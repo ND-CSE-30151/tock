@@ -1,7 +1,6 @@
 import csv, StringIO
 import collections
 import operator
-import subprocess
 import sys
 try:
     import IPython.display
@@ -9,6 +8,7 @@ except ImportError:
     pass
 
 import formats
+import viz
 
 START = 'START'
 ACCEPT = 'ACCEPT'
@@ -145,23 +145,17 @@ class Machine(object):
         return "\n".join(str(t) for t in self.transitions)
 
     def display_graph(self):
-        return IPython.display.SVG(self._repr_svg_())
+        dot = StringIO.StringIO()
+        formats.write_dot(self, dot)
+        return viz.viz(dot.getvalue())
 
     def display_table(self):
         out = StringIO.StringIO()
         formats.write_html(self, out)
         return IPython.display.HTML(out.getvalue())
 
-    def _repr_svg_(self):
-        process = subprocess.Popen(['dot', '-Tsvg'], 
-                                   stdin=subprocess.PIPE,
-                                   stdout=subprocess.PIPE, 
-                                   stderr=subprocess.PIPE)
-        formats.write_dot(self, process.stdin)
-        out, err = process.communicate()
-        if err:
-            raise Exception(err)
-        return out.decode('utf8')
+    def _ipython_display_(self):
+        IPython.display.display(self.display_graph())
 
     def run(self, input_string):
 
@@ -234,7 +228,7 @@ class Run(object):
         self.configs.add(to_config)
         self.edges.add((from_config, to_config))
 
-    def _repr_svg_(self):
+    def _ipython_display_(self):
         def label(config): 
             # Label nodes by config
             return formats.ascii_to_html(','.join(map(str, (config[0][0],) + config[1:])))
@@ -276,14 +270,5 @@ class Run(object):
 
         result.append("}")
 
-        process = subprocess.Popen(['dot', '-Tsvg'], 
-                                   stdin=subprocess.PIPE,
-                                   stdout=subprocess.PIPE, 
-                                   stderr=subprocess.PIPE)
-        out, err = process.communicate("\n".join(result))
-
-        if err:
-            raise Exception(err)
-
-        return out.decode('utf8')
+        IPython.display.display(viz.viz("\n".join(result)))
         

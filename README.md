@@ -28,10 +28,6 @@ See the [IPython installation instructions], or follow these steps:
 
 Tock uses [GraphViz] if you have it; otherwise, it downloads and uses [Viz.js].
 
-
-License
--------
-
 [IPython]: http://ipython.org
 [IPython installation instructions]: http://jupyter.readthedocs.org/en/latest/install.html
 [Miniconda]: http://conda.pydata.org/miniconda.html

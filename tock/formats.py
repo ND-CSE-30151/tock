@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
-
 import collections
 import machines
 import csv
-
-# To do: better error reporting
-# Abstract graph and table structures to read/write tgf, dot, csv, md
 
 ### Parser for transitions and pieces of transitions
 
@@ -155,10 +150,29 @@ def string_to_transition(s):
     parse_end(s)
     return tuple(lhs), tuple(rhs)
 
+def configs_to_string(configs):
+    if len(configs) == 0:
+        return ""
+    if len(configs) == 1:
+        [config] = configs
+        return ','.join(map(str, config))
+    strings = []
+    for config in configs:
+        if len(config) == 1:
+            store = [config]
+            strings.append(str(store))
+        else:
+            strings.append('(%s)' % ','.join(map(str, config)))
+    return '{%s}' % ','.join(strings)
+
 ### Utility functions
 
 def ascii_to_html(s):
-    return s.replace("&", "&epsilon;").replace("->", "&rarr;")
+    s = str(s)
+    s = s.replace("&", "&epsilon;")
+    s = s.replace("->", "&rarr;")
+    s = s.replace(">", "&gt;")
+    return s
 
 def single_value(s):
     s = set(s)
@@ -169,7 +183,7 @@ def single_value(s):
 """These functions act as an adapter between conventional machines and ours.
 
 Conventional: initial state distinguished
-Ours: initial state always ACCEPT
+Ours: initial state always START
 
 These conventions kick in when m.one_way_state() is True:
 
@@ -179,10 +193,28 @@ Conventional: input symbol is always consumed (a -> &)
 Ours: rewrite for input could be anything
 """
 
-def add_initial_state(m, q, n):
-    inputs = [machines.Store(['START'])] + [machines.Store()]*(n-1)
+def set_initial_state(m, q, n):
+    if get_initial_state(m):
+        raise ValueError("machine can only have one start state")
+    inputs = [machines.Store([machines.START])] + [machines.Store()]*(n-1)
     outputs = [machines.Store([q])] + [machines.Store()]*(n-1)
     m.add_transition(machines.Transition(inputs, outputs))
+
+def get_initial_state(m):
+    """Returns the initial state of m, or None if there is none."""
+    initial_states = set()
+    for t in m.transitions:
+        if list(t.inputs[0]) == [machines.START]:
+            if (sum(len(store) for store in t.inputs) +
+                sum(len(store) for store in t.outputs)) == 2:
+                initial_states.add(t.outputs[0][0])
+            else:
+                # machine has an explicit transition from START
+                return None
+    if len(initial_states) == 1:
+        return initial_states.pop()
+    else:
+        return None
 
 def add_transition(m, l, r):
     # If necessary, supply implicit rhs for input,
@@ -192,10 +224,28 @@ def add_transition(m, l, r):
         r[1:1] = [machines.Store()]
     m.add_transition(machines.Transition(l, r))
 
+def get_transitions(m):
+    one_way_input = m.one_way_input()
+    for t in m.transitions:
+        inputs, outputs = t.inputs, t.outputs
+        if one_way_input:
+            outputs = outputs[0:1] + outputs[2:]
+        yield inputs, outputs
+
 def add_final_state(m, q, n):
     inputs = [machines.Store([q]), machines.Store([machines.BLANK])] + [machines.Store()]*(n-2)
-    outputs = [machines.Store(['ACCEPT'])] + [machines.Store()]*(n-1)
+    outputs = [machines.Store([machines.ACCEPT])] + [machines.Store()]*(n-1)
     m.add_transition(machines.Transition(inputs, outputs))
+
+def get_final_states(m):
+    final_states = set()
+    if not m.one_way_input():
+        return final_states
+    for t in m.transitions:
+        if list(t.outputs[0]) == [machines.ACCEPT]:
+            if len(t.inputs[0]) == 1 and list(t.inputs[1]) == [machines.BLANK]:
+                final_states.add(t.inputs[0][0])
+    return final_states
 
 ### Top-level functions for reading and writing machines in various formats.
 
@@ -235,7 +285,7 @@ def read_csv(infile):
         except Exception as e:
             raise ValueError("cell A%d: %s" % (i+1, e.message))
         if '>' in flags:
-            add_initial_state(m, q, n)
+            set_initial_state(m, q, n)
         if '@' in flags:
             add_final_state(m, q, n)
 
@@ -287,7 +337,7 @@ def read_tgf(infile):
 
     for i in states:
         if '>' in flags[i]:
-            add_initial_state(m, states[i], m.num_stores)
+            set_initial_state(m, states[i], m.num_stores)
         if '@' in flags[i]:
             add_final_state(m, states[i], m.num_stores)
 
@@ -295,64 +345,48 @@ def read_tgf(infile):
 
 def write_html(m, file):
     """Writes an automaton's transition matrix as an HTML table."""
-    file.write('<table style="font-family: Courier, monospace;">')
+    file.write('<table style="font-family: Courier, monospace;">\n')
     states = set()
-    initial_state = None
-    final_states = set()
+    initial_state = get_initial_state(m)
+    final_states = get_final_states(m)
     conditions = set()
     transitions = collections.defaultdict(list)
-    one_way_input = m.one_way_input()
-    for t in m.transitions:
-        if len(t.inputs[0]) != 1: 
-            raise ValueError("can't convert to table")
-        q = t.inputs[0][0]
-        r = t.outputs[0][0]
-        condition = t.inputs[1:]
 
-        if q == machines.START:
-            # to do: also allow explicit START
-            assert sum(len(i) for i in t.inputs[1:]) == 0
-            assert sum(len(i) for i in t.outputs[1:]) == 0
-            initial_state = r
-        elif one_way_input and r == machines.ACCEPT and len(t.inputs[1]) == 1 and t.inputs[1][0] == machines.BLANK:
-            final_states.add(q)
+    for inputs, outputs in get_transitions(m):
+        if len(inputs[0]) != 1: 
+            raise ValueError("can't convert to table")
+        q = inputs[0][0]
+        r = outputs[0][0]
+        condition = inputs[1:]
+
+        if q == machines.START and r == initial_state:
+            continue
+        elif q in final_states and r == machines.ACCEPT:
+            continue
         else:
             states.add(q)
             if r not in [machines.ACCEPT, machines.REJECT]:
                 states.add(r)
             conditions.add(condition)
-            transitions[q,condition].append(t)
+            transitions[q,condition].append(outputs)
+
+    conditions = sorted(conditions)
 
     file.write("  <tr><td></td>")
     for condition in conditions:
-        file.write("<th>%s</th>" % ','.join(ascii_to_html(str(c)) for c in condition))
-    for q in states:
-        qstring = ascii_to_html(q)
+        file.write("<th>%s</th>" % ','.join(map(ascii_to_html, condition)))
+    file.write("</tr>\n")
+    for q in sorted(states):
+        qstring = q
         if q == initial_state:
-            qstring = "&gt;" + qstring
+            qstring = ">" + qstring
         if q in final_states:
             qstring = "@" + qstring
-        file.write("  <tr><th>%s</th>" % qstring)
+        file.write("  <tr><th>%s</th>" % ascii_to_html(qstring))
         for condition in conditions:
-            contents = []
-            parens = False
-            for t in transitions[q,condition]:
-                outputs = [str(t.outputs[0])] + [ascii_to_html(str(r)) for r in t.outputs[1:]]
-                if one_way_input:
-                    outputs[1:2] = []
-                if len(outputs) > 1:
-                    parens = True
-                contents.append(','.join(outputs))
-            if len(contents) > 1 and parens:
-                file.write('<td>{%s}</td>' % ('(%s)' % ','.join('%s' % tstring for tstring in contents)))
-            elif len(contents) > 1:
-                file.write('<td>{%s}</td>' % (','.join('%s' % tstring for tstring in contents)))
-            elif len(contents) == 1:
-                file.write("<td>%s</td>" % contents[0])
-            else:
-                file.write("<td></td>")
-        file.write("  </tr>")
-    file.write("</table>")
+            file.write('<td>%s</td>' % ascii_to_html(configs_to_string(transitions[q,condition])))
+        file.write("</tr>\n")
+    file.write("</table>\n")
 
 def write_dot(m, file):
     """Writes an automaton's transition function in GraphViz dot format."""
@@ -362,23 +396,20 @@ def write_dot(m, file):
     file.write("  edge [arrowhead=vee,arrowsize=0.8,fontname=Courier,fontsize=9];\n")
     states = set()
     transitions = collections.defaultdict(list)
-    initial_state = None
-    final_states = set()
+    initial_state = get_initial_state(m)
+    final_states = get_final_states(m)
 
-    for t in m.transitions:
-        q = t.inputs[0][0]
-        r = t.outputs[0][0]
-        if q == machines.START:
-            # to do: also allow explicit START
-            assert sum(len(i) for i in t.inputs[1:]) == 0
-            assert sum(len(i) for i in t.outputs[1:]) == 0
-            initial_state = r
-        elif m.one_way_input() and r == machines.ACCEPT and len(t.inputs[1]) == 1 and t.inputs[1][0] == machines.BLANK:
-            final_states.add(q)
+    for inputs, outputs in get_transitions(m):
+        q = inputs[0][0]
+        r = outputs[0][0]
+        if q == machines.START and r == initial_state:
+            continue
+        if q in final_states and r == machines.ACCEPT:
+            continue
         else:
             states.add(q)
             states.add(r)
-            transitions[q,r].append(t)
+            transitions[q,r].append((inputs[1:], outputs[1:]))
 
     states = list(states)
     id_to_state = {}
@@ -393,12 +424,8 @@ def write_dot(m, file):
         id_to_state[q] = i
     for (q,r), ts in transitions.iteritems():
         labels = []
-        for t in ts:
-            label = ','.join(map(str, t.inputs[1:]))
-            if m.one_way_input():
-                outputs = t.outputs[2:]
-            else:
-                outputs = t.outputs[1:]
+        for (inputs, outputs) in ts:
+            label = ','.join(map(str, inputs))
             if len(outputs) > 0:
                 label = label + " -> " + ", ".join(map(str, outputs))
             labels.append("<tr><td>%s</td></tr>" % ascii_to_html(label))

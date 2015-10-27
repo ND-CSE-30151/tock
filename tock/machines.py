@@ -71,8 +71,8 @@ class Store(object):
 
 class Transition(object):
     def __init__(self, inputs, outputs):
-        self.inputs = inputs
-        self.outputs = outputs
+        self.inputs = tuple(inputs)
+        self.outputs = tuple(outputs)
 
     def match(self, stores):
         if len(self.inputs) != len(stores):

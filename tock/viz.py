@@ -2,6 +2,7 @@
 
 try:
     import subprocess
+    from IPython.display import SVG
 
     def viz(dot):
         process = subprocess.Popen(['dot', '-Tsvg'], 
@@ -19,21 +20,13 @@ try:
 
 except:
 
-    try:
-        ### viz.js
+    from IPython.display import display, Javascript
 
-        from IPython.display import display, Javascript, SVG
+    display(Javascript('require.config({waitSeconds: 10, paths: {viz: "//github.com/mdaines/viz.js/releases/download/v1.2.0/viz"}, shim: {viz: {exports: "Viz"}}}); require.undef("viz")'))
 
-        # Due to a bug in require.js, this doesn't work with IPython 3.1
-        #display(Javascript('require.config({baseUrl: "/files", shim: {viz: {exports: "Viz"}}})'))
-        display(Javascript('require.config({paths: {viz: "//github.com/mdaines/viz.js/releases/download/v1.2.0/viz"}, shim: {viz: {exports: "Viz"}}})'))
-
-        def viz(dot):
-            dot = dot.replace("\\", r"\\")
-            dot = dot.replace("\"", r"\"")
-            dot = dot.replace("\n", r"\n")
-            return Javascript('require(["viz"], function (Viz) {var div = $("<div>"); element.append(div); div.append(Viz("%s", {format: "svg", engine: "dot"})); var svg = div.find("svg"); div.css("width", svg.attr("width")); div.css("height", svg.attr("height")); })' % dot)
-
-    except:
-        raise ImportError("couldn't load GraphViz")
+    def viz(dot):
+        dot = dot.replace("\\", r"\\")
+        dot = dot.replace("\"", r"\"")
+        dot = dot.replace("\n", r"\n")
+        return Javascript('require(["viz"], function (Viz) {var div = $("<div>"); element.append(div); div.append(Viz("%s", {format: "svg", engine: "dot"})); var svg = div.find("svg"); div.css("width", svg.attr("width")); div.css("height", svg.attr("height")); })' % dot)
 

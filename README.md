@@ -18,18 +18,19 @@ The documentation is contained in a series of [IPython] notebooks:
 Installation
 ------------
 
-In order to view these notebooks, you'll need to install [IPython] and
-run the IPython server on your own machine.
+In order to view these notebooks, you'll need [IPython] and
+[GraphViz]. The easiest way to get them is:
 
-See the [IPython installation instructions], or follow these steps:
+1. Install [Miniconda]. Important: Select Python 2.7, not 3.x.
+2. Install [IPython] by running `conda install jupyter`.
+3. If you don't have [GraphViz] already, don't worry; Tock downloads
+   and uses [Viz.js] instead.
 
-- Download and install [Miniconda]. Important: Select Python 2.7, not 3.x
-- Install Jupyter and IPython by running `conda install jupyter`
-
-Tock uses [GraphViz] if you have it; otherwise, it downloads and uses [Viz.js].
+Then, run `ipython notebook` in the Tock directory. A web browser
+should open, showing you the contents of the directory. Click on one
+of the `.pynb` files to view it.
 
 [IPython]: http://ipython.org
-[IPython installation instructions]: http://jupyter.readthedocs.org/en/latest/install.html
 [Miniconda]: http://conda.pydata.org/miniconda.html
 [Graphviz]: http://www.graphviz.org
 [Viz.js]: http://github.com/mdaines/viz.js/

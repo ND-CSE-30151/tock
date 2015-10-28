@@ -1,6 +1,7 @@
 import collections
-import machines
 import csv
+
+import machines
 
 ### Parser for transitions and pieces of transitions
 
@@ -157,7 +158,7 @@ def configs_to_string(configs):
         [config] = configs
         return ','.join(map(str, config))
     strings = []
-    for config in configs:
+    for config in sorted(configs):
         if len(config) == 1:
             [store] = config
             strings.append(str(store))
@@ -392,8 +393,8 @@ def write_dot(m, file):
     """Writes an automaton's transition function in GraphViz dot format."""
     file.write("digraph {\n")
     file.write('  rankdir=LR;\n')
-    file.write('  node [fontname=Courier,fontsize=10,shape=box,style=rounded,height=0,width=0,margin="0.055,0.0277"];\n')
-    file.write("  edge [arrowhead=vee,arrowsize=0.8,fontname=Courier,fontsize=9];\n")
+    file.write('  node [fontname=Courier,fontsize=10,shape=box,style=rounded,height=0,width=0,margin="0.055,0.042"];\n')
+    file.write("  edge [arrowhead=vee,arrowsize=0.5,fontname=Courier,fontsize=9];\n")
     states = set()
     transitions = collections.defaultdict(list)
     initial_state = get_initial_state(m)
@@ -424,7 +425,7 @@ def write_dot(m, file):
         id_to_state[q] = i
     for (q,r), ts in transitions.iteritems():
         labels = []
-        for (inputs, outputs) in ts:
+        for (inputs, outputs) in sorted(ts):
             label = ','.join(map(str, inputs))
             if len(outputs) > 0:
                 label = label + " -> " + ", ".join(map(str, outputs))

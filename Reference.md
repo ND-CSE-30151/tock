@@ -57,6 +57,7 @@ string, followed by an infinite number of blank symbols (`_`). In FAs
 and PDAs you should not use `_` as an alphabet symbol.
 
 There are some additional restrictions on states and symbols:
+
 - The empty string (`&`) can't be used as a state or symbol.
 - States and symbols should not contain the following special characters:
 ```
@@ -85,11 +86,10 @@ the cell.
 Graphs
 ======
 
-Graphs are in Trivial Graph Format (`.tgf`).
+Graphs are in Trivial Graph Format (TGF).
 
 The nodes are labeled with states, including the `>` and `@` flags as
 described above.
 
 The edges are labeled with transitions, minus the state on both the
 left-hand side and right-hand side.
-

@@ -22,11 +22,29 @@ except:
 
     from IPython.display import display, Javascript
 
-    display(Javascript('require.config({waitSeconds: 10, paths: {viz: "//github.com/mdaines/viz.js/releases/download/v1.2.0/viz"}, shim: {viz: {exports: "Viz"}}}); require.undef("viz")'))
+    display(Javascript('require.config({'
+                       # increase timeout (it's a large script)
+                       '  waitSeconds: 10,'
+                       # location of script
+                       '  paths: {viz: "//github.com/mdaines/viz.js/releases/download/v1.2.0/viz"},'
+                       # tells require.js what symbols to take
+                       '  shim: {viz: {exports: "Viz"}}});'
+                       # clear any old module in case there was an error
+                       'require.undef("viz")'))
 
     def viz(dot):
         dot = dot.replace("\\", r"\\")
         dot = dot.replace("\"", r"\"")
         dot = dot.replace("\n", r"\n")
-        return Javascript('require(["viz"], function (Viz) {var div = $("<div>"); element.append(div); div.append(Viz("%s", {format: "svg", engine: "dot"})); var svg = div.find("svg"); div.css("width", svg.attr("width")); div.css("height", svg.attr("height")); })' % dot)
+        return Javascript('require(["viz"], function (Viz) {'
+                          # wrap the SVG inside a div
+                          '  var div = $("<div>");'
+                          '  element.append(div);'
+                          # generate the SVG
+                          '  div.append(Viz("%s"));'
+                          # set the div's size to match the SVG
+                          '  var svg = div.find("svg");'
+                          '  div.css("width", svg.attr("width"));'
+                          '  div.css("height", svg.attr("height"));'
+                          '})' % dot)
 

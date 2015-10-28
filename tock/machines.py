@@ -1,20 +1,18 @@
-import csv, StringIO
 import collections
-import operator
-import sys
+import StringIO
+
 try:
     import IPython.display
+    import viz
 except ImportError:
     pass
 
 import formats
-import viz
 
 START = 'START'
 ACCEPT = 'ACCEPT'
 REJECT = 'REJECT'
 BLANK = '_'
-trace = False
 
 class Store(object):
     """A (configuration of a) store, which could be a tape, stack, or
@@ -35,6 +33,9 @@ class Store(object):
         return not self == other
     def __hash__(self):
         return hash((tuple(self.values), self.position))
+
+    def __cmp__(self, other):
+        return cmp(self.values, other.values)
 
     def __len__(self):
         return len(self.values)
@@ -157,7 +158,7 @@ class Machine(object):
     def _ipython_display_(self):
         IPython.display.display(self.display_graph())
 
-    def run(self, input_string):
+    def run(self, input_string, trace=False):
 
         # Breadth-first search
         agenda = collections.deque()
@@ -182,6 +183,7 @@ class Machine(object):
 
                     if nconfig[0].values[0] == ACCEPT:
                         accept = True
+                        # to do: optionally break (to avoid looping)
 
                     if nconfig in visited:
                         nconfig = visited[nconfig] # normalize id
@@ -243,8 +245,8 @@ class Run(object):
         result = []
         result.append("digraph {")
         result.append("  rankdir=TB;")
-        result.append('  node [fontname=Courier,fontsize=10,shape=box,style=rounded,height=0,width=0,margin="0.055,0.0277"];')
-        result.append("  edge [arrowhead=vee,arrowsize=0.8];")
+        result.append('  node [fontname=Courier,fontsize=10,shape=box,style=rounded,height=0,width=0,margin="0.055,0.042"];')
+        result.append("  edge [arrowhead=vee,arrowsize=0.5];")
 
         one_way_input = self.machine.one_way_input()
 

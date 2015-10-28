@@ -134,14 +134,6 @@ class Machine(object):
                 raise TypeError("wrong number of actions")
         self.transitions.append(t)
 
-    def one_way_input(self):
-        for t in self.transitions:
-            if t.inputs[1].position != 0:
-                return False
-            if len(t.outputs[1]) != 0:
-                return False
-        return True
-
     def __str__(self):
         return "\n".join(str(t) for t in self.transitions)
 
@@ -169,8 +161,6 @@ class Machine(object):
         agenda.append(config)
         run = Run(self, config)
 
-        accept = False
-
         while len(agenda) > 0:
             tconfig = agenda.popleft()
 
@@ -197,23 +187,110 @@ class Machine(object):
         return run
 
     ### Testing for different types of automata
-    # To do: PDA, TM
 
-    def is_finite_state(self):
-        if self.stores != {'state', 'input'}:
-            return False
-        for r in self.transitions:
-            rs = r['state']
-            if len(rs.input) != 1:
-                return False
-            if len(rs.output) != 1:
-                return False
+    def has_cell(self, s):
+        """Tests whether store `s` is a cell, that is, it uses exactly one
+        cell, and there can take on only a finite number of states)."""
 
-            if 'input' in r:
-                ri = r['input']
-                if not (len(ri.input) == 2 and ri.input.values[0] == ANY and ri.input.position == 1):
-                    return False
-                if not (len(ri.output) == 2 and ri.output.values[0] == ANY and ri.output.position == 0):
+        for t in self.transitions:
+            if len(t.inputs[s]) != 1:
+                return False
+            if len(t.outputs[s]) != 1:
+                return False
+            if t.inputs[s].position != 0:
+                return False
+            if t.outputs[s].position != 0:
+                return False
+        return True
+
+    def has_input(self, s):
+        """Tests whether store `s` is an input, that is, it only deletes and
+        never moves from position 0."""
+
+        for t in self.transitions:
+            if t.inputs[s].position != 0:
+                return False
+            if len(t.outputs[s]) != 0:
+                return False
+        return True
+
+    def has_output(self, s):
+        """Tests whether store `s` is an output, that is, it only appends and
+        is always one past the end."""
+
+        for t in self.transitions:
+            if len(t.inputs[s]) != 0:
+                return False
+            if t.outputs[s].position != len(t.outputs[s]):
+                return False
+        return True
+
+    def has_stack(self, s):
+        """Tests whether store `s` is a stack, that is, it never moves from
+        position 0."""
+        for t in self.transitions:
+            if t.inputs[s].position != 0:
+                return False
+            if t.outputs[s].position != 0:
+                return False
+        return True
+
+    def has_readonly(self, s):
+        """Tests whether store `s` is read-only."""
+        for t in self.transitions:
+            if list(t.inputs[s]) != list(t.outputs[s]):
+                return False
+        return True
+
+    def is_finite(self):
+        """Tests whether machine is finite state, in a broad sense.
+        It should have one input and any number of cells."""
+        cells = set()
+        inputs = set()
+        for s in xrange(self.num_stores):
+            if self.has_cell(s):
+                cells.add(s)
+            if self.has_input(s):
+                inputs.add(s)
+        # It's possible to be both a cell and an input,
+        # and we just need to check that there is some way to 
+        # designate exactly 1 stack and num_store-1 cells
+        return (len(cells|inputs) == self.num_stores and 
+                len(inputs) >= 1 and 
+                len(cells) >= self.num_stores-1)
+
+    def is_pushdown(self):
+        """Tests whether machine is a pushdown automaton, in a broad sense.
+        It should have one input and one stack, and any number of cells."""
+        cells = set()
+        inputs = set()
+        stacks = set()
+        for s in xrange(self.num_stores):
+            if self.has_cell(s):
+                cells.add(s)
+            if self.has_input(s):
+                inputs.add(s)
+            if self.has_stack(s):
+                stacks.add(s)
+        return (len(cells|inputs|stacks) == self.num_stores and
+                len(inputs) >= 1 and
+                len(cells) >= self.num_stores-2)
+
+    def is_deterministic(self):
+        """Tests whether machine is deterministic."""
+        # naive quadratic algorithm
+        for i, t1 in enumerate(self.transitions):
+            for t2 in self.transitions[:i]:
+                match = True
+                for in1, in2 in zip(t1.inputs, t2.inputs):
+                    i = max(-in1.position, -in2.position)
+                    while i+in1.position < len(in1) and i+in2.position < len(in2):
+                        x1 = in1.values[i+in1.position]
+                        x2 = in2.values[i+in2.position]
+                        if x1 != x2:
+                            match = False
+                        i += 1
+                if match:
                     return False
         return True
 
@@ -248,7 +325,7 @@ class Run(object):
         result.append('  node [fontname=Courier,fontsize=10,shape=box,style=rounded,height=0,width=0,margin="0.055,0.042"];')
         result.append("  edge [arrowhead=vee,arrowsize=0.5];")
 
-        one_way_input = self.machine.one_way_input()
+        one_way_input = self.machine.has_input(1)
 
         for config in self.configs:
             if one_way_input:

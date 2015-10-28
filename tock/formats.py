@@ -186,7 +186,7 @@ def single_value(s):
 Conventional: initial state distinguished
 Ours: initial state always START
 
-These conventions kick in when m.one_way_state() is True:
+These conventions kick in when m.has_input(1) is True:
 
 Conventional: final states distinguished; final state only active at end of input
 Ours: final state always ACCEPT and is unconditional
@@ -226,7 +226,7 @@ def add_transition(m, l, r):
     m.add_transition(machines.Transition(l, r))
 
 def get_transitions(m):
-    one_way_input = m.one_way_input()
+    one_way_input = m.has_input(1)
     for t in m.transitions:
         inputs, outputs = t.inputs, t.outputs
         if one_way_input:
@@ -240,7 +240,7 @@ def add_final_state(m, q, n):
 
 def get_final_states(m):
     final_states = set()
-    if not m.one_way_input():
+    if not m.has_input(1):
         return final_states
     for t in m.transitions:
         if list(t.outputs[0]) == [machines.ACCEPT]:

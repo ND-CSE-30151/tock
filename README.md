@@ -9,11 +9,11 @@ or tapes, and look-ahead/behind.
 
 The documentation is contained in a series of [IPython] notebooks:
 
-- Introduction.pynb
-- DFAs.pynb
-- NFAs.pynb
-- PDAs.pynb
-- TMs.pynb
+- Introduction.ipynb
+- DFAs.ipynb
+- NFAs.ipynb
+- PDAs.ipynb
+- TMs.ipynb
 
 Installation
 ------------
@@ -28,7 +28,7 @@ In order to view these notebooks, you'll need [IPython] and
 
 Then, run `ipython notebook` in the Tock directory. A web browser
 should open, showing you the contents of the directory. Click on one
-of the `.pynb` files to view it.
+of the `.ipynb` files to view it.
 
 [IPython]: http://ipython.org
 [Miniconda]: http://conda.pydata.org/miniconda.html

@@ -159,7 +159,7 @@ def configs_to_string(configs):
     strings = []
     for config in configs:
         if len(config) == 1:
-            store = [config]
+            [store] = config
             strings.append(str(store))
         else:
             strings.append('(%s)' % ','.join(map(str, config)))

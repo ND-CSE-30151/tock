@@ -5,7 +5,7 @@ Tock stands for Theory Of Computing toolKit. It can simulate the
 automata taught in standard theory of computation courses
 (deterministic and nondeterministic finite automata, pushdown
 automata, and Turing machines). It also allows multiple cells, stacks,
-or tapes, and look-ahead/behind.
+or tapes.
 
 The documentation is contained in a series of [IPython] notebooks:
 

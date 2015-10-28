@@ -1,26 +1,36 @@
-Internal representation
-=======================
+Stores
+======
 
-Internally, all kinds of automata are represented in the same way. They have one or more _stores_, which are, in the most general case, half-infinite tapes, but you can use them as a finite state or as a stack.
-
-The operation of the automaton is defined by transitions of the form
-```
-			    a,b,c -> x,y,z
-```
-where the left-hand side and right-hand side must have the same number of elements as there are stores. The meaning of the rule is that if the current symbol on the first store is `a`, replace it with `x`.
-
-You don't actually write transitions in the above form; instead, write them as tables or graphs, as described below.
+Internally, all kinds of automata are represented in the same
+way. They have two or more _stores_. The first store is always the
+state, and the second store is always the input. The remaining stores,
+if any, are half-infinite tapes, but you don't have to use them as
+tapes; you can use them instead as finite states or as stacks.
 
 Transitions
 ===========
 
-The left-hand sides and right-hand sides of transitions are tuples of one of the following:
+The operation of the automaton is defined by transitions of the form
+```
+    a,b,c -> x,y,z
+```
+where the left-hand side and right-hand side must have the same number
+of elements as there are stores, and each element is a symbol
+annotated with a head position. The meaning of the transition is that
+if the first store matches `a` (relative to the current head
+position), replace it with `x`; if the second store matches `b`,
+replace it with `y`; and so on.
 
-- Empty (`&`), in which case the head is understood to be immediately to the _right_;
+In more detail, each element is one of:
+
+- Empty (`&`), in which case the head is understood to be immediately
+  to the _right_;
 - A single symbol, which is the symbol under the head;
-- Any number of (space-separated) symbols with a single `^` character somewhere, which indicates the head position. The symbol under the head is unspecified. There's no deep reason for this; it's just a limitation of the notation. (In the future, we may also allow `[a]` to represent both the head position and the symbol under the head.)
+- A symbol preceded or followed by `^`, which indicates that the head
+  is to the left or to the right of the symbol.
 
-Despite the peculiarities of this notation, it can describe all the possible moves that typical automata make:
+Despite the peculiarities of this notation, it can describe all the
+possible moves that typical automata make:
 
 - `a -> b`: write symbol and don't move
 - `a -> b^`: write symbol and move right
@@ -28,18 +38,29 @@ Despite the peculiarities of this notation, it can describe all the possible mov
 - `& -> b`: push symbol on left
 - `a -> &`: pop symbol on left
 
+You don't actually write transitions in the above form; instead, you
+write them as tables or graphs, as described below.
+
 States and symbols
 ==================
 
-The first store is always the state. The start state is always called `START`, and the accept state and reject states are always called `ACCEPT` and `REJECT`, respectively.
+As mentioned above, the first store is always the state. The start
+state is always called `START`; when some other state is designated a
+start state, a transition is added from `START` to that state. The
+accept state and reject states are always called `ACCEPT` and
+`REJECT`, respectively. When another state is designated a final
+state, a transition is added from that state (and the end of the
+input) to `ACCEPT`.
 
-The second store is always the input. It is initialized with the input string, followed by an infinite number of blank symbols (`_`). In FAs and PDAs you should not use `_` as an alphabet symbol.
+The second store is always the input. It is initialized with the input
+string, followed by an infinite number of blank symbols (`_`). In FAs
+and PDAs you should not use `_` as an alphabet symbol.
 
-There are some restrictions on states and symbols:
+There are some additional restrictions on states and symbols:
 - The empty string (`&`) can't be used as a state or symbol.
 - States and symbols should not contain the following special characters:
 ```
-			     { } ( ) , ^
+    { } ( ) , ^
 ```
 - States should not start with `>` or `@`.
 
@@ -48,33 +69,27 @@ Tables
 
 Tables are in CSV format.
 
-The first column lists all the states, one per row. Precede the name of the start state with `>`, and precede the name of final states with `@`. These symbols are not part of the state name.
+The first column lists all the states, one per row. Precede the name
+of the start state with `>`, and precede the name of final states with
+`@`. These symbols are not part of the state name.
 
-Each interior cell contains a set of transitions. The left-hand side is formed from the row header (the state) and the column header; the cell contains the right-hand side or a set of right-hand sides.
+The first row lists all the possible left-hand sides of transitions,
+sans state.
+
+Each interior cell contains a set of right-hand sides.
+
+Thus, the left-hand side is formed by concatenating the row header
+(the state) and the column header; the right-hand side is taken from
+the cell.
 
 Graphs
 ======
 
 Graphs are in Trivial Graph Format (`.tgf`).
 
-The nodes are labeled with states, including the `>` and `@` flags as described above.
+The nodes are labeled with states, including the `>` and `@` flags as
+described above.
 
-The edges are labeled with transitions, minus the state on both the left-hand side and right-hand side.
+The edges are labeled with transitions, minus the state on both the
+left-hand side and right-hand side.
 
-Unicode special characters
-==========================
-
-If you want your automata to look even more like the book, you can use the following Unicode characters.
-
-Warning: Unicode has many characters that look alike. These are the only ones supported.
-
-Purpose       | ASCII | Unicode | Code point
---------------|-------|---------|----------------
-final state   | @     | ◎       | U+25CE Bullseye
-initial state | >     | →       | U+2191 Rightwards arrow
-empty set     | {}    | ∅       | U+2205 Empty set
-empty string  | &     | ε       | U+03B5 Greek small letter epsilon
-              |       | ϵ       | U+03F5 Greek lunate epsilon symbol
-transition    | ->    | →       | U+2191 Rightwards arrow
-blank         | _     | ␣       | U+2423 Open box
-head position | ^     | ↴       | U+21B4 Rightwards arrow with corner downwards

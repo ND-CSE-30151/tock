@@ -9,6 +9,8 @@ except ImportError:
 
 import formats
 
+__all__ = []
+
 START = 'START'
 ACCEPT = 'ACCEPT'
 REJECT = 'REJECT'

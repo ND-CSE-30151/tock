@@ -3,6 +3,8 @@ import csv
 
 import machines
 
+__all__ = ['read_csv', 'read_tgf']
+
 ### Parser for transitions and pieces of transitions
 
 class dotstring(str):
@@ -194,9 +196,11 @@ Conventional: input symbol is always consumed (a -> &)
 Ours: rewrite for input could be anything
 """
 
-def set_initial_state(m, q, n):
+def set_initial_state(m, q, n=None):
     if get_initial_state(m):
         raise ValueError("machine can only have one start state")
+    if n is None:
+        n = m.num_stores
     inputs = [machines.Store([machines.START])] + [machines.Store()]*(n-1)
     outputs = [machines.Store([q])] + [machines.Store()]*(n-1)
     m.add_transition(machines.Transition(inputs, outputs))
@@ -233,7 +237,9 @@ def get_transitions(m):
             outputs = outputs[0:1] + outputs[2:]
         yield inputs, outputs
 
-def add_final_state(m, q, n):
+def add_final_state(m, q, n=None):
+    if n is None:
+        n = m.num_stores
     inputs = [machines.Store([q]), machines.Store([machines.BLANK])] + [machines.Store()]*(n-2)
     outputs = [machines.Store([machines.ACCEPT])] + [machines.Store()]*(n-1)
     m.add_transition(machines.Transition(inputs, outputs))
@@ -338,9 +344,9 @@ def read_tgf(infile):
 
     for i in states:
         if '>' in flags[i]:
-            set_initial_state(m, states[i], m.num_stores)
+            set_initial_state(m, states[i])
         if '@' in flags[i]:
-            add_final_state(m, states[i], m.num_stores)
+            add_final_state(m, states[i])
 
     return m
 

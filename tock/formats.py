@@ -418,15 +418,15 @@ def write_dot(m, file):
             states.add(r)
             transitions[q,r].append((inputs[1:], outputs[1:]))
 
-    states = list(states)
+    states = sorted(states)
     id_to_state = {}
+    file.write('  START[shape=none,label=""];\n')
     for i, q in enumerate(states):
         if q in final_states:
             file.write('  %s[label="%s",peripheries=2];\n' % (i, q,))
         else:
             file.write('  %s[label="%s"];\n' % (i, q,))
         if q == initial_state:
-            file.write('  START[shape=none,label=""];\n')
             file.write('  START -> %s;\n' % i)
         id_to_state[q] = i
     for (q,r), ts in transitions.iteritems():

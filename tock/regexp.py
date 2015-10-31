@@ -37,6 +37,10 @@ def parse_union(s, m):
     i = s.i
     initial, finals = parse_concat(s, m)
     if s.i < len(s) and s.c == '|':
+        # There can never be more than one star with the same starting index,
+        # so use the starting index for the extra state. It is possible
+        # for a star and union to start at the same place (a*|b) so
+        # union gets the earlier letter in the alphabet.
         new_initial = zero_pad(len(s), i) + "a"
         m.add_transition(make_empty_transition(new_initial, initial))
 
@@ -64,6 +68,10 @@ def parse_star(s, m):
     initial, finals = parse_base(s, m)
     if s.i < len(s) and s.c == '*':
         parse_character(s, '*')
+        # There can never be more than one star with the same starting index,
+        # so use the starting index for the extra state. It is possible
+        # for a star and union to start at the same place (a*|b) so
+        # union gets the earlier letter in the alphabet.
         new_initial = zero_pad(len(s), i) + "i"
         m.add_transition(make_empty_transition(new_initial, initial))
         for qf in finals:
@@ -78,6 +86,15 @@ def parse_base(s, m):
         initial, final = parse_union(s, m)
         parse_character(s, ')')
         return initial, final
+    elif s.i == len(s) or s.c in ')|':
+        # Borrow the index of the following character,
+        # which can never be a symbol.
+        q = zero_pad(len(s), s.i)
+        return q, [q]
+    elif s.i < len(s) and s.c == '&':
+        q = zero_pad(len(s), s.i)
+        parse_character(s, '&')
+        return q, [q]
     elif s.i < len(s):
         if s.c in '*|()':
             raise ValueError("expected symbol, found %s" % s.c)
@@ -88,9 +105,7 @@ def parse_base(s, m):
         s.i += 1
         return q, [r]
     else:
-        assert len(s) == 0
-        q = "0"
-        return q, [q]
+        assert False
 
 if __name__ == "__main__":
     import sys

@@ -367,9 +367,9 @@ def write_html(m, file):
         condition = inputs[1:]
 
         if q == machines.START and r == initial_state:
-            continue
+            states.add(r)
         elif q in final_states and r == machines.ACCEPT:
-            continue
+            states.add(q)
         else:
             states.add(q)
             if r not in [machines.ACCEPT, machines.REJECT]:
@@ -410,9 +410,9 @@ def write_dot(m, file):
         q = inputs[0][0]
         r = outputs[0][0]
         if q == machines.START and r == initial_state:
-            continue
-        if q in final_states and r == machines.ACCEPT:
-            continue
+            states.add(r)
+        elif q in final_states and r == machines.ACCEPT:
+            states.add(q)
         else:
             states.add(q)
             states.add(r)

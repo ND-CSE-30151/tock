@@ -19,9 +19,14 @@ def parse_character(s, c):
         raise ValueError("expected %s, found %s" % (c, s.c))
     s.i += 1
 
-def convert_regexp(s):
-    s = formats.dotstring(s)
+def zero_pad(n, i):
+    return str(i).zfill(len(str(n)))
+
+def convert_regexp(s, start=0):
+    s = formats.dotstring(" "*start + s)
+    s.i = start
     m = machines.Machine()
+    m.num_stores = 2
     initial, finals = parse_union(s, m)
     formats.set_initial_state(m, initial)
     for q in finals:
@@ -29,9 +34,10 @@ def convert_regexp(s):
     return m
 
 def parse_union(s, m):
+    i = s.i
     initial, finals = parse_concat(s, m)
     if s.i < len(s) and s.c == '|':
-        new_initial = initial+"u"
+        new_initial = zero_pad(len(s), i) + "a"
         m.add_transition(make_empty_transition(new_initial, initial))
 
         while s.i < len(s) and s.c == '|':
@@ -54,10 +60,11 @@ def parse_concat(s, m):
     return initial, finals
 
 def parse_star(s, m):
+    i = s.i
     initial, finals = parse_base(s, m)
     if s.i < len(s) and s.c == '*':
         parse_character(s, '*')
-        new_initial = initial+"s"
+        new_initial = zero_pad(len(s), i) + "i"
         m.add_transition(make_empty_transition(new_initial, initial))
         for qf in finals:
             m.add_transition(make_empty_transition(qf, initial))
@@ -75,12 +82,16 @@ def parse_base(s, m):
         if s.c in '*|()':
             raise ValueError("expected symbol, found %s" % s.c)
         child = s.c
-        q = "q%s" % (s.i+1)
-        r = "r%s" % (s.i+1)
+        q = zero_pad(len(s), s.i) + "s"
+        r = zero_pad(len(s), s.i) + "t"
         m.add_transition(make_transition(q, s.c, r))
         s.i += 1
         return q, [r]
     else:
-        q = "e%s" % s.i
+        assert len(s) == 0
+        q = "0"
         return q, [q]
 
+if __name__ == "__main__":
+    import sys
+    print convert_regexp(sys.argv[1])

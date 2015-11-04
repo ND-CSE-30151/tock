@@ -12,7 +12,7 @@ The documentation is contained in a series of [IPython] notebooks:
 - [Introduction](Introduction.ipynb)
 - [Deterministic finite automata](DFAs.ipynb)
 - [Nondeterministic finite automata](NFAs.ipynb)
-- [Regular expression](Regexps.ipynb)
+- [Regular expressions](Regexps.ipynb)
 - [Pushdown automata](PDAs.ipynb)
 - [Context free grammars](CFGs.ipynb)
 - [Turing machines](TMs.ipynb)

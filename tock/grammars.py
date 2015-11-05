@@ -1,11 +1,28 @@
 import machines
 import formats
+import lexer
 
 def zero_pad(n, i):
     return str(i).zfill(len(str(n)))
 
-def convert_grammar(start, rules):
-    """`rules` should be of the form [(a, [b, c]), ...]"""
+def convert_grammar(rules):
+    """Argument `rules` is a file-like object or sequence of strings.
+       Each is of the form lhs -> rhs, where lhs is a nonterminal and
+       rhs is a space-separated sequence of terminals or nonterminals.
+       The lhs of the first rule is taken to be the start symbol."""
+
+    parsed_rules = []
+    for rule in rules:
+        tokens = lexer.lexer(rule)
+        lhs = tokens[0]
+        if tokens[1] != '->':
+            raise ValueError("expected ->")
+        rhs = tokens[2:]
+        if rhs == ['&']:
+            rhs = []
+        parsed_rules.append((lhs, rhs))
+    rules = parsed_rules
+    start = rules[0][0]
 
     m = machines.Machine()
     m.num_stores = 3
@@ -37,21 +54,21 @@ def convert_grammar(start, rules):
                                     machines.Store(),
                                     machines.Store([lhs])), 
                                    (machines.Store(["loop"]),
-                                    machines.Store([]),))
+                                    machines.Store([])))
         else:
             q = "loop"
-            for si, r in enumerate(rhs):
-                if si < len(rhs)-1:
+            for si, r in reversed(list(enumerate(rhs))):
+                if si > 0:
                     q1 = "%s.%s" % (zero_pad(len(rules)+1, ri+1), 
-                                    zero_pad(len(rhs)+1, si+1))
+                                    zero_pad(len(rhs)+1, si))
                 else:
                     q1 = "loop"
                 formats.add_transition(m, 
                                        (machines.Store([q]),
                                         machines.Store(),
-                                        machines.Store([lhs] if si==0 else [])), 
+                                        machines.Store([lhs] if si==len(rhs)-1 else [])), 
                                        (machines.Store([q1]),
-                                        machines.Store([r]),))
+                                        machines.Store([r])))
                 q = q1
 
     formats.add_transition(m, 
@@ -59,14 +76,15 @@ def convert_grammar(start, rules):
                             machines.Store(),
                             machines.Store(["$"])), 
                            (machines.Store(["accept"]),
-                            machines.Store(),))
+                            machines.Store()))
     formats.add_final_state(m, "accept")
 
+    for a in symbols - nonterminals:
+        formats.add_transition(m,
+                               (machines.Store(["loop"]),
+                                machines.Store([a]),
+                                machines.Store([a])),
+                               (machines.Store(["loop"]),
+                                machines.Store()))
+                                
     return m
-
-if __name__ == "__main__":
-    print convert_grammar("S", [("S", ["a", "T", "b"]),
-                                ("S", ["b"]),
-                                ("T", ["T", "a"]),
-                                ("T", [])])
-    

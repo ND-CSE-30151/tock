@@ -173,9 +173,6 @@ class Machine(object):
                 if rule.match(tconfig):
                     nconfig = rule.apply(tconfig)
 
-                    if nconfig[0].values[0] == ACCEPT:
-                        accept = True
-                        # to do: optionally break (to avoid looping)
 
                     if nconfig in visited:
                         nconfig = visited[nconfig] # normalize id
@@ -184,6 +181,8 @@ class Machine(object):
                         visited[nconfig] = nconfig
                         if trace: print "add:", nconfig
                     run.add(tconfig, nconfig)
+                    #if nconfig[0].values[0] == ACCEPT:
+                    #    return run
                     agenda.append(nconfig)
 
         return run

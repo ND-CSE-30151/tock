@@ -9,11 +9,13 @@ or tapes.
 
 The documentation is contained in a series of [IPython] notebooks:
 
-- Introduction.ipynb
-- DFAs.ipynb
-- NFAs.ipynb
-- PDAs.ipynb
-- TMs.ipynb
+- [Introduction](Introduction.ipynb)
+- [Deterministic finite automata](DFAs.ipynb)
+- [Nondeterministic finite automata](NFAs.ipynb)
+- [Regular expressions](Regexps.ipynb)
+- [Pushdown automata](PDAs.ipynb)
+- [Context free grammars](CFGs.ipynb)
+- [Turing machines](TMs.ipynb)
 
 Installation
 ------------

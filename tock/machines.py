@@ -1,5 +1,6 @@
 import collections
 import StringIO
+import lexer
 
 try:
     import IPython.display
@@ -153,13 +154,13 @@ class Machine(object):
         IPython.display.display(self.display_graph())
 
     def run(self, input_string, trace=False):
-
         # Breadth-first search
         agenda = collections.deque()
         visited = {}
 
         # Initial configuration
-        config = (Store([START]), Store(input_string, 0)) + tuple(Store() for s in xrange(2, self.num_stores))
+        input_tokens = lexer.lexer(input_string)
+        config = (Store([START]), Store(input_tokens, 0)) + tuple(Store() for s in xrange(2, self.num_stores))
         agenda.append(config)
         run = Run(self, config)
 

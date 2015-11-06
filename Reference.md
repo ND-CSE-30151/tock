@@ -21,13 +21,14 @@ if the first store matches `a` (relative to the current head
 position), replace it with `x`; if the second store matches `b`,
 replace it with `y`; and so on.
 
-In more detail, each element is one of:
+In more detail, each element is either empty (`&`) or a whitespace-separated
+string of symbols, optionally preceded or followed by a caret (`^`).
 
-- Empty (`&`), in which case the head is understood to be immediately
-  to the _right_;
-- A single symbol, which is the symbol under the head;
-- A symbol preceded or followed by `^`, which indicates that the head
-  is to the left or to the right of the symbol.
+- If the caret precedes the string, the head is one before the first symbol;
+- If the caret follows the string, the head is one after the last symbol;
+- If the caret is absent, the head is over the _first_ symbol.
+
+Note that `^ &` is different from `& ^`, and `&` is the same as `& ^`.
 
 Despite the peculiarities of this notation, it can describe all the
 possible moves that typical automata make:
@@ -56,14 +57,10 @@ The second store is always the input. It is initialized with the input
 string, followed by an infinite number of blank symbols (`_`). In FAs
 and PDAs you should not use `_` as an alphabet symbol.
 
-There are some additional restrictions on states and symbols:
+States and symbols can be:
 
-- The empty string (`&`) can't be used as a state or symbol.
-- States and symbols should not contain the following special characters:
-```
-    { } ( ) , ^
-```
-- States should not start with `>` or `@`.
+- A sequence of one or more letters, numbers, `_`, or `.`
+- One of the following: `|- -| # $`
 
 Tables
 ======

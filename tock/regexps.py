@@ -11,18 +11,12 @@ def make_empty_transition(q, r):
     return machines.Transition((machines.Store([q]), machines.Store()),
                                (machines.Store([r]), machines.Store()))
 
-def parse_character(s, c):
-    if s.pos == len(s):
-        raise ValueError("expected %s, found end of string" % c)
-    elif s.cur != c:
-        raise ValueError("expected %s, found %s" % (c, s.c))
-    s.pos += 1
-
 def zero_pad(n, i):
     return str(i).zfill(len(str(n)))
 
-def convert_regexp(s, start=0):
+def convert_regexp(s, offset=0):
     s = lexer.lexer(s)
+    s.offset = offset
     m = machines.Machine()
     m.num_stores = 2
     initial, finals = parse_union(s, m)
@@ -43,7 +37,7 @@ def parse_union(s, m):
         m.add_transition(make_empty_transition(new_initial, initial))
 
         while s.pos < len(s) and s.cur == '|':
-            parse_character(s, '|')
+            lexer.parse_character(s, '|')
             initial1, finals1 = parse_concat(s, m)
             m.add_transition(make_empty_transition(new_initial, initial1))
             finals += finals1
@@ -65,7 +59,7 @@ def parse_star(s, m):
     i = s.pos
     initial, finals = parse_base(s, m)
     if s.pos < len(s) and s.cur == '*':
-        parse_character(s, '*')
+        lexer.parse_character(s, '*')
         # There can never be more than one star with the same starting index,
         # so use the starting index for the extra state. It is possible
         # for a star and union to start at the same place (a*|b) so
@@ -80,9 +74,9 @@ def parse_star(s, m):
 
 def parse_base(s, m):
     if s.pos < len(s) and s.cur == '(':
-        parse_character(s, '(')
+        lexer.parse_character(s, '(')
         initial, final = parse_union(s, m)
-        parse_character(s, ')')
+        lexer.parse_character(s, ')')
         return initial, final
     elif s.pos == len(s) or s.cur in ')|':
         raise ValueError("expected symbol, found nothing (use & for the empty string)")
@@ -91,17 +85,13 @@ def parse_base(s, m):
         q = zero_pad(len(s), s.pos)
         return q, [q]"""
     elif s.pos < len(s) and s.cur == '&':
-        q = zero_pad(len(s), s.pos)
-        parse_character(s, '&')
+        q = zero_pad(len(s)+s.offset, s.pos+s.offset)
+        lexer.parse_character(s, '&')
         return q, [q]
     elif s.pos < len(s):
-        if s.cur in '*|()':
-            raise ValueError("expected symbol, found %s" % s.cur)
-        child = s.cur
-        q = zero_pad(len(s), s.pos) + "s"
-        r = zero_pad(len(s), s.pos) + "t"
-        m.add_transition(make_transition(q, s.cur, r))
-        s.pos += 1
+        q = zero_pad(len(s)+s.offset, s.pos+s.offset) + "s"
+        r = zero_pad(len(s)+s.offset, s.pos+s.offset) + "t"
+        m.add_transition(make_transition(q, lexer.parse_symbol(s), r))
         return q, [r]
     else:
         assert False

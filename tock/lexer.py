@@ -18,27 +18,62 @@ class Tokens(object):
     def cur(self):
         return self.tokens[self.pos]
 
-# Comments are introduced by //
-comment_re = re.compile(r"\s*//.*")
+whitespace_re = re.compile(r"\s*(//.*)?")
 
 # Symbols can be |- -| # $ or any string of alphanumerics or _ .
-symbol_re = re.compile(r"\s*(\|-|-\||#|$|[A-Za-z0-9_.]+)")
+symbol_re = re.compile(r"\|-|-\||#|\$|[A-Za-z0-9_.]+")
+class Symbol(str):
+    def __repr__(self):
+        return "Symbol(%s)" % self
 
 # Operators
-operator_re = re.compile(r"\s*(->|[&^(){},@>|*])")
+operator_re = re.compile(r"->|[&^(){},@>|*]")
+class Operator(str):
+    def __repr__(self):
+        return "Operator(%s)" % self
 
 def lexer(s):
     i = 0
     tokens = []
+    m = whitespace_re.match(s, i)
+    if m:
+        i = m.end()
     while i < len(s):
-        m = comment_re.match(s, i)
+        m = symbol_re.match(s, i)
         if m:
-            i = m.end(0)
-            continue
-        m = symbol_re.match(s, i) or operator_re.match(s, i)
-        if not m:
-            raise ValueError("couldn't understand input: %s" % s[i:])
-        tokens.append(m.group(1))
-        i = m.end(0)
+            token = Symbol(m.group())
+        else:
+            m = operator_re.match(s, i)
+            if m:
+                token = Operator(m.group())
+            else:
+                raise ValueError("couldn't understand input: %s" % s[i:])
+        tokens.append(token)
+        i = m.end()
+        m = whitespace_re.match(s, i)
+        if m:
+            i = m.end()
     return Tokens(tokens)
 
+def parse_character(s, c):
+    if s.pos == len(s):
+        raise ValueError("expected %s, found end of string" % c)
+    elif s.cur != c:
+        raise ValueError("expected %s, found %s" % (c, s.c))
+    s.pos += 1
+
+def parse_symbol(s):
+    if not isinstance(s.cur, Symbol):
+        raise ValueError("expected symbol, found %s" % (s.cur))
+    else:
+        x = s.cur
+        s.pos += 1
+        return x
+
+def parse_end(s):
+    if s.pos < len(s):
+        raise ValueError("unexpected %s" % (s.cur))
+
+if __name__ == "__main__":
+    import sys
+    print list(lexer(sys.argv[1]))

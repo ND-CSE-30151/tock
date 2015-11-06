@@ -14,12 +14,15 @@ def convert_grammar(rules):
     parsed_rules = []
     for rule in rules:
         tokens = lexer.lexer(rule)
-        lhs = tokens[0]
-        if tokens[1] != '->':
-            raise ValueError("expected ->")
-        rhs = tokens[2:]
-        if rhs == ['&']:
-            rhs = []
+        lhs = lexer.parse_symbol(tokens)
+        lexer.parse_character(tokens, '->')
+        rhs = []
+        if tokens.cur == '&':
+            lexer.parse_character(tokens, '&')
+            lexer.parse_end(tokens)
+        else:
+            while tokens.pos < len(tokens):
+                rhs.append(lexer.parse_symbol(tokens))
         parsed_rules.append((lhs, rhs))
     rules = parsed_rules
     start = rules[0][0]

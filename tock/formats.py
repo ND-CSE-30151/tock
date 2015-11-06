@@ -2,64 +2,31 @@ import collections
 import csv
 
 import machines
+import lexer
 
 __all__ = ['read_csv', 'read_tgf']
 
 ### Parser for transitions and pieces of transitions
 
-class dotstring(str):
-    def __init__(self, *args, **kwargs):
-        str.__init__(self, *args, **kwargs)
-        self.i = 0
-
-    @property
-    def c(self):
-        return self[self.i]
-
-def parse_whitespace(s):
-    while s.i < len(s) and s.c.isspace():
-        s.i += 1
-
-# All the following methods are guaranteed to skip leading whitespace,
-# and may or may not skip trailing whitespace.
-
-def parse_character(s, c):
-    n = len(c)
-    parse_whitespace(s)
-    if s.i+n > len(s):
-        raise ValueError("expected %s, found end of string" % c)
-    elif s[s.i:s.i+n] == c:
-        s.i += n
+def parse_string(s):
+    if s.cur == '&':
+        s.pos += 1
+        return []
     else:
-        raise ValueError("expected %s, found %s" % (c, s.c))
-
-def parse_end(s):
-    parse_whitespace(s)
-    if s.i < len(s):
-        raise ValueError("unexpected %s" % (s.c))
-
-def parse_symbol(s):
-    parse_whitespace(s)
-    i0 = s.i
-    while s.i < len(s) and s.c not in ",)}^" and not s.c.isspace():
-        s.i += 1
-    return s[i0:s.i]
+        result = []
+        while s.pos < len(s) and isinstance(s.cur, lexer.Symbol):
+            result.append(s.cur)
+            s.pos += 1
+        return result
 
 def parse_store(s):
-    """Bugs: only handles single symbols."""
     position = None
-    parse_whitespace(s)
-    if s.c == '^':
-        s.i += 1
+    if s.cur == '^':
+        s.pos += 1
         position = -1
-    x = parse_symbol(s)
-    if x == '&':
-        x = []
-    else:
-        x = [x]
-    parse_whitespace(s)
-    if s.i < len(s) and s.c == '^':
-        s.i += 1
+    x = parse_string(s)
+    if s.pos < len(s) and s.cur == '^':
+        s.pos += 1
         if position is not None:
             raise ValueError("head is only allowed to be in one position")
         position = len(x)
@@ -70,50 +37,46 @@ def parse_store(s):
 def parse_multiple(s, f, values=None):
     if values is None: values = []
     values.append(f(s))
-    parse_whitespace(s)
-    if s.i < len(s) and s.c == ',':
-        s.i += 1
+    if s.pos < len(s) and s.cur == ',':
+        s.pos += 1
         return parse_multiple(s, f, values)
     else:
         return values
 
 def parse_tuple(s):
-    parse_character(s, '(')
+    lexer.parse_character(s, '(')
     value = tuple(parse_multiple(s, parse_store))
-    parse_character(s, ')')
+    lexer.parse_character(s, ')')
     return value
 
 def parse_set(s):
-    parse_character(s, '{')
-    parse_whitespace(s)
-    if s.c == '(':
+    lexer.parse_character(s, '{')
+    if s.cur == '(':
         value = set(parse_multiple(s, parse_tuple))
     else:
         value = {(x,) for x in parse_multiple(s, parse_store)}
-    parse_character(s, '}')
+    lexer.parse_character(s, '}')
     return value
 
 def string_to_state(s):
     """s is a string possibly preceded by > or @."""
-    s = dotstring(s)
-    parse_whitespace(s)
+    s = lexer.lexer(s)
     flags = set()
     while True:
-        if s.c in '>@':
-            flags.add(s.c)
-            s.i += 1
-            parse_whitespace(s)
+        if s.cur in '>@':
+            flags.add(s.cur)
+            s.pos += 1
         else:
             break
-    x = parse_symbol(s)
-    parse_end(s)
+    x = lexer.parse_symbol(s)
+    lexer.parse_end(s)
     return x, flags
 
 def string_to_config(s):
     """s is a comma-separated list of stores."""
-    s = dotstring(s)
+    s = lexer.lexer(s)
     x = parse_multiple(s, parse_store)
-    parse_end(s)
+    lexer.parse_end(s)
     return tuple(x)
 
 def string_to_configs(s):
@@ -125,32 +88,30 @@ def string_to_configs(s):
        In any case, returns a set of tuples of stores.
     """
 
-    s = dotstring(s)
+    s = lexer.lexer(s)
     value = None
-    parse_whitespace(s)
-    if s.i == len(s):
+    if s.pos == len(s):
         value = set()
-    elif s.c == '{':
+    elif s.cur == '{':
         value = parse_set(s)
-    elif s.c == '(':
+    elif s.cur == '(':
         value = {parse_tuple(s)}
     else:
         value = {tuple(parse_multiple(s, parse_store))}
-    parse_end(s)
+    lexer.parse_end(s)
 
     return value
 
 def string_to_transition(s):
     """s is a string of the form a,b or a,b->c,d"""
-    s = dotstring(s)
+    s = lexer.lexer(s)
     lhs = parse_multiple(s, parse_store)
-    parse_whitespace(s)
-    if s.i+2 < len(s) and s[s.i:s.i+2] == "->":
-        s.i += 2
+    if s.pos+2 < len(s) and s[s.pos:s.pos+2] == "->":
+        s.pos += 2
         rhs = parse_multiple(s, parse_store)
     else:
         rhs = ()
-    parse_end(s)
+    lexer.parse_end(s)
     return tuple(lhs), tuple(rhs)
 
 def configs_to_string(configs):
@@ -277,7 +238,8 @@ def read_csv(infile):
         try:
             lhs.append(string_to_config(cell))
         except Exception as e:
-            raise ValueError("cell %s1: %s" % (chr(ord('A')+j), e.message))
+            e.message = "cell %s1: %s" % (chr(ord('A')+j), e.message)
+            raise
         j += 1
     m = machines.Machine()
     n = single_value(map(len, lhs))+1
@@ -290,7 +252,8 @@ def read_csv(infile):
         try:
             q, flags = string_to_state(row[0])
         except Exception as e:
-            raise ValueError("cell A%d: %s" % (i+1, e.message))
+            e.message = "cell A%d: %s" % (i+1, e.message)
+            raise
         if '>' in flags:
             set_initial_state(m, q, n)
         if '@' in flags:
@@ -302,7 +265,8 @@ def read_csv(infile):
             try:
                 rhs.append(string_to_configs(cell))
             except Exception as e:
-                raise ValueError("cell %s%d: %s" % (chr(ord('A')+j), i+1, e.message))
+                e.message = "cell %s%d: %s" % (chr(ord('A')+j), i+1, e.message)
+                raise
             j += 1
         for l, rs in zip(lhs, rhs):
             l = (machines.Store([q]),) + l
@@ -438,4 +402,3 @@ def write_dot(m, file):
             labels.append("<tr><td>%s</td></tr>" % ascii_to_html(label))
         file.write('  %s -> %s[label=<<table border="0" cellpadding="1">%s</table>>];\n' % (id_to_state[q], id_to_state[r], ''.join(labels)))
     file.write("}\n")
-

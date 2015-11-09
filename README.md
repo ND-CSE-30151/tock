@@ -32,7 +32,14 @@ Then, run `ipython notebook` in the Tock directory. A web browser
 should open, showing you the contents of the directory. Click on one
 of the `.ipynb` files to view it.
 
-[IPython]: http://ipython.org
 [Miniconda]: http://conda.pydata.org/miniconda.html
+[IPython]: http://ipython.org
 [Graphviz]: http://www.graphviz.org
 [Viz.js]: http://github.com/mdaines/viz.js/
+
+Copying
+-------
+
+This is open-source software under the MIT License. See `LICENSE.md`
+for more information.
+

@@ -48,7 +48,10 @@ class Store(object):
         self.values[i] = x
 
     def __repr__(self):
-        return "Store(%s, %s)" % (list(self.values), self.position)
+        if self.position == 0:
+            return "Store(%s)" % (repr(" ".join(self.values)),)
+        else:
+            return "Store(%s, %s)" % (repr(" ".join(self.values)), self.position)
     def __str__(self):
         if len(self) == 0:
             if self.position == 0:
@@ -111,7 +114,7 @@ class Transition(object):
             store.position = max(0, store.position)
 
             # pad or clip the store
-            while len(store) <= store.position:
+            while len(store) <= store.position-1:
                 store.values.append(BLANK)
             while len(store)-1 > store.position and store[-1] == BLANK:
                 store.values[-1:] = []
@@ -156,7 +159,7 @@ class Machine(object):
     def run(self, input_string, trace=False):
         # Breadth-first search
         agenda = collections.deque()
-        visited = {}
+        chart = set()
 
         # Initial configuration
         input_tokens = lexer.lexer(input_string)
@@ -174,12 +177,10 @@ class Machine(object):
                 if rule.match(tconfig):
                     nconfig = rule.apply(tconfig)
 
-
-                    if nconfig in visited:
-                        nconfig = visited[nconfig] # normalize id
+                    if nconfig in chart:
                         if trace: print "merge:", nconfig
                     else:
-                        visited[nconfig] = nconfig
+                        chart.add(nconfig)
                         if trace: print "add:", nconfig
                     run.add(tconfig, nconfig)
                     #if nconfig[0].values[0] == ACCEPT:
@@ -329,18 +330,24 @@ class Run(object):
 
         one_way_input = self.machine.has_input(1)
 
+        # assign an id to each config
+        config_id = {}
+        for config in self.configs:
+            if config not in config_id:
+                config_id[config] = len(config_id)
+
         for config in self.configs:
             if one_way_input:
-                result.append('  %s[label=<%s>];' % (id(config), label_no_input(config)))
+                result.append('  %s[label=<%s>];' % (config_id[config], label_no_input(config)))
             else:
-                result.append('  %s[label=<%s>];' % (id(config), label(config)))
+                result.append('  %s[label=<%s>];' % (config_id[config], label(config)))
         for from_config, to_config in self.edges:
-            result.append("  %s -> %s;" % (id(from_config), id(to_config)))
+            result.append("  %s -> %s;" % (config_id[from_config], config_id[to_config]))
 
         if one_way_input:
             ranks = collections.defaultdict(list)
             for config in self.configs:
-                ranks[rank(config)].append(str(id(config)))
+                ranks[rank(config)].append(str(config_id[config]))
             prev_ri = None
             for ri, ((level, rank), nodes) in enumerate(sorted(ranks.iteritems())):
                 result.append('  rank%s[shape=plaintext,label=<%s>];' % (ri, formats.ascii_to_html(str(rank))))

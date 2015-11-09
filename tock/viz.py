@@ -26,7 +26,7 @@ except:
                        # increase timeout (it's a large script)
                        '  waitSeconds: 10,'
                        # location of script
-                       '  paths: {viz: "//github.com/mdaines/viz.js/releases/download/v1.2.0/viz"},'
+                       '  paths: {viz: "//github.com/mdaines/viz.js/releases/download/v1.2.1/viz"},'
                        # tells require.js what symbols to take
                        '  shim: {viz: {exports: "Viz"}}});'
                        # clear any old module in case there was an error

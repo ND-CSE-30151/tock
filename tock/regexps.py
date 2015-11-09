@@ -1,6 +1,6 @@
-import machines
-import formats
-import lexer
+from . import machines
+from . import lexer
+from . import special
 
 __all__ = ['convert_regexp']
 
@@ -20,9 +20,9 @@ def convert_regexp(s, offset=0):
     m = machines.Machine()
     m.num_stores = 2
     initial, finals = parse_union(s, m)
-    formats.set_initial_state(m, initial)
+    special.set_initial_state(m, initial)
     for q in finals:
-        formats.add_final_state(m, q)
+        special.add_final_state(m, q)
     return m
 
 def parse_union(s, m):
@@ -98,4 +98,4 @@ def parse_base(s, m):
 
 if __name__ == "__main__":
     import sys
-    print convert_regexp(sys.argv[1])
+    print(convert_regexp(sys.argv[1]))

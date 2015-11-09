@@ -1,6 +1,8 @@
 import collections
-import machines
-import lexer
+from . import machines
+from . import lexer
+
+__all__ = ['run_pda']
 
 def run_pda(m, w, trace=False):
     """Runs a nondeterministic pushdown automaton using the cubic
@@ -42,7 +44,8 @@ def run_pda(m, w, trace=False):
                  [q, i, yz => s, k, y']
     """
 
-    from machines import START, ACCEPT, REJECT, Store, Run
+    from .constants import START, ACCEPT, REJECT
+    from .machines import Store, Run
 
     agenda = collections.deque()
     goals = []
@@ -65,19 +68,19 @@ def run_pda(m, w, trace=False):
 
     def add(parent, child):
         if (parent, child) in chart:
-            if trace: print "merge: %s => %s" % (parent, child)
+            if trace: print("merge: {} => {}".format(parent, child))
         else:
             chart.add((parent, child))
-            if trace: print "add: %s => %s" % (parent, child)
+            if trace: print("add: {} => {}".format(parent, child))
             agenda.append((parent, child))
 
     while len(agenda) > 0:
         parent, child = agenda.popleft()
-        if trace: print "trigger: %s => %s" % (parent, child)
+        if trace: print("trigger: {} => {}".format(parent, child))
 
         if child[qi].values == [ACCEPT]:
             if trace:
-                print "Goal!"
+                print("goal!")
 
         # The stack shows too many items (push)
         if len(child[si]) > show_stack:

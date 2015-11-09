@@ -1,6 +1,6 @@
-import machines
-import formats
-import lexer
+from . import machines
+from . import lexer
+from . import special
 
 def zero_pad(n, i):
     return str(i).zfill(len(str(n)))
@@ -31,14 +31,14 @@ def convert_grammar(rules):
     m.num_stores = 3
 
     q1 = "%s.1" % zero_pad(len(rules)+1, 0)
-    formats.set_initial_state(m, "start")
-    formats.add_transition(m, 
+    special.set_initial_state(m, "start")
+    special.add_transition(m, 
                            (machines.Store(["start"]),
                             machines.Store(),
                             machines.Store()), 
                            (machines.Store([q1]),
                             machines.Store(["$"]),))
-    formats.add_transition(m, 
+    special.add_transition(m, 
                            (machines.Store([q1]),
                             machines.Store(),
                             machines.Store()), 
@@ -52,7 +52,7 @@ def convert_grammar(rules):
         symbols.add(lhs)
         symbols.update(rhs)
         if len(rhs) == 0:
-            formats.add_transition(m, 
+            special.add_transition(m, 
                                    (machines.Store(["loop"]),
                                     machines.Store(),
                                     machines.Store([lhs])), 
@@ -66,7 +66,7 @@ def convert_grammar(rules):
                                     zero_pad(len(rhs)+1, si))
                 else:
                     q1 = "loop"
-                formats.add_transition(m, 
+                special.add_transition(m, 
                                        (machines.Store([q]),
                                         machines.Store(),
                                         machines.Store([lhs] if si==len(rhs)-1 else [])), 
@@ -74,16 +74,16 @@ def convert_grammar(rules):
                                         machines.Store([r])))
                 q = q1
 
-    formats.add_transition(m, 
+    special.add_transition(m, 
                            (machines.Store(["loop"]),
                             machines.Store(),
                             machines.Store(["$"])), 
                            (machines.Store(["accept"]),
                             machines.Store()))
-    formats.add_final_state(m, "accept")
+    special.add_final_state(m, "accept")
 
     for a in symbols - nonterminals:
-        formats.add_transition(m,
+        special.add_transition(m,
                                (machines.Store(["loop"]),
                                 machines.Store([a]),
                                 machines.Store([a])),

@@ -23,9 +23,10 @@ Installation
 In order to view these notebooks, you'll need [IPython] and
 [GraphViz]. The easiest way to get them is:
 
-1. Install [Miniconda]. Important: Select Python 2.7, not 3.x.
-2. Install [IPython] by running `conda install jupyter`.
-3. If you don't have [GraphViz] already, don't worry; Tock downloads
+1. Install [Miniconda]. Either Python 2.7 or 3.4 is fine.
+2. Run `conda install six`.
+3. Install [IPython] by running `conda install jupyter`.
+4. If you don't have [GraphViz] already, don't worry; Tock downloads
    and uses [Viz.js] instead.
 
 Then, run `ipython notebook` in the Tock directory. A web browser

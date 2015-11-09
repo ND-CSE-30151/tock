@@ -1,21 +1,12 @@
 import collections
-import StringIO
-import lexer
+from . import lexer
+from .constants import START, ACCEPT, REJECT, BLANK
 
 try:
     import IPython.display
-    import viz
+    from . import viz
 except ImportError:
     pass
-
-import formats
-
-__all__ = []
-
-START = 'START'
-ACCEPT = 'ACCEPT'
-REJECT = 'REJECT'
-BLANK = '_'
 
 class Store(object):
     """A (configuration of a) store, which could be a tape, stack, or
@@ -37,8 +28,8 @@ class Store(object):
     def __hash__(self):
         return hash((tuple(self.values), self.position))
 
-    def __cmp__(self, other):
-        return cmp(self.values, other.values)
+    def __lt__(self, other):
+        return self.values < other.values
 
     def __len__(self):
         return len(self.values)
@@ -143,18 +134,8 @@ class Machine(object):
     def __str__(self):
         return "\n".join(str(t) for t in self.transitions)
 
-    def display_graph(self):
-        dot = StringIO.StringIO()
-        formats.write_dot(self, dot)
-        return viz.viz(dot.getvalue())
-
-    def display_table(self):
-        out = StringIO.StringIO()
-        formats.write_html(self, out)
-        return IPython.display.HTML(out.getvalue())
-
-    def _ipython_display_(self):
-        IPython.display.display(self.display_graph())
+    """def _ipython_display_(self):
+        IPython.display.display(self.display_graph())"""
 
     def run(self, input_string, trace=False):
         # Breadth-first search
@@ -163,25 +144,25 @@ class Machine(object):
 
         # Initial configuration
         input_tokens = lexer.lexer(input_string)
-        config = (Store([START]), Store(input_tokens, 0)) + tuple(Store() for s in xrange(2, self.num_stores))
+        config = (Store([START]), Store(input_tokens, 0)) + tuple(Store() for s in range(2, self.num_stores))
         agenda.append(config)
         run = Run(self, config)
 
         while len(agenda) > 0:
             tconfig = agenda.popleft()
 
-            if trace: print "trigger:", tconfig
+            if trace: print("trigger: {}".format(tconfig))
 
             for rule in self.transitions:
-                if trace: print "rule:", rule
+                if trace: print("rule: {}".format(rule))
                 if rule.match(tconfig):
                     nconfig = rule.apply(tconfig)
 
                     if nconfig in chart:
-                        if trace: print "merge:", nconfig
+                        if trace: print("merge: {}".format(nconfig))
                     else:
                         chart.add(nconfig)
-                        if trace: print "add:", nconfig
+                        if trace: print("add: {}".format(nconfig))
                     run.add(tconfig, nconfig)
                     #if nconfig[0].values[0] == ACCEPT:
                     #    return run
@@ -250,7 +231,7 @@ class Machine(object):
         It should have one input and any number of cells."""
         cells = set()
         inputs = set()
-        for s in xrange(self.num_stores):
+        for s in range(self.num_stores):
             if self.has_cell(s):
                 cells.add(s)
             if self.has_input(s):
@@ -268,7 +249,7 @@ class Machine(object):
         cells = set()
         inputs = set()
         stacks = set()
-        for s in xrange(self.num_stores):
+        for s in range(self.num_stores):
             if self.has_cell(s):
                 cells.add(s)
             if self.has_input(s):
@@ -297,6 +278,13 @@ class Machine(object):
                     return False
         return True
 
+def ascii_to_html(s):
+    s = str(s)
+    s = s.replace("&", "&epsilon;")
+    s = s.replace("->", "&rarr;")
+    s = s.replace(">", "&gt;")
+    return s
+
 class Run(object):
     def __init__(self, machine, start):
         self.machine = machine
@@ -313,10 +301,10 @@ class Run(object):
     def _ipython_display_(self):
         def label(config): 
             # Label nodes by config
-            return formats.ascii_to_html(','.join(map(str, (config[0][0],) + config[1:])))
+            return ascii_to_html(','.join(map(str, (config[0][0],) + config[1:])))
         def label_no_input(config): 
             # Label nodes by config sans input (second store)
-            return formats.ascii_to_html(','.join(map(str, (config[0][0],) + config[2:])))
+            return ascii_to_html(','.join(map(str, (config[0][0],) + config[2:])))
         def rank(config): 
             # Rank nodes by input (second store) position
             l = len([x for x in config[1] if x != BLANK])
@@ -349,8 +337,8 @@ class Run(object):
             for config in self.configs:
                 ranks[rank(config)].append(str(config_id[config]))
             prev_ri = None
-            for ri, ((level, rank), nodes) in enumerate(sorted(ranks.iteritems())):
-                result.append('  rank%s[shape=plaintext,label=<%s>];' % (ri, formats.ascii_to_html(str(rank))))
+            for ri, ((level, rank), nodes) in enumerate(sorted(ranks.items())):
+                result.append('  rank%s[shape=plaintext,label=<%s>];' % (ri, ascii_to_html(str(rank))))
                 result.append("{ rank=same; rank%s %s }" % (ri, " ".join(nodes)))
                 if prev_ri is not None:
                     result.append('  rank%s -> rank%s[style=invis];' % (prev_ri, ri))

@@ -1,3 +1,6 @@
+import sys
+import six
+
 ### First try to use external dot
 
 try:
@@ -5,6 +8,8 @@ try:
     from IPython.display import SVG
 
     def viz(dot):
+        if isinstance(dot, six.text_type):
+            dot = dot.encode('utf8')
         process = subprocess.Popen(['dot', '-Tsvg'], 
                                    stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE, 
@@ -18,7 +23,8 @@ try:
 
 ### But if it doesn't work, download viz.js
 
-except:
+except Exception as e:
+    #sys.stderr.write("couldn't run dot ({}); trying viz.js instead".format(e))
 
     from IPython.display import display, Javascript
 

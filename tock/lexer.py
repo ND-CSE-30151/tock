@@ -76,4 +76,4 @@ def parse_end(s):
 
 if __name__ == "__main__":
     import sys
-    print list(lexer(sys.argv[1]))
+    print(list(lexer(sys.argv[1])))

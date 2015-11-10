@@ -1,7 +1,7 @@
 import collections
 import six
 from . import special
-from .constants import START, ACCEPT, REJECT
+from .constants import *
 
 try:
     import IPython.display

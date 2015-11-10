@@ -4,7 +4,7 @@ import six
 from . import machines
 from . import lexer
 from . import special
-from .constants import START, ACCEPT, REJECT, BLANK
+from .constants import *
 
 __all__ = ['read_csv', 'read_tgf']
 

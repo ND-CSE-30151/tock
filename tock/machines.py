@@ -1,25 +1,18 @@
 import collections
 from . import lexer
-from .constants import START, ACCEPT, REJECT, BLANK
-
-try:
-    import IPython.display
-    from . import viz
-except ImportError:
-    pass
+from .constants import *
 
 class Store(object):
     """A (configuration of a) store, which could be a tape, stack, or
        state. It consists of a string together with a head
        position."""
 
-    def __init__(self, values=None, position=0, single=False):
+    def __init__(self, values=None, position=0):
         self.values = list(values) if values is not None else []
         self.position = position
-        self.single = single
 
     def copy(self):
-        return Store(self.values, self.position, single=self.single)
+        return Store(self.values, self.position)
 
     def __eq__(self, other):
         return type(other) == Store and self.values == other.values and self.position == other.position
@@ -48,7 +41,7 @@ class Store(object):
             if self.position == 0:
                 return "&"
             elif self.position == -1:
-                return "^&"
+                return "^ &"
             else:
                 raise ValueError()
 
@@ -134,8 +127,10 @@ class Machine(object):
     def __str__(self):
         return "\n".join(str(t) for t in self.transitions)
 
-    """def _ipython_display_(self):
-        IPython.display.display(self.display_graph())"""
+    def _ipython_display_(self):
+        from IPython.display import display
+        from .writers import display_graph
+        display(display_graph(self))
 
     def run(self, input_string, trace=False):
         # Breadth-first search
@@ -346,5 +341,7 @@ class Run(object):
 
         result.append("}")
 
-        IPython.display.display(viz.viz("\n".join(result)))
+        from IPython.display import display
+        from .viz import viz
+        display(viz("\n".join(result)))
         

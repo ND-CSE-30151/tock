@@ -1,6 +1,7 @@
 import collections
 from . import machines
 from . import lexer
+from .constants import *
 
 __all__ = ['run_pda']
 
@@ -44,7 +45,6 @@ def run_pda(m, w, trace=False):
                  [q, i, yz => s, k, y']
     """
 
-    from .constants import START, ACCEPT, REJECT
     from .machines import Store, Run
 
     agenda = collections.deque()

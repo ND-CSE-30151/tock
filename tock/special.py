@@ -1,4 +1,4 @@
-from .constants import START, ACCEPT, REJECT, BLANK
+from .constants import *
 from . import machines
 
 """These convenience functions get/set the fake transition from START

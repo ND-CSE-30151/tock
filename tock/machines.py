@@ -135,9 +135,43 @@ class Transition(object):
                              ",".join(map(str, self.rhs)))
 
 class Machine(object):
-    def __init__(self):
+    def __init__(self, num_stores, input=None):
         self.transitions = []
-        self.num_stores = None
+        self.num_stores = num_stores
+        self.input = input
+
+        self.start_config = None
+        self.accept_configs = set()
+        self.reject_configs = set()
+
+    def set_start_config(self, config):
+        # If input is missing, supply &
+        if self.input is not None and len(config) == self.num_stores-1:
+            config = list(config)
+            config[self.input:self.input] = [[]]
+        # since there is no Configuration object, make a fake Transition
+        t = Transition([[]]*self.num_stores, config)
+        self.start_config = t.rhs
+
+    def add_accept_config(self, config):
+        # If input is missing, supply _. This is meant for machines
+        # with one-way inputs.
+        if self.input is not None and len(config) == self.num_stores-1:
+            config = list(config)
+            config[self.input:self.input] = [[BLANK]]
+        # since there is no Configuration object, make a fake Transition
+        t = Transition(config, [[]]*self.num_stores)
+        self.accept_configs.add(t.lhs)
+
+    def add_reject_config(self, config):
+        # If input is missing, supply _. This is meant for machines
+        # with one-way inputs.
+        if self.input is not None and len(config) == self.num_stores-1:
+            config = list(config)
+            config[self.input:self.input] = [[BLANK]]
+        # since there is no Configuration object, make a fake Transition
+        t = Transition(config, [[]]*self.num_stores)
+        self.reject_configs.add(t.lhs)
 
     def add_transition(self, *args):
         if len(args) == 1 and isinstance(args[0], Transition):
@@ -145,17 +179,30 @@ class Machine(object):
         else:
             t = Transition(*args)
 
-        if self.num_stores is None:
-            self.num_stores = len(t.lhs)
-        else:
-            if len(t.lhs) != self.num_stores:
-                raise TypeError("wrong number of conditions")
-            if len(t.rhs) != self.num_stores:
-                raise TypeError("wrong number of actions")
+        # If input is missing on the rhs, fill in &
+        if self.input is not None and len(t.rhs) == self.num_stores-1:
+            t.rhs = list(t.rhs)
+            t.rhs[self.input:self.input] = [Store()]
+            t.rhs = tuple(t.rhs)
+
+        if len(t.lhs) != self.num_stores:
+            raise TypeError("wrong number of stores on left-hand side")
+        if len(t.rhs) != self.num_stores:
+            raise TypeError("wrong number of stores on right-hand side")
+
         self.transitions.append(t)
 
+    def get_transitions(self):
+        one_way_input = self.has_input(self.input)
+        for t in self.transitions:
+            if one_way_input:
+                rhs = list(t.rhs)
+                del rhs[self.input]
+                t = Transition(t.lhs, rhs)
+            yield t
+
     def __str__(self):
-        return "\n".join(str(t) for t in self.transitions)
+        return "\n".join(str(t) for t in self.get_transitions())
 
     def _ipython_display_(self):
         from IPython.display import display
@@ -169,9 +216,12 @@ class Machine(object):
 
         # Initial configuration
         input_tokens = syntax.lexer(input_string)
-        config = (Store([START]), Store(input_tokens, 0)) + tuple(Store() for s in range(2, self.num_stores))
+        config = list(self.start_config)
+        config[self.input] = Store(input_tokens)
+        config = tuple(config)
+                  
         agenda.append(config)
-        run = Run(self, config)
+        run = Run(self)
 
         while len(agenda) > 0:
             tconfig = agenda.popleft()
@@ -189,8 +239,6 @@ class Machine(object):
                         chart.add(nconfig)
                         if trace: print("add: {}".format(nconfig))
                     run.add(tconfig, nconfig)
-                    #if nconfig[0].values[0] == ACCEPT:
-                    #    return run
                     agenda.append(nconfig)
 
         return run
@@ -311,12 +359,10 @@ def ascii_to_html(s):
     return s
 
 class Run(object):
-    def __init__(self, machine, start):
+    def __init__(self, machine):
         self.machine = machine
         self.configs = set()
         self.edges = set()
-        self.start = start
-        self.configs.add(start)
 
     def add(self, from_config, to_config):
         self.configs.add(from_config)
@@ -331,8 +377,8 @@ class Run(object):
             # Label nodes by config sans input (second store)
             return ascii_to_html(','.join(map(str, (config[0][0],) + config[2:])))
         def rank(config): 
-            # Rank nodes by input (second store) position
-            l = len([x for x in config[1] if x != BLANK])
+            # Rank nodes by input position
+            l = len([x for x in config[self.machine.input] if x != BLANK])
             return (-l, config[1])
 
         result = []
@@ -341,7 +387,7 @@ class Run(object):
         result.append('  node [fontname=Courier,fontsize=10,shape=box,style=rounded,height=0,width=0,margin="0.055,0.042"];')
         result.append("  edge [arrowhead=vee,arrowsize=0.5];")
 
-        one_way_input = self.machine.has_input(1)
+        one_way_input = self.machine.has_input(self.machine.input)
 
         # assign an id to each config
         config_id = {}

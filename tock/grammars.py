@@ -1,6 +1,5 @@
 from . import machines
 from . import syntax
-from . import special
 
 def zero_pad(n, i):
     return str(i).zfill(len(str(n)))
@@ -27,11 +26,10 @@ def convert_grammar(rules):
     rules = parsed_rules
     start = rules[0][0]
 
-    m = machines.Machine()
-    m.num_stores = 3
+    m = machines.Machine(3, input=1)
 
     q1 = "%s.1" % zero_pad(len(rules)+1, 0)
-    special.set_initial_state(m, "start")
+    m.set_start_config(("start", []))
     m.add_transition(("start", [], []), (q1,     [], "$"))
     m.add_transition((q1,      [], []), ("loop", [], start))
 
@@ -58,7 +56,7 @@ def convert_grammar(rules):
                 q = q1
 
     m.add_transition(("loop", [], "$"), ("accept", [], []))
-    special.add_final_state(m, "accept")
+    m.add_final_config(["accept", []])
 
     for a in symbols - nonterminals:
         m.add_transition(("loop", a, a), ("loop", [], []))

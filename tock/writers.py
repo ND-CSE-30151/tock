@@ -1,9 +1,6 @@
 import collections
 import six
 
-from . import special
-from .syntax import START, ACCEPT, REJECT, BLANK
-
 try:
     import IPython.display
     from . import viz
@@ -48,28 +45,22 @@ def write_html(m, file):
     """Writes an automaton's transition matrix as an HTML table."""
     file.write('<table style="font-family: Courier, monospace;">\n')
     states = set()
-    initial_state = special.get_initial_state(m)
-    final_states = special.get_final_states(m)
+    initial_state = m.start_config[0][0]
+    final_states = [config[0][0] for config in m.accept_configs]
     conditions = set()
     transitions = collections.defaultdict(list)
 
-    for lhs, rhs in special.get_transitions(m):
+    for t in m.get_transitions():
+        lhs, rhs = t.lhs, t.rhs
         if len(lhs[0]) != 1: 
             raise ValueError("can't convert to table")
         q = lhs[0][0]
         r = rhs[0][0]
         condition = lhs[1:]
 
-        if q == START and r == initial_state:
-            states.add(r)
-        elif q in final_states and r == ACCEPT:
-            states.add(q)
-        else:
-            states.add(q)
-            if r not in [ACCEPT, REJECT]:
-                states.add(r)
-            conditions.add(condition)
-            transitions[q,condition].append(rhs)
+        states.add(q)
+        conditions.add(condition)
+        transitions[q,condition].append(rhs)
 
     conditions = sorted(conditions)
 
@@ -97,20 +88,16 @@ def write_dot(m, file):
     file.write("  edge [arrowhead=vee,arrowsize=0.5,fontname=Courier,fontsize=9];\n")
     states = set()
     transitions = collections.defaultdict(list)
-    initial_state = special.get_initial_state(m)
-    final_states = special.get_final_states(m)
+    initial_state = m.start_config[0][0]
+    final_states = [config[0][0] for config in m.accept_configs]
 
-    for lhs, rhs in special.get_transitions(m):
+    for t in m.get_transitions():
+        lhs, rhs = t.lhs, t.rhs
         q = lhs[0][0]
         r = rhs[0][0]
-        if q == START and r == initial_state:
-            states.add(r)
-        elif q in final_states and r == ACCEPT:
-            states.add(q)
-        else:
-            states.add(q)
-            states.add(r)
-            transitions[q,r].append((lhs[1:], rhs[1:]))
+        states.add(q)
+        states.add(r)
+        transitions[q,r].append((lhs[1:], rhs[1:]))
 
     states = sorted(states)
     id_to_state = {}

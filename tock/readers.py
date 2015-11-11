@@ -2,9 +2,7 @@ import csv
 import six
 
 from . import machines
-from . import special
 from . import syntax
-from .syntax import START, ACCEPT, REJECT, BLANK
 
 __all__ = ['read_csv', 'read_tgf']
 
@@ -105,7 +103,7 @@ def string_to_transition(s):
     else:
         rhs = ()
     syntax.parse_end(s)
-    return tuple(lhs), tuple(rhs)
+    return machines.Transition(lhs, rhs)
 
 def single_value(s):
     s = set(s)
@@ -138,8 +136,8 @@ def read_csv(infilename):
                 e.message = "cell %s1: %s" % (chr(ord('A')+j), e.message)
                 raise
             j += 1
-        m = machines.Machine()
-        n = single_value(map(len, lhs))+1
+        num_stores = single_value(map(len, lhs))+1
+        m = machines.Machine(num_stores, input=1)
 
         # Body
         i = 1
@@ -152,9 +150,9 @@ def read_csv(infilename):
                 e.message = "cell A%d: %s" % (i+1, e.message)
                 raise
             if '>' in flags:
-                special.set_initial_state(m, q, n)
+                m.set_start_config([q] + [[]] * (num_stores-2))
             if '@' in flags:
-                special.add_final_state(m, q, n)
+                m.add_accept_config([q] + [[]] * (num_stores-2))
 
             rhs = []
             j = 1
@@ -166,9 +164,9 @@ def read_csv(infilename):
                     raise
                 j += 1
             for l, rs in zip(lhs, rhs):
-                l = (machines.Store([q]),) + l
+                l = ([q],) + l
                 for r in rs:
-                    special.add_transition(m, l, r)
+                    m.add_transition(l, r)
             i += 1
     return m
 
@@ -177,8 +175,8 @@ def read_tgf(infilename):
 
     with open(infilename) as infile:
         states = {}
+        transitions = []
         flags = {}
-        m = machines.Machine()
 
         # Nodes
         for line in infile:
@@ -197,16 +195,20 @@ def read_tgf(infilename):
                 continue
             i, j, t = line.split(None, 2)
             q, r = states[i], states[j]
-            lhs, rhs = string_to_transition(t)
-            lhs = (machines.Store([q]),) + lhs
-            rhs = (machines.Store([r]),) + rhs
-            special.add_transition(m, lhs, rhs)
+            t = string_to_transition(t)
+            transitions.append((([q],)+t.lhs, ([r],)+t.rhs))
 
-        for i in states:
-            if '>' in flags[i]:
-                special.set_initial_state(m, states[i])
-            if '@' in flags[i]:
-                special.add_final_state(m, states[i])
+    num_stores = single_value(len(lhs) for lhs, rhs in transitions)
+    m = machines.Machine(num_stores, input=1)
+
+    for i in states:
+        if '>' in flags[i]:
+            m.set_start_config([states[i]] + [[]] * (num_stores-2))
+        if '@' in flags[i]:
+            m.add_accept_config([states[i]] + [[]] * (num_stores-2))
+
+    for lhs, rhs in transitions:
+        m.add_transition(lhs, rhs)
 
     return m
 

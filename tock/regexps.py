@@ -1,6 +1,5 @@
 from . import machines
 from . import syntax
-from . import special
 
 __all__ = ['convert_regexp']
 
@@ -10,12 +9,11 @@ def zero_pad(n, i):
 def convert_regexp(s, offset=0):
     s = syntax.lexer(s)
     s.offset = offset
-    m = machines.Machine()
-    m.num_stores = 2
+    m = machines.Machine(2, input=1)
     initial, finals = parse_union(s, m)
-    special.set_initial_state(m, initial)
+    m.set_start_config([initial])
     for q in finals:
-        special.add_final_state(m, q)
+        m.add_accept_config([q])
     return m
 
 def parse_union(s, m):

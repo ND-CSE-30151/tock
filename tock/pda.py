@@ -1,7 +1,7 @@
 import collections
 from . import machines
-from . import lexer
-from .constants import *
+from . import syntax
+from .syntax import START, ACCEPT, REJECT, BLANK
 
 __all__ = ['run_pda']
 
@@ -18,7 +18,7 @@ def run_pda(m, w, trace=False):
     be fine.
     """
 
-    w = lexer.lexer(w)
+    w = syntax.lexer(w)
 
     """The items are pairs of configurations (parent, child), where
 
@@ -59,7 +59,7 @@ def run_pda(m, w, trace=False):
         raise ValueError("store %s must be a stack" % si)
 
     # how much of the stack is not elided
-    show_stack = max(len(t.inputs[si]) for t in m.transitions)
+    show_stack = max(len(t.lhs[si]) for t in m.transitions)
 
     # Axiom
     initial_config = (Store([START]), Store(w, 0), Store())

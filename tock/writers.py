@@ -1,7 +1,8 @@
 import collections
 import six
+
 from . import special
-from .constants import *
+from .syntax import START, ACCEPT, REJECT, BLANK
 
 try:
     import IPython.display
@@ -52,12 +53,12 @@ def write_html(m, file):
     conditions = set()
     transitions = collections.defaultdict(list)
 
-    for inputs, outputs in special.get_transitions(m):
-        if len(inputs[0]) != 1: 
+    for lhs, rhs in special.get_transitions(m):
+        if len(lhs[0]) != 1: 
             raise ValueError("can't convert to table")
-        q = inputs[0][0]
-        r = outputs[0][0]
-        condition = inputs[1:]
+        q = lhs[0][0]
+        r = rhs[0][0]
+        condition = lhs[1:]
 
         if q == START and r == initial_state:
             states.add(r)
@@ -68,7 +69,7 @@ def write_html(m, file):
             if r not in [ACCEPT, REJECT]:
                 states.add(r)
             conditions.add(condition)
-            transitions[q,condition].append(outputs)
+            transitions[q,condition].append(rhs)
 
     conditions = sorted(conditions)
 
@@ -99,9 +100,9 @@ def write_dot(m, file):
     initial_state = special.get_initial_state(m)
     final_states = special.get_final_states(m)
 
-    for inputs, outputs in special.get_transitions(m):
-        q = inputs[0][0]
-        r = outputs[0][0]
+    for lhs, rhs in special.get_transitions(m):
+        q = lhs[0][0]
+        r = rhs[0][0]
         if q == START and r == initial_state:
             states.add(r)
         elif q in final_states and r == ACCEPT:
@@ -109,7 +110,7 @@ def write_dot(m, file):
         else:
             states.add(q)
             states.add(r)
-            transitions[q,r].append((inputs[1:], outputs[1:]))
+            transitions[q,r].append((lhs[1:], rhs[1:]))
 
     states = sorted(states)
     id_to_state = {}
@@ -124,10 +125,10 @@ def write_dot(m, file):
         id_to_state[q] = i
     for (q,r), ts in transitions.items():
         labels = []
-        for (inputs, outputs) in sorted(ts):
-            label = ','.join(map(str, inputs))
-            if len(outputs) > 0:
-                label = label + " -> " + ", ".join(map(str, outputs))
+        for (lhs, rhs) in sorted(ts):
+            label = ','.join(map(str, lhs))
+            if len(rhs) > 0:
+                label = label + " -> " + ", ".join(map(str, rhs))
             labels.append("<tr><td>%s</td></tr>" % ascii_to_html(label))
         file.write('  %s -> %s[label=<<table border="0" cellpadding="1">%s</table>>];\n' % (id_to_state[q], id_to_state[r], ''.join(labels)))
     file.write("}\n")

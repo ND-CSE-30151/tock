@@ -1,5 +1,10 @@
 import re
 
+START = 'START'
+ACCEPT = 'ACCEPT'
+REJECT = 'REJECT'
+BLANK = '_'
+
 class Tokens(object):
     def __init__(self, tokens):
         self.tokens = tokens
@@ -69,6 +74,28 @@ def parse_symbol(s):
         x = s.cur
         s.pos += 1
         return x
+
+def parse_string(s):
+    if s.cur == '&':
+        s.pos += 1
+        return []
+    else:
+        result = []
+        while s.pos < len(s) and isinstance(s.cur, Symbol):
+            result.append(s.cur)
+            s.pos += 1
+        return result
+
+def parse_multiple(s, f, values=None):
+    """Parse multiple comma-separated elements, each of which is parsed
+       using function f."""
+    if values is None: values = []
+    values.append(f(s))
+    if s.pos < len(s) and s.cur == ',':
+        s.pos += 1
+        return parse_multiple(s, f, values)
+    else:
+        return values
 
 def parse_end(s):
     if s.pos < len(s):

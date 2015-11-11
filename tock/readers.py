@@ -2,31 +2,25 @@ import csv
 import six
 
 from . import machines
-from . import lexer
 from . import special
-from .constants import *
+from . import syntax
+from .syntax import START, ACCEPT, REJECT, BLANK
 
 __all__ = ['read_csv', 'read_tgf']
 
-### Parser for transitions and pieces of transitions
+# This module has three parts:
+# - Parser for transitions and pieces of transitions (maybe should move to syntax.py and/or machines.py)
+# - Reader for CSV files (maybe should move to a tables.py)
+# - Reader for TGF files (maybe should move to a graphs.py)
 
-def parse_string(s):
-    if s.cur == '&':
-        s.pos += 1
-        return []
-    else:
-        result = []
-        while s.pos < len(s) and isinstance(s.cur, lexer.Symbol):
-            result.append(s.cur)
-            s.pos += 1
-        return result
+### Parser for transitions and pieces of transitions
 
 def parse_store(s):
     position = None
     if s.cur == '^':
         s.pos += 1
         position = -1
-    x = parse_string(s)
+    x = syntax.parse_string(s)
     if s.pos < len(s) and s.cur == '^':
         s.pos += 1
         if position is not None:
@@ -36,33 +30,24 @@ def parse_store(s):
         position = 0
     return machines.Store(x, position)
 
-def parse_multiple(s, f, values=None):
-    if values is None: values = []
-    values.append(f(s))
-    if s.pos < len(s) and s.cur == ',':
-        s.pos += 1
-        return parse_multiple(s, f, values)
-    else:
-        return values
-
 def parse_tuple(s):
-    lexer.parse_character(s, '(')
-    value = tuple(parse_multiple(s, parse_store))
-    lexer.parse_character(s, ')')
+    syntax.parse_character(s, '(')
+    value = tuple(syntax.parse_multiple(s, parse_store))
+    syntax.parse_character(s, ')')
     return value
 
 def parse_set(s):
-    lexer.parse_character(s, '{')
+    syntax.parse_character(s, '{')
     if s.cur == '(':
-        value = set(parse_multiple(s, parse_tuple))
+        value = set(syntax.parse_multiple(s, parse_tuple))
     else:
-        value = {(x,) for x in parse_multiple(s, parse_store)}
-    lexer.parse_character(s, '}')
+        value = {(x,) for x in syntax.parse_multiple(s, parse_store)}
+    syntax.parse_character(s, '}')
     return value
 
 def string_to_state(s):
     """s is a string possibly preceded by > or @."""
-    s = lexer.lexer(s)
+    s = syntax.lexer(s)
     flags = set()
     while True:
         if s.cur in '>@':
@@ -70,15 +55,21 @@ def string_to_state(s):
             s.pos += 1
         else:
             break
-    x = lexer.parse_symbol(s)
-    lexer.parse_end(s)
+    x = syntax.parse_symbol(s)
+    syntax.parse_end(s)
     return x, flags
+
+def string_to_store(s):
+    s = syntax.lexer(s)
+    x = parse_store(s)
+    syntax.parse_end(s)
+    return x
 
 def string_to_config(s):
     """s is a comma-separated list of stores."""
-    s = lexer.lexer(s)
-    x = parse_multiple(s, parse_store)
-    lexer.parse_end(s)
+    s = syntax.lexer(s)
+    x = syntax.parse_multiple(s, parse_store)
+    syntax.parse_end(s)
     return tuple(x)
 
 def string_to_configs(s):
@@ -90,7 +81,7 @@ def string_to_configs(s):
        In any case, returns a set of tuples of stores.
     """
 
-    s = lexer.lexer(s)
+    s = syntax.lexer(s)
     value = None
     if s.pos == len(s):
         value = set()
@@ -99,21 +90,21 @@ def string_to_configs(s):
     elif s.cur == '(':
         value = {parse_tuple(s)}
     else:
-        value = {tuple(parse_multiple(s, parse_store))}
-    lexer.parse_end(s)
+        value = {tuple(syntax.parse_multiple(s, parse_store))}
+    syntax.parse_end(s)
 
     return value
 
 def string_to_transition(s):
     """s is a string of the form a,b or a,b->c,d"""
-    s = lexer.lexer(s)
-    lhs = parse_multiple(s, parse_store)
-    if s.pos+2 < len(s) and s[s.pos:s.pos+2] == "->":
-        s.pos += 2
-        rhs = parse_multiple(s, parse_store)
+    s = syntax.lexer(s)
+    lhs = syntax.parse_multiple(s, parse_store)
+    if s.pos < len(s) and s.cur == "->":
+        s.pos += 1
+        rhs = syntax.parse_multiple(s, parse_store)
     else:
         rhs = ()
-    lexer.parse_end(s)
+    syntax.parse_end(s)
     return tuple(lhs), tuple(rhs)
 
 def single_value(s):

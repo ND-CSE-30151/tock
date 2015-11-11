@@ -1,5 +1,5 @@
 from . import machines
-from . import lexer
+from . import syntax
 from . import special
 
 def zero_pad(n, i):
@@ -13,16 +13,16 @@ def convert_grammar(rules):
 
     parsed_rules = []
     for rule in rules:
-        tokens = lexer.lexer(rule)
-        lhs = lexer.parse_symbol(tokens)
-        lexer.parse_character(tokens, '->')
+        tokens = syntax.lexer(rule)
+        lhs = syntax.parse_symbol(tokens)
+        syntax.parse_character(tokens, '->')
         rhs = []
         if tokens.cur == '&':
-            lexer.parse_character(tokens, '&')
-            lexer.parse_end(tokens)
+            syntax.parse_character(tokens, '&')
+            syntax.parse_end(tokens)
         else:
             while tokens.pos < len(tokens):
-                rhs.append(lexer.parse_symbol(tokens))
+                rhs.append(syntax.parse_symbol(tokens))
         parsed_rules.append((lhs, rhs))
     rules = parsed_rules
     start = rules[0][0]
@@ -32,18 +32,8 @@ def convert_grammar(rules):
 
     q1 = "%s.1" % zero_pad(len(rules)+1, 0)
     special.set_initial_state(m, "start")
-    special.add_transition(m, 
-                           (machines.Store(["start"]),
-                            machines.Store(),
-                            machines.Store()), 
-                           (machines.Store([q1]),
-                            machines.Store(["$"]),))
-    special.add_transition(m, 
-                           (machines.Store([q1]),
-                            machines.Store(),
-                            machines.Store()), 
-                           (machines.Store(["loop"]),
-                            machines.Store([start]),))
+    m.add_transition(("start", [], []), (q1,     [], "$"))
+    m.add_transition((q1,      [], []), ("loop", [], start))
 
     nonterminals = set([start])
     symbols = set()
@@ -52,12 +42,8 @@ def convert_grammar(rules):
         symbols.add(lhs)
         symbols.update(rhs)
         if len(rhs) == 0:
-            special.add_transition(m, 
-                                   (machines.Store(["loop"]),
-                                    machines.Store(),
-                                    machines.Store([lhs])), 
-                                   (machines.Store(["loop"]),
-                                    machines.Store([])))
+            m.add_transition(("loop", [], lhs), ("loop", [], []))
+
         else:
             q = "loop"
             for si, r in reversed(list(enumerate(rhs))):
@@ -66,28 +52,15 @@ def convert_grammar(rules):
                                     zero_pad(len(rhs)+1, si))
                 else:
                     q1 = "loop"
-                special.add_transition(m, 
-                                       (machines.Store([q]),
-                                        machines.Store(),
-                                        machines.Store([lhs] if si==len(rhs)-1 else [])), 
-                                       (machines.Store([q1]),
-                                        machines.Store([r])))
+                m.add_transition((q, [], lhs if si==len(rhs)-1 else []),
+                                 (q1, [], r))
+
                 q = q1
 
-    special.add_transition(m, 
-                           (machines.Store(["loop"]),
-                            machines.Store(),
-                            machines.Store(["$"])), 
-                           (machines.Store(["accept"]),
-                            machines.Store()))
+    m.add_transition(("loop", [], "$"), ("accept", [], []))
     special.add_final_state(m, "accept")
 
     for a in symbols - nonterminals:
-        special.add_transition(m,
-                               (machines.Store(["loop"]),
-                                machines.Store([a]),
-                                machines.Store([a])),
-                               (machines.Store(["loop"]),
-                                machines.Store()))
+        m.add_transition(("loop", a, a), ("loop", [], []))
                                 
     return m

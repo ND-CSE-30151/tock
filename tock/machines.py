@@ -1,15 +1,26 @@
 import collections
-from . import lexer
-from .constants import *
+import six
+from . import syntax
+from .syntax import START, ACCEPT, REJECT, BLANK
 
 class Store(object):
     """A (configuration of a) store, which could be a tape, stack, or
        state. It consists of a string together with a head
        position."""
 
-    def __init__(self, values=None, position=0):
-        self.values = list(values) if values is not None else []
-        self.position = position
+    def __init__(self, values=None, position=None):
+        from .readers import string_to_store
+        self.position = 0
+        if values is None:
+            self.values = []
+        elif isinstance(values, six.string_types):
+            other = string_to_store(values)
+            self.values = other.values
+            self.position = other.position
+        else:
+            self.values = list(values)
+        if position is not None:
+            self.position = position
 
     def copy(self):
         return Store(self.values, self.position)
@@ -61,38 +72,52 @@ class Store(object):
         return " ".join(result)
 
 class Transition(object):
-    def __init__(self, inputs, outputs):
-        self.inputs = tuple(inputs)
-        self.outputs = tuple(outputs)
+    def __init__(self, *args):
+        from .readers import string_to_transition
+        if len(args) == 1:
+            arg = args[0]
+            if isinstance(arg, six.string_types):
+                arg = string_to_transition(arg)
+                self.lhs = arg.lhs
+                self.rhs = arg.rhs
+            else:
+                raise TypeError("can't construct Transition from {}".format(type(arg)))
+        elif len(args) == 2:
+            lhs, rhs = args
+            self.lhs = tuple(Store(x) for x in lhs)
+            self.rhs = tuple(Store(x) for x in rhs)
+
+        else:
+            raise TypeError("invalid arguments to Transition")
 
     def match(self, stores):
-        if len(self.inputs) != len(stores):
+        if len(self.lhs) != len(stores):
             raise ValueError()
-        for input, store in zip(self.inputs, stores):
-            i = store.position - input.position
+        for x, store in zip(self.lhs, stores):
+            i = store.position - x.position
             if i < 0:
                 return False
-            l = len(input)
-            while i+l > len(store) and input[l-1] == BLANK:
-                l -= 1
-            if store.values[i:i+l] != input.values[:l]:
+            n = len(x)
+            while i+n > len(store) and x[n-1] == BLANK:
+                n -= 1
+            if store.values[i:i+n] != x.values[:n]:
                 return False
         return True
 
     def apply(self, stores):
         stores = tuple(store.copy() for store in stores)
 
-        for input, output, store in zip(self.inputs, self.outputs, stores):
-            i = store.position - input.position
+        for x, y, store in zip(self.lhs, self.rhs, stores):
+            i = store.position - x.position
             if i < 0:
                 raise ValueError("transition cannot apply")
-            l = len(input)
-            while i+l > len(store) and input[l-1] == BLANK:
+            n = len(x)
+            while i+n > len(store) and x[n-1] == BLANK:
                 store.values.append(BLANK)
-            if store.values[i:i+l] != input.values:
+            if store.values[i:i+n] != x.values:
                 raise ValueError("transition cannot apply")
-            store.values[i:i+l] = output.values
-            store.position = i + output.position
+            store.values[i:i+n] = y.values
+            store.position = i + y.position
 
             # don't move off left end
             store.position = max(0, store.position)
@@ -106,21 +131,26 @@ class Transition(object):
         return stores
 
     def __str__(self):
-        return "%s -> %s" % (",".join(map(str, self.inputs)), 
-                             ",".join(map(str, self.outputs)))
+        return "%s -> %s" % (",".join(map(str, self.lhs)), 
+                             ",".join(map(str, self.rhs)))
 
 class Machine(object):
     def __init__(self):
         self.transitions = []
         self.num_stores = None
 
-    def add_transition(self, t):
-        if self.num_stores is None:
-            self.num_stores = len(t.inputs)
+    def add_transition(self, *args):
+        if len(args) == 1 and isinstance(args[0], Transition):
+            t = args[0]
         else:
-            if len(t.inputs) != self.num_stores:
+            t = Transition(*args)
+
+        if self.num_stores is None:
+            self.num_stores = len(t.lhs)
+        else:
+            if len(t.lhs) != self.num_stores:
                 raise TypeError("wrong number of conditions")
-            if len(t.outputs) != self.num_stores:
+            if len(t.rhs) != self.num_stores:
                 raise TypeError("wrong number of actions")
         self.transitions.append(t)
 
@@ -138,7 +168,7 @@ class Machine(object):
         chart = set()
 
         # Initial configuration
-        input_tokens = lexer.lexer(input_string)
+        input_tokens = syntax.lexer(input_string)
         config = (Store([START]), Store(input_tokens, 0)) + tuple(Store() for s in range(2, self.num_stores))
         agenda.append(config)
         run = Run(self, config)
@@ -172,13 +202,13 @@ class Machine(object):
         cell, and there can take on only a finite number of states)."""
 
         for t in self.transitions:
-            if len(t.inputs[s]) != 1:
+            if len(t.lhs[s]) != 1:
                 return False
-            if len(t.outputs[s]) != 1:
+            if len(t.rhs[s]) != 1:
                 return False
-            if t.inputs[s].position != 0:
+            if t.lhs[s].position != 0:
                 return False
-            if t.outputs[s].position != 0:
+            if t.rhs[s].position != 0:
                 return False
         return True
 
@@ -187,9 +217,9 @@ class Machine(object):
         never moves from position 0."""
 
         for t in self.transitions:
-            if t.inputs[s].position != 0:
+            if t.lhs[s].position != 0:
                 return False
-            if len(t.outputs[s]) != 0:
+            if len(t.rhs[s]) != 0:
                 return False
         return True
 
@@ -198,9 +228,9 @@ class Machine(object):
         is always one past the end."""
 
         for t in self.transitions:
-            if len(t.inputs[s]) != 0:
+            if len(t.lhs[s]) != 0:
                 return False
-            if t.outputs[s].position != len(t.outputs[s]):
+            if t.rhs[s].position != len(t.rhs[s]):
                 return False
         return True
 
@@ -208,16 +238,16 @@ class Machine(object):
         """Tests whether store `s` is a stack, that is, it never moves from
         position 0."""
         for t in self.transitions:
-            if t.inputs[s].position != 0:
+            if t.lhs[s].position != 0:
                 return False
-            if t.outputs[s].position != 0:
+            if t.rhs[s].position != 0:
                 return False
         return True
 
     def has_readonly(self, s):
         """Tests whether store `s` is read-only."""
         for t in self.transitions:
-            if list(t.inputs[s]) != list(t.outputs[s]):
+            if list(t.lhs[s]) != list(t.rhs[s]):
                 return False
         return True
 
@@ -225,34 +255,34 @@ class Machine(object):
         """Tests whether machine is finite state, in a broad sense.
         It should have one input and any number of cells."""
         cells = set()
-        inputs = set()
+        lhs = set()
         for s in range(self.num_stores):
             if self.has_cell(s):
                 cells.add(s)
             if self.has_input(s):
-                inputs.add(s)
+                lhs.add(s)
         # It's possible to be both a cell and an input,
         # and we just need to check that there is some way to 
         # designate exactly 1 stack and num_store-1 cells
-        return (len(cells|inputs) == self.num_stores and 
-                len(inputs) >= 1 and 
+        return (len(cells|lhs) == self.num_stores and 
+                len(lhs) >= 1 and 
                 len(cells) >= self.num_stores-1)
 
     def is_pushdown(self):
         """Tests whether machine is a pushdown automaton, in a broad sense.
         It should have one input and one stack, and any number of cells."""
         cells = set()
-        inputs = set()
+        lhs = set()
         stacks = set()
         for s in range(self.num_stores):
             if self.has_cell(s):
                 cells.add(s)
             if self.has_input(s):
-                inputs.add(s)
+                lhs.add(s)
             if self.has_stack(s):
                 stacks.add(s)
-        return (len(cells|inputs|stacks) == self.num_stores and
-                len(inputs) >= 1 and
+        return (len(cells|lhs|stacks) == self.num_stores and
+                len(lhs) >= 1 and
                 len(cells) >= self.num_stores-2)
 
     def is_deterministic(self):
@@ -261,7 +291,7 @@ class Machine(object):
         for i, t1 in enumerate(self.transitions):
             for t2 in self.transitions[:i]:
                 match = True
-                for in1, in2 in zip(t1.inputs, t2.inputs):
+                for in1, in2 in zip(t1.lhs, t2.lhs):
                     i = max(-in1.position, -in2.position)
                     while i+in1.position < len(in1) and i+in2.position < len(in2):
                         x1 = in1.values[i+in1.position]

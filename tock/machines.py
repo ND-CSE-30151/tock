@@ -1,7 +1,6 @@
 import collections
 import six
 from . import syntax
-from .syntax import START, ACCEPT, REJECT, BLANK
 
 class Store(object):
     """A (configuration of a) store, which could be a tape, stack, or
@@ -84,8 +83,8 @@ class Transition(object):
                 raise TypeError("can't construct Transition from {}".format(type(arg)))
         elif len(args) == 2:
             lhs, rhs = args
-            self.lhs = tuple(Store(x) for x in lhs)
-            self.rhs = tuple(Store(x) for x in rhs)
+            self.lhs = tuple(x if isinstance(x, Store) else Store(x) for x in lhs)
+            self.rhs = tuple(x if isinstance(x, Store) else Store(x) for x in rhs)
 
         else:
             raise TypeError("invalid arguments to Transition")
@@ -98,7 +97,7 @@ class Transition(object):
             if i < 0:
                 return False
             n = len(x)
-            while i+n > len(store) and x[n-1] == BLANK:
+            while i+n > len(store) and x[n-1] == syntax.BLANK:
                 n -= 1
             if store.values[i:i+n] != x.values[:n]:
                 return False
@@ -112,8 +111,8 @@ class Transition(object):
             if i < 0:
                 raise ValueError("transition cannot apply")
             n = len(x)
-            while i+n > len(store) and x[n-1] == BLANK:
-                store.values.append(BLANK)
+            while i+n > len(store) and x[n-1] == syntax.BLANK:
+                store.values.append(syntax.BLANK)
             if store.values[i:i+n] != x.values:
                 raise ValueError("transition cannot apply")
             store.values[i:i+n] = y.values
@@ -124,8 +123,8 @@ class Transition(object):
 
             # pad or clip the store
             while len(store) <= store.position-1:
-                store.values.append(BLANK)
-            while len(store)-1 > store.position and store[-1] == BLANK:
+                store.values.append(syntax.BLANK)
+            while len(store)-1 > store.position and store[-1] == syntax.BLANK:
                 store.values[-1:] = []
 
         return stores
@@ -202,14 +201,25 @@ class Machine(object):
         config = list(self.start_config)
         config[self.input] = Store(input_tokens)
         config = tuple(config)
-                  
+
         agenda.append(config)
         run = Run(self)
+        run.set_start_config(config)
+
+        # Final configurations
+        # Since there is no Configuration class, we need to make a fake Transition
+        final_transitions = []
+        for config in self.accept_configs:
+            final_transitions.append(Transition(config, [[]]*self.num_stores))
 
         while len(agenda) > 0:
             tconfig = agenda.popleft()
 
             if trace: print("trigger: {}".format(tconfig))
+
+            for t in final_transitions:
+                if t.match(tconfig):
+                    run.add_accept_config(tconfig)
 
             for rule in self.transitions:
                 if trace: print("rule: {}".format(rule))
@@ -347,11 +357,19 @@ class Run(object):
         self.machine = machine
         self.configs = set()
         self.edges = set()
+        self.start_config = None
+        self.accept_configs = set()
 
     def add(self, from_config, to_config):
         self.configs.add(from_config)
         self.configs.add(to_config)
         self.edges.add((from_config, to_config))
+
+    def set_start_config(self, config):
+        self.start_config = config
+
+    def add_accept_config(self, config):
+        self.accept_configs.add(config)
 
     def _ipython_display_(self):
         def label(config): 
@@ -362,7 +380,7 @@ class Run(object):
             return ascii_to_html(','.join(map(str, (config[0][0],) + config[2:])))
         def rank(config): 
             # Rank nodes by input position
-            l = len([x for x in config[self.machine.input] if x != BLANK])
+            l = len([x for x in config[self.machine.input] if x != syntax.BLANK])
             return (-l, config[1])
 
         result = []
@@ -370,6 +388,8 @@ class Run(object):
         result.append("  rankdir=TB;")
         result.append('  node [fontname=Courier,fontsize=10,shape=box,style=rounded,height=0,width=0,margin="0.055,0.042"];')
         result.append("  edge [arrowhead=vee,arrowsize=0.5];")
+
+        result.append('  START[shape=none,label=""];\n')
 
         one_way_input = self.machine.has_input(self.machine.input)
 
@@ -380,10 +400,19 @@ class Run(object):
                 config_id[config] = len(config_id)
 
         for config in self.configs:
+            attrs = {}
             if one_way_input:
-                result.append('  %s[label=<%s>];' % (config_id[config], label_no_input(config)))
+                attrs['label'] = '<{}>'.format(label_no_input(config))
             else:
-                result.append('  %s[label=<%s>];' % (config_id[config], label(config)))
+                attrs['label'] = '<{}>'.format(label(config))
+
+            if config in self.accept_configs:
+                attrs['peripheries'] = 2
+
+            result.append('  %s[%s];' % (config_id[config], ','.join('{}={}'.format(key,val) for key,val in attrs.items())))
+            if config == self.start_config:
+                result.append('  START -> %s;' % (config_id[config]))
+
         for from_config, to_config in self.edges:
             result.append("  %s -> %s;" % (config_id[from_config], config_id[to_config]))
 

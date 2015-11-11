@@ -13,7 +13,7 @@ def convert_regexp(s, offset=0):
     initial, finals = parse_union(s, m)
     m.set_start_config([initial])
     for q in finals:
-        m.add_accept_config([q])
+        m.add_accept_config([q, [syntax.BLANK]])
     return m
 
 def parse_union(s, m):
@@ -25,12 +25,12 @@ def parse_union(s, m):
         # for a star and union to start at the same place (a*|b) so
         # union gets the earlier letter in the alphabet.
         new_initial = zero_pad(len(s), i) + "a"
-        m.add_transition((new_initial, []), (initial, []))
+        m.add_transition((new_initial, []), (initial,))
 
         while s.pos < len(s) and s.cur == '|':
             syntax.parse_character(s, '|')
             initial1, finals1 = parse_concat(s, m)
-            m.add_transition((new_initial, []), (initial1, []))
+            m.add_transition((new_initial, []), (initial1,))
             finals += finals1
 
         initial = new_initial
@@ -42,7 +42,7 @@ def parse_concat(s, m):
     while s.pos < len(s) and s.cur not in '|)':
         initial1, finals1 = parse_star(s, m)
         for qf in finals:
-            m.add_transition((qf, []), (initial1, []))
+            m.add_transition((qf, []), (initial1,))
         finals = finals1
     return initial, finals
 
@@ -56,9 +56,9 @@ def parse_star(s, m):
         # for a star and union to start at the same place (a*|b) so
         # union gets the earlier letter in the alphabet.
         new_initial = zero_pad(len(s), i) + "i"
-        m.add_transition((new_initial, []), (initial, []))
+        m.add_transition((new_initial, []), (initial,))
         for qf in finals:
-            m.add_transition((qf, []), (initial, []))
+            m.add_transition((qf, []), (initial,))
         initial = new_initial
         finals += [new_initial]
     return initial, finals
@@ -83,7 +83,7 @@ def parse_base(s, m):
         q = zero_pad(len(s)+s.offset, s.pos+s.offset) + "s"
         r = zero_pad(len(s)+s.offset, s.pos+s.offset) + "t"
         a = syntax.parse_symbol(s)
-        m.add_transition((q, a), (r, []))
+        m.add_transition((q, a), (r,))
         return q, [r]
     else:
         assert False

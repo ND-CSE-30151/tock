@@ -1,7 +1,6 @@
 import collections
 from . import machines
 from . import syntax
-from .syntax import START, ACCEPT, REJECT, BLANK
 
 __all__ = ['run_pda']
 
@@ -17,8 +16,6 @@ def run_pda(m, w, trace=False):
     Currently we don't allow any other stores, though additional cells would
     be fine.
     """
-
-    w = syntax.lexer(w)
 
     """The items are pairs of configurations (parent, child), where
 
@@ -62,9 +59,12 @@ def run_pda(m, w, trace=False):
     show_stack = max(len(t.lhs[si]) for t in m.transitions)
 
     # Axiom
-    initial_config = (Store([START]), Store(w, 0), Store())
-    agenda.append((None, initial_config))
-    run = Run(m, initial_config)
+    input_tokens = syntax.lexer(w)
+    config = list(self.start_config)
+    config[self.input] = Store(input_tokens)
+    config = tuple(config)
+    agenda.append((None, config))
+    run = Run(m, config)
 
     def add(parent, child):
         if (parent, child) in chart:
@@ -77,10 +77,6 @@ def run_pda(m, w, trace=False):
     while len(agenda) > 0:
         parent, child = agenda.popleft()
         if trace: print("trigger: {} => {}".format(parent, child))
-
-        if child[qi].values == [ACCEPT]:
-            if trace:
-                print("goal!")
 
         # The stack shows too many items (push)
         if len(child[si]) > show_stack:

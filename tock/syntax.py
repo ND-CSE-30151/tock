@@ -1,8 +1,5 @@
 import re
 
-START = 'START'
-ACCEPT = 'ACCEPT'
-REJECT = 'REJECT'
 BLANK = '_'
 
 class Tokens(object):

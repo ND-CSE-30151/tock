@@ -138,6 +138,7 @@ def read_csv(infilename):
             j += 1
         num_stores = single_value(map(len, lhs))+1
         m = machines.Machine(num_stores, input=1)
+        m.add_accept_config(["ACCEPT"] + [[]]*(num_stores-1))
 
         # Body
         i = 1
@@ -152,7 +153,7 @@ def read_csv(infilename):
             if '>' in flags:
                 m.set_start_config([q] + [[]] * (num_stores-2))
             if '@' in flags:
-                m.add_accept_config([q] + [[]] * (num_stores-2))
+                m.add_accept_config([q, syntax.BLANK] + [[]]*(num_stores-2))
 
             rhs = []
             j = 1
@@ -200,12 +201,13 @@ def read_tgf(infilename):
 
     num_stores = single_value(len(lhs) for lhs, rhs in transitions)
     m = machines.Machine(num_stores, input=1)
+    m.add_accept_config(["ACCEPT"] + [[]]*(num_stores-1))
 
     for i in states:
         if '>' in flags[i]:
             m.set_start_config([states[i]] + [[]] * (num_stores-2))
         if '@' in flags[i]:
-            m.add_accept_config([states[i]] + [[]] * (num_stores-2))
+            m.add_accept_config([states[i], syntax.BLANK] + [[]] * (num_stores-2))
 
     for lhs, rhs in transitions:
         m.add_transition(lhs, rhs)

@@ -2,10 +2,9 @@ Stores
 ======
 
 Internally, all kinds of automata are represented in the same
-way. They have two or more _stores_. The first store is always the
-state, and the second store is always the input. The remaining stores,
-if any, are half-infinite tapes, but you don't have to use them as
-tapes; you can use them instead as finite states or as stacks.
+way. They have one or more _stores_, which are half-infinite tapes,
+but you don't have to use them as tapes; you can use them instead as
+finite states or as stacks.
 
 Transitions
 ===========
@@ -34,8 +33,8 @@ Despite the peculiarities of this notation, it can describe all the
 possible moves that typical automata make:
 
 - `a -> b`: write symbol and don't move
-- `a -> b^`: write symbol and move right
-- `a -> ^b`: write symbol and move left
+- `a -> b ^`: write symbol and move right
+- `a -> ^ b`: write symbol and move left
 - `& -> b`: push symbol on left
 - `a -> &`: pop symbol on left
 
@@ -45,13 +44,12 @@ write them as tables or graphs, as described below.
 States and symbols
 ==================
 
-As mentioned above, the first store is always the state. The start
-state is always called `START`; when some other state is designated a
-start state, a transition is added from `START` to that state. The
-accept state and reject states are always called `ACCEPT` and
-`REJECT`, respectively. When another state is designated a final
-state, a transition is added from that state (and the end of the
-input) to `ACCEPT`.
+When an automaton is read in from a table or graph, it always has at
+least two stores. The first is the state and the second is the input.
+
+There are two conditions for an automaton to accept a string: either
+when the automaton enters the special state `ACCEPT`, or when it
+enters an accept state _and_ the current input symbol is blank (`_`).
 
 The second store is always the input. It is initialized with the input
 string, followed by an infinite number of blank symbols (`_`). In FAs

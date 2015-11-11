@@ -1,5 +1,6 @@
 import collections
 import six
+from . import syntax
 
 try:
     import IPython.display
@@ -46,7 +47,7 @@ def write_html(m, file):
     file.write('<table style="font-family: Courier, monospace;">\n')
     states = set()
     initial_state = m.start_config[0][0]
-    final_states = [config[0][0] for config in m.accept_configs]
+    final_states = [config[0][0] for config in m.accept_configs if list(config[m.input]) == [syntax.BLANK]]
     conditions = set()
     transitions = collections.defaultdict(list)
 
@@ -89,7 +90,7 @@ def write_dot(m, file):
     states = set()
     transitions = collections.defaultdict(list)
     initial_state = m.start_config[0][0]
-    final_states = [config[0][0] for config in m.accept_configs]
+    final_states = [config[0][0] for config in m.accept_configs if list(config[m.input]) == [syntax.BLANK]]
 
     for t in m.get_transitions():
         lhs, rhs = t.lhs, t.rhs

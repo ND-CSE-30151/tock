@@ -29,9 +29,9 @@ def convert_grammar(rules):
     m = machines.Machine(3, input=1)
 
     q1 = "%s.1" % zero_pad(len(rules)+1, 0)
-    m.set_start_config(("start", []))
-    m.add_transition(("start", [], []), (q1,     [], "$"))
-    m.add_transition((q1,      [], []), ("loop", [], start))
+    m.set_start_config(("start", [], []))
+    m.add_transition(("start", [], []), (q1,     "$"))
+    m.add_transition((q1,      [], []), ("loop", start))
 
     nonterminals = set([start])
     symbols = set()
@@ -40,7 +40,7 @@ def convert_grammar(rules):
         symbols.add(lhs)
         symbols.update(rhs)
         if len(rhs) == 0:
-            m.add_transition(("loop", [], lhs), ("loop", [], []))
+            m.add_transition(("loop", [], lhs), ("loop", []))
 
         else:
             q = "loop"
@@ -51,14 +51,14 @@ def convert_grammar(rules):
                 else:
                     q1 = "loop"
                 m.add_transition((q, [], lhs if si==len(rhs)-1 else []),
-                                 (q1, [], r))
+                                 (q1, r))
 
                 q = q1
 
-    m.add_transition(("loop", [], "$"), ("accept", [], []))
-    m.add_final_config(["accept", []])
+    m.add_transition(("loop", [], "$"), ("accept", []))
+    m.add_accept_config(["accept", syntax.BLANK, []])
 
     for a in symbols - nonterminals:
-        m.add_transition(("loop", a, a), ("loop", [], []))
+        m.add_transition(("loop", a, a), ("loop", []))
                                 
     return m

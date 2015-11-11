@@ -142,7 +142,6 @@ class Machine(object):
 
         self.start_config = None
         self.accept_configs = set()
-        self.reject_configs = set()
 
     def set_start_config(self, config):
         # If input is missing, supply &
@@ -154,24 +153,8 @@ class Machine(object):
         self.start_config = t.rhs
 
     def add_accept_config(self, config):
-        # If input is missing, supply _. This is meant for machines
-        # with one-way inputs.
-        if self.input is not None and len(config) == self.num_stores-1:
-            config = list(config)
-            config[self.input:self.input] = [[BLANK]]
-        # since there is no Configuration object, make a fake Transition
         t = Transition(config, [[]]*self.num_stores)
         self.accept_configs.add(t.lhs)
-
-    def add_reject_config(self, config):
-        # If input is missing, supply _. This is meant for machines
-        # with one-way inputs.
-        if self.input is not None and len(config) == self.num_stores-1:
-            config = list(config)
-            config[self.input:self.input] = [[BLANK]]
-        # since there is no Configuration object, make a fake Transition
-        t = Transition(config, [[]]*self.num_stores)
-        self.reject_configs.add(t.lhs)
 
     def add_transition(self, *args):
         if len(args) == 1 and isinstance(args[0], Transition):
@@ -261,7 +244,7 @@ class Machine(object):
         return True
 
     def has_input(self, s):
-        """Tests whether store `s` is an input, that is, it only deletes and
+        """Tests whether store `s` is a one-way input, that is, it only deletes and
         never moves from position 0."""
 
         for t in self.transitions:
@@ -336,10 +319,11 @@ class Machine(object):
     def is_deterministic(self):
         """Tests whether machine is deterministic."""
         # naive quadratic algorithm
-        for i, t1 in enumerate(self.transitions):
-            for t2 in self.transitions[:i]:
+        patterns = [t.lhs for t in self.transitions] + list(self.accept_configs)
+        for i, t1 in enumerate(patterns):
+            for t2 in patterns[:i]:
                 match = True
-                for in1, in2 in zip(t1.lhs, t2.lhs):
+                for in1, in2 in zip(t1, t2):
                     i = max(-in1.position, -in2.position)
                     while i+in1.position < len(in1) and i+in2.position < len(in2):
                         x1 = in1.values[i+in1.position]

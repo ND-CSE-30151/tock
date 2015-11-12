@@ -143,6 +143,9 @@ class Machine(object):
         self.accept_configs = set()
 
     def set_start_config(self, config):
+        from .readers import string_to_config
+        if isinstance(config, six.string_types):
+            config = string_to_config(config)
         # If input is missing, supply &
         if self.input is not None and len(config) == self.num_stores-1:
             config = list(config)
@@ -152,6 +155,9 @@ class Machine(object):
         self.start_config = t.rhs
 
     def add_accept_config(self, config):
+        from .readers import string_to_config
+        if isinstance(config, six.string_types):
+            config = string_to_config(config)
         t = Transition(config, [[]]*self.num_stores)
         self.accept_configs.add(t.lhs)
 
@@ -191,10 +197,10 @@ class Machine(object):
         from .writers import display_graph
         display(display_graph(self))
 
-    def run(self, input_string, trace=False):
+    def run(self, input_string, trace=False, steps=1000):
         # Breadth-first search
         agenda = collections.deque()
-        chart = set()
+        chart = {}
 
         # Initial configuration
         input_tokens = syntax.lexer(input_string)
@@ -202,6 +208,7 @@ class Machine(object):
         config[self.input] = Store(input_tokens)
         config = tuple(config)
 
+        chart[config] = 0
         agenda.append(config)
         run = Run(self)
         run.set_start_config(config)
@@ -221,18 +228,24 @@ class Machine(object):
                 if t.match(tconfig):
                     run.add_accept_config(tconfig)
 
+            if chart[tconfig] == steps:
+                if trace: print("maximum number of steps reached")
+                run.add_ellipsis(tconfig, None)
+                continue
+
             for rule in self.transitions:
                 if trace: print("rule: {}".format(rule))
                 if rule.match(tconfig):
                     nconfig = rule.apply(tconfig)
 
                     if nconfig in chart:
+                        assert chart[nconfig] <= chart[tconfig]+1
                         if trace: print("merge: {}".format(nconfig))
                     else:
-                        chart.add(nconfig)
+                        chart[nconfig] = chart[tconfig]+1
                         if trace: print("add: {}".format(nconfig))
-                    run.add(tconfig, nconfig)
                     agenda.append(nconfig)
+                    run.add_edge(tconfig, nconfig)
 
         return run
 
@@ -357,13 +370,21 @@ class Run(object):
         self.machine = machine
         self.configs = set()
         self.edges = set()
+        self.ellipses = set()
         self.start_config = None
         self.accept_configs = set()
 
-    def add(self, from_config, to_config):
+    def add_edge(self, from_config, to_config):
         self.configs.add(from_config)
         self.configs.add(to_config)
         self.edges.add((from_config, to_config))
+
+    def add_ellipsis(self, from_config, to_config):
+        if from_config is not None:
+            self.configs.add(from_config)
+        if to_config is not None:
+            self.configs.add(to_config)
+        self.ellipses.add((from_config, to_config))
 
     def set_start_config(self, config):
         self.start_config = config
@@ -414,7 +435,20 @@ class Run(object):
                 result.append('  START -> %s;' % (config_id[config]))
 
         for from_config, to_config in self.edges:
-            result.append("  %s -> %s;" % (config_id[from_config], config_id[to_config]))
+            if False and one_way_input and rank(from_config) == rank(to_config):
+                result.append("  %s -> %s[constraint=false];" % (config_id[from_config], config_id[to_config]))
+            else:
+                result.append("  %s -> %s;" % (config_id[from_config], config_id[to_config]))
+
+        for from_config, to_config in self.ellipses:
+            if to_config is None:
+                cid = config_id[from_config]
+                result.append('  DOTS_%s[shape=none,label=""];\n' % (cid,))
+                result.append("  %s -> DOTS_%s[dir=none,style=dotted];" % (cid, cid))
+            elif from_config is None:
+                cid = config_id[to_config]
+                result.append('  DOTS_%s[shape=none,label=""];\n' % (cid,))
+                result.append("  DOTS_%s -> %s[dir=none,style=dotted];" % (cid, cid))
 
         if one_way_input:
             ranks = collections.defaultdict(list)

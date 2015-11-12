@@ -23,7 +23,7 @@ Installation
 In order to view these notebooks, you'll need [IPython] and
 [GraphViz]. The easiest way to get them is:
 
-1. Install [Miniconda]. Either Python 2.7 or 3.4 is fine.
+1. Install [Miniconda]. Either Python 2.7 or 3.x is fine.
 2. Run `conda install six`.
 3. Install [IPython] by running `conda install jupyter`.
 4. If you don't have [GraphViz] already, don't worry; Tock downloads

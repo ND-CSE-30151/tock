@@ -60,11 +60,19 @@ def run_pda(m, w, trace=False):
 
     # Axiom
     input_tokens = syntax.lexer(w)
-    config = list(self.start_config)
-    config[self.input] = Store(input_tokens)
+    config = list(m.start_config)
+    config[m.input] = Store(input_tokens)
     config = tuple(config)
+
     agenda.append((None, config))
-    run = Run(m, config)
+    run = Run(m)
+    run.set_start_config(config)
+
+    # Final configurations
+    # Since there is no Configuration class, we need to make a fake Transition
+    final_transitions = []
+    for config in m.accept_configs:
+        final_transitions.append(machines.Transition(config, [[]]*m.num_stores))
 
     def add(parent, child):
         if (parent, child) in chart:
@@ -78,13 +86,17 @@ def run_pda(m, w, trace=False):
         parent, child = agenda.popleft()
         if trace: print("trigger: {} => {}".format(parent, child))
 
+        for t in final_transitions:
+            if t.match(child):
+                run.add_accept_config(child)
+
         # The stack shows too many items (push)
         if len(child[si]) > show_stack:
             grandchild = tuple(s.copy() for s in child)
             del grandchild[si].values[-1]
             add(child, grandchild)
             index_right[child].add(parent)
-            run.add(child, grandchild) # to do: skip this item
+            run.add_edge(child, grandchild) # to do: skip this item
 
             for grandchild in index_left[child]:
                 grandchild = tuple(s.copy() for s in grandchild)
@@ -102,7 +114,7 @@ def run_pda(m, w, trace=False):
 
             for grandparent in index_right[parent]:
                 add(grandparent, aunt)
-                run.add(child, aunt) # to do: skip this item
+                run.add_edge(child, aunt) # to do: skip this item
 
         # The stack is just right
         else:
@@ -110,7 +122,7 @@ def run_pda(m, w, trace=False):
                 if transition.match(child):
                     sister = transition.apply(child)
                     add(parent, sister)
-                    run.add(child, sister)
+                    run.add_edge(child, sister)
 
     return run
 

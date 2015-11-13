@@ -388,9 +388,11 @@ class Run(object):
 
     def set_start_config(self, config):
         self.start_config = config
+        self.configs.add(config)
 
     def add_accept_config(self, config):
         self.accept_configs.add(config)
+        self.configs.add(config)
 
     def _ipython_display_(self):
         def label(config): 
@@ -434,10 +436,23 @@ class Run(object):
             if config == self.start_config:
                 result.append('  START -> %s;' % (config_id[config]))
 
-        for from_config, to_config in self.edges:
-            if False and one_way_input and rank(from_config) == rank(to_config):
-                result.append("  %s -> %s[constraint=false];" % (config_id[from_config], config_id[to_config]))
-            else:
+        if one_way_input:
+            # If a node has a predecessor in a previous rank
+            # as well as in the same rank, let the former determine
+            # the position of the node
+
+            nonepsilon = set()
+            for from_config, to_config in self.edges:
+                if rank(to_config) > rank(from_config):
+                    nonepsilon.add(to_config)
+            for from_config, to_config in self.edges:
+                if rank(to_config) == rank(from_config) and to_config in nonepsilon:
+                    result.append("  %s -> %s[constraint=false];" % (config_id[from_config], config_id[to_config]))
+                else:
+                    result.append("  %s -> %s;" % (config_id[from_config], config_id[to_config]))
+
+        else:
+            for from_config, to_config in self.edges:
                 result.append("  %s -> %s;" % (config_id[from_config], config_id[to_config]))
 
         for from_config, to_config in self.ellipses:
@@ -467,4 +482,3 @@ class Run(object):
         from IPython.display import display
         from .viz import viz
         display(viz("\n".join(result)))
-        

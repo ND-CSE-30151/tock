@@ -1,0 +1,4 @@
+include *.md
+include *.ipynb
+recursive-include examples *.csv *.tgf
+

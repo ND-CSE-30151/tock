@@ -197,57 +197,6 @@ class Machine(object):
         from .writers import display_graph
         display(display_graph(self))
 
-    def run(self, input_string, trace=False, steps=1000):
-        # Breadth-first search
-        agenda = collections.deque()
-        chart = {}
-
-        # Initial configuration
-        input_tokens = syntax.lexer(input_string)
-        config = list(self.start_config)
-        config[self.input] = Store(input_tokens)
-        config = tuple(config)
-
-        chart[config] = 0
-        agenda.append(config)
-        run = Run(self)
-        run.set_start_config(config)
-
-        # Final configurations
-        # Since there is no Configuration class, we need to make a fake Transition
-        final_transitions = []
-        for config in self.accept_configs:
-            final_transitions.append(Transition(config, [[]]*self.num_stores))
-
-        while len(agenda) > 0:
-            tconfig = agenda.popleft()
-
-            if trace: print("trigger: {}".format(tconfig))
-
-            for t in final_transitions:
-                if t.match(tconfig):
-                    run.add_accept_config(tconfig)
-
-            if chart[tconfig] == steps:
-                if trace: print("maximum number of steps reached")
-                run.add_ellipsis(tconfig, None)
-                continue
-
-            for rule in self.transitions:
-                if trace: print("rule: {}".format(rule))
-                if rule.match(tconfig):
-                    nconfig = rule.apply(tconfig)
-
-                    if nconfig in chart:
-                        assert chart[nconfig] <= chart[tconfig]+1
-                        if trace: print("merge: {}".format(nconfig))
-                    else:
-                        chart[nconfig] = chart[tconfig]+1
-                        if trace: print("add: {}".format(nconfig))
-                    agenda.append(nconfig)
-                    run.add_edge(tconfig, nconfig)
-
-        return run
 
     ### Testing for different types of automata
 
@@ -309,34 +258,34 @@ class Machine(object):
         """Tests whether machine is finite state, in a broad sense.
         It should have one input and any number of cells."""
         cells = set()
-        lhs = set()
+        inputs = set()
         for s in range(self.num_stores):
             if self.has_cell(s):
                 cells.add(s)
             if self.has_input(s):
-                lhs.add(s)
+                inputs.add(s)
         # It's possible to be both a cell and an input,
         # and we just need to check that there is some way to 
         # designate exactly 1 stack and num_store-1 cells
-        return (len(cells|lhs) == self.num_stores and 
-                len(lhs) >= 1 and 
+        return (len(cells|inputs) == self.num_stores and 
+                len(inputs) >= 1 and 
                 len(cells) >= self.num_stores-1)
 
     def is_pushdown(self):
         """Tests whether machine is a pushdown automaton, in a broad sense.
         It should have one input and one stack, and any number of cells."""
         cells = set()
-        lhs = set()
+        inputs = set()
         stacks = set()
         for s in range(self.num_stores):
             if self.has_cell(s):
                 cells.add(s)
             if self.has_input(s):
-                lhs.add(s)
+                inputs.add(s)
             if self.has_stack(s):
                 stacks.add(s)
-        return (len(cells|lhs|stacks) == self.num_stores and
-                len(lhs) >= 1 and
+        return (len(cells|inputs|stacks) == self.num_stores and
+                len(inputs) >= 1 and
                 len(cells) >= self.num_stores-2)
 
     def is_deterministic(self):
@@ -358,127 +307,3 @@ class Machine(object):
                     return False
         return True
 
-def ascii_to_html(s):
-    s = str(s)
-    s = s.replace("&", "&epsilon;")
-    s = s.replace("->", "&rarr;")
-    s = s.replace(">", "&gt;")
-    return s
-
-class Run(object):
-    def __init__(self, machine):
-        self.machine = machine
-        self.configs = set()
-        self.edges = set()
-        self.ellipses = set()
-        self.start_config = None
-        self.accept_configs = set()
-
-    def add_edge(self, from_config, to_config):
-        self.configs.add(from_config)
-        self.configs.add(to_config)
-        self.edges.add((from_config, to_config))
-
-    def add_ellipsis(self, from_config, to_config):
-        if from_config is not None:
-            self.configs.add(from_config)
-        if to_config is not None:
-            self.configs.add(to_config)
-        self.ellipses.add((from_config, to_config))
-
-    def set_start_config(self, config):
-        self.start_config = config
-        self.configs.add(config)
-
-    def add_accept_config(self, config):
-        self.accept_configs.add(config)
-        self.configs.add(config)
-
-    def _ipython_display_(self):
-        def label(config): 
-            # Label nodes by config
-            return ascii_to_html(','.join(map(str, (config[0][0],) + config[1:])))
-        def label_no_input(config): 
-            # Label nodes by config sans input (second store)
-            return ascii_to_html(','.join(map(str, (config[0][0],) + config[2:])))
-        def rank(config): 
-            # Rank nodes by input position
-            l = len([x for x in config[self.machine.input] if x != syntax.BLANK])
-            return (-l, config[1])
-
-        result = []
-        result.append("digraph {")
-        result.append("  rankdir=TB;")
-        result.append('  node [fontname=Courier,fontsize=10,shape=box,style=rounded,height=0,width=0,margin="0.055,0.042"];')
-        result.append("  edge [arrowhead=vee,arrowsize=0.5];")
-
-        result.append('  START[shape=none,label=""];\n')
-
-        one_way_input = self.machine.has_input(self.machine.input)
-
-        # assign an id to each config
-        config_id = {}
-        for config in self.configs:
-            if config not in config_id:
-                config_id[config] = len(config_id)
-
-        for config in self.configs:
-            attrs = {}
-            if one_way_input:
-                attrs['label'] = '<{}>'.format(label_no_input(config))
-            else:
-                attrs['label'] = '<{}>'.format(label(config))
-
-            if config in self.accept_configs:
-                attrs['peripheries'] = 2
-
-            result.append('  %s[%s];' % (config_id[config], ','.join('{}={}'.format(key,val) for key,val in attrs.items())))
-            if config == self.start_config:
-                result.append('  START -> %s;' % (config_id[config]))
-
-        if one_way_input:
-            # If a node has a predecessor in a previous rank
-            # as well as in the same rank, let the former determine
-            # the position of the node
-
-            nonepsilon = set()
-            for from_config, to_config in self.edges:
-                if rank(to_config) > rank(from_config):
-                    nonepsilon.add(to_config)
-            for from_config, to_config in self.edges:
-                if rank(to_config) == rank(from_config) and to_config in nonepsilon:
-                    result.append("  %s -> %s[constraint=false];" % (config_id[from_config], config_id[to_config]))
-                else:
-                    result.append("  %s -> %s;" % (config_id[from_config], config_id[to_config]))
-
-        else:
-            for from_config, to_config in self.edges:
-                result.append("  %s -> %s;" % (config_id[from_config], config_id[to_config]))
-
-        for from_config, to_config in self.ellipses:
-            if to_config is None:
-                cid = config_id[from_config]
-                result.append('  DOTS_%s[shape=none,label=""];\n' % (cid,))
-                result.append("  %s -> DOTS_%s[dir=none,style=dotted];" % (cid, cid))
-            elif from_config is None:
-                cid = config_id[to_config]
-                result.append('  DOTS_%s[shape=none,label=""];\n' % (cid,))
-                result.append("  DOTS_%s -> %s[dir=none,style=dotted];" % (cid, cid))
-
-        if one_way_input:
-            ranks = collections.defaultdict(list)
-            for config in self.configs:
-                ranks[rank(config)].append(str(config_id[config]))
-            prev_ri = None
-            for ri, ((level, rank), nodes) in enumerate(sorted(ranks.items())):
-                result.append('  rank%s[shape=plaintext,label=<%s>];' % (ri, ascii_to_html(str(rank))))
-                result.append("{ rank=same; rank%s %s }" % (ri, " ".join(nodes)))
-                if prev_ri is not None:
-                    result.append('  rank%s -> rank%s[style=invis];' % (prev_ri, ri))
-                prev_ri = ri
-
-        result.append("}")
-
-        from IPython.display import display
-        from .viz import viz
-        display(viz("\n".join(result)))

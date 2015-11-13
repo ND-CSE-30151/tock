@@ -151,6 +151,8 @@ def read_csv(infilename):
                 e.message = "cell A%d: %s" % (i+1, e.message)
                 raise
             if '>' in flags:
+                if m.start_config is not None:
+                    raise ValueError("cell A%d: more than one start state" % (i+1))
                 m.set_start_config([q] + [[]] * (num_stores-2))
             if '@' in flags:
                 m.add_accept_config([q, syntax.BLANK] + [[]]*(num_stores-2))
@@ -205,6 +207,8 @@ def read_tgf(infilename):
 
     for i in states:
         if '>' in flags[i]:
+            if m.start_config is not None:
+                raise ValueError("more than one start state")
             m.set_start_config([states[i]] + [[]] * (num_stores-2))
         if '@' in flags[i]:
             m.add_accept_config([states[i], syntax.BLANK] + [[]] * (num_stores-2))

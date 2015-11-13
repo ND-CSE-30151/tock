@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='tock',
       version='0.1',
@@ -9,6 +9,16 @@ setup(name='tock',
       author_email='dchiang@nd.edu',
       url='https://github.org/davidweichiang/tock',
       license='MIT',
+      classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Education',
+        'Topic :: Education',
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        ],
       packages=['tock'],
       install_requires=['six'],
       )

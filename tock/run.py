@@ -80,7 +80,7 @@ def run_bfs(m, w, trace=False, steps=1000):
                 else:
                     chart[nconfig] = chart[tconfig]+1
                     if trace: print("add: {}".format(nconfig))
-                agenda.append(nconfig)
+                    agenda.append(nconfig)
                 run.add_edge(tconfig, nconfig)
 
     return run

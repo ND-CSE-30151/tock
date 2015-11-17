@@ -184,7 +184,7 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
         if trace: print("trigger: {} => {}".format(parent, child))
 
         for t in final_transitions:
-            if t.match(child):
+            if t.match(child) and (parent is None or len(child[stack]) == show_stack):
                 run.add_accept_config(simplify(parent, child))
 
         # The stack shows too many items (push)

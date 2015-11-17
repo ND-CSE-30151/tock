@@ -62,6 +62,7 @@ def write_html(m, file):
         states.add(q)
         conditions.add(condition)
         transitions[q,condition].append(rhs)
+    states.update(final_states)
 
     conditions = sorted(conditions)
 

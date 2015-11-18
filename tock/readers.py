@@ -4,7 +4,7 @@ import six
 from . import machines
 from . import syntax
 
-__all__ = ['read_csv', 'read_tgf']
+__all__ = ['read_csv', 'read_excel', 'read_tgf']
 
 # This module has three parts:
 # - Parser for transitions and pieces of transitions (maybe should move to syntax.py and/or machines.py)
@@ -113,65 +113,80 @@ def single_value(s):
 
 ### Top-level functions for reading and writing machines in various formats.
 
-def read_csv(infilename):
+def convert_table(table):
+    transitions = []
+
+    # Header row has one dummy cell, and then each cell has lhs values
+    # for the input and any additional stores.
+    lhs = []
+    for j, cell in enumerate(table[0][1:], 1):
+        try:
+            lhs.append(string_to_config(cell))
+        except Exception as e:
+            e.message = "cell %s1: %s" % (chr(ord('A')+j), e.message)
+            raise
+    try:
+        num_stores = single_value(map(len, lhs))+1
+    except ValueError:
+        raise ValueError("row 1: left-hand sides must all have same size")
+    m = machines.Machine(num_stores, input=1)
+    m.add_accept_config(["ACCEPT"] + [[]]*(num_stores-1))
+
+    # Body
+    for i, row in enumerate(table[1:], 1):
+        if sum(len(cell.strip()) for cell in row) == 0:
+            continue
+        try:
+            q, flags = string_to_state(row[0])
+            if '>' in flags:
+                if m.start_config is not None:
+                    raise ValueError("more than one start state")
+                m.set_start_config([q] + [[]] * (num_stores-2))
+            if '@' in flags:
+                m.add_accept_config([q, syntax.BLANK] + [[]]*(num_stores-2))
+        except Exception as e:
+            e.message = "cell A%d: %s" % (i+1, e.message)
+            raise
+
+        rhs = []
+        for j, cell in enumerate(row[1:], 1):
+            try:
+                rhs.append(string_to_configs(cell))
+            except Exception as e:
+                e.message = "cell %s%d: %s" % (chr(ord('A')+j), i+1, e.message)
+                raise
+
+        for l, rs in zip(lhs, rhs):
+            l = ([q],) + l
+            for r in rs:
+                m.add_transition(l, r)
+    return m
+
+def read_csv(filename):
     """Reads a CSV file containing a tabular description of a transition function,
        as found in Sipser. Major difference: instead of multiple header rows,
        only a single header row whose entries might be tuples.
        """
-    with open(infilename) as infile:
 
-        reader = csv.reader(infile)
-        lhs = []
-        transitions = []
-
-        # Header row has one dummy cell, and then each cell has lhs values
-        # for the input and any additional stores.
-        row = six.next(reader)
-        lhs = []
-        j = 1
-        for cell in row[1:]: 
-            try:
-                lhs.append(string_to_config(cell))
-            except Exception as e:
-                e.message = "cell %s1: %s" % (chr(ord('A')+j), e.message)
-                raise
-            j += 1
-        num_stores = single_value(map(len, lhs))+1
-        m = machines.Machine(num_stores, input=1)
-        m.add_accept_config(["ACCEPT"] + [[]]*(num_stores-1))
-
-        # Body
-        i = 1
-        for row in reader:
-            if sum(len(cell.strip()) for cell in row) == 0:
-                continue
-            try:
-                q, flags = string_to_state(row[0])
-            except Exception as e:
-                e.message = "cell A%d: %s" % (i+1, e.message)
-                raise
-            if '>' in flags:
-                if m.start_config is not None:
-                    raise ValueError("cell A%d: more than one start state" % (i+1))
-                m.set_start_config([q] + [[]] * (num_stores-2))
-            if '@' in flags:
-                m.add_accept_config([q, syntax.BLANK] + [[]]*(num_stores-2))
-
-            rhs = []
-            j = 1
-            for cell in row[1:]:
-                try:
-                    rhs.append(string_to_configs(cell))
-                except Exception as e:
-                    e.message = "cell %s%d: %s" % (chr(ord('A')+j), i+1, e.message)
-                    raise
-                j += 1
-            for l, rs in zip(lhs, rhs):
-                l = ([q],) + l
-                for r in rs:
-                    m.add_transition(l, r)
-            i += 1
+    with open(filename) as file:
+        table = list(csv.reader(file))
+    m = convert_table(table)
     return m
+
+def read_excel(filename, sheet=None):
+    """Reads an Excel file containing a tabular description of a transition function,
+       as found in Sipser. Major difference: instead of multiple header rows,
+       only a single header row whose entries might be tuples.
+       """
+
+    from openpyxl import load_workbook
+    wb = load_workbook(filename)
+    if sheet is None:
+        ws = wb.active
+    else:
+        ws = wb.get_sheet_by_name(sheet)
+    table = [[cell.value or "" for cell in row] for row in ws.rows]
+    return convert_table(table)
 
 def read_tgf(infilename):
     """Reads a file in Trivial Graph Format."""

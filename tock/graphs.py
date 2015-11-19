@@ -62,12 +62,10 @@ class Graph(object):
         result.append('}')
         return '\n'.join(result)
 
-    graphviz_impl = None
-
     def _ipython_display_(self):
         from IPython.display import display
-        from .viz import viz
-        display(viz(self._repr_dot_()))
+        from .graphviz import run_dot
+        display(run_dot(self._repr_dot_()))
 
 def read_tgf(filename):
     """Reads a file in Trivial Graph Format."""

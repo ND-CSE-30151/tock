@@ -1,6 +1,7 @@
 from . import machines
+from . import readers
 
-__all__ = ['to_graph', 'write_dot']
+__all__ = ['to_graph', 'write_dot', 'read_tgf']
 
 class Graph(object):
     def __init__(self):
@@ -66,6 +67,62 @@ class Graph(object):
         from IPython.display import display
         from .viz import viz
         display(viz(self._repr_dot_()))
+
+def read_tgf(filename):
+    """Reads a file in Trivial Graph Format."""
+    g = Graph()
+    with open(filename) as file:
+        states = {}
+
+        # Nodes
+        for line in file:
+            line = line.strip()
+            if line == "": 
+                continue
+            elif line == "#":
+                break
+            i, q = line.split(None, 1)
+            q, attrs = readers.string_to_state(q)
+            states[i] = q
+            g.add_node(q, attrs)
+
+        # Edges
+        for line in file:
+            line = line.strip()
+            if line == "": 
+                continue
+            i, j, t = line.split(None, 2)
+            q, r = states[i], states[j]
+            t = readers.string_to_transition(t)
+            g.add_edge(q, r, {'label':t})
+
+    return from_graph(g)
+
+def from_graph(g):
+    transitions = []
+
+    for q in g.edges:
+        for r in g.edges[q]:
+            for e in g.edges[q][r]:
+                t = e['label']
+                transitions.append((([q],)+t.lhs, ([r],)+t.rhs))
+
+    num_stores = readers.single_value(len(lhs) for lhs, rhs in transitions)
+    m = machines.Machine(num_stores, state=0, input=1)
+    m.add_accept_config(["ACCEPT"] + [[]]*(num_stores-1))
+
+    for q in g.nodes:
+        if g.nodes[q].get('start', False):
+            if m.start_config is not None:
+                raise ValueError("more than one start state")
+            m.set_start_state(q)
+        if g.nodes[q].get('accept', False):
+            m.add_accept_state(q)
+
+    for lhs, rhs in transitions:
+        m.add_transition(lhs, rhs)
+
+    return m
 
 def write_dot(x, filename):
     if isinstance(x, machines.Machine):

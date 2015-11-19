@@ -1,15 +1,9 @@
-import csv
-import six
-
 from . import machines
 from . import syntax
 
-__all__ = ['read_csv', 'read_excel', 'read_tgf']
-
 # This module has three parts:
 # - Parser for transitions and pieces of transitions (maybe should move to syntax.py and/or machines.py)
-# - Reader for CSV files (maybe should move to a tables.py)
-# - Reader for TGF files (maybe should move to a graphs.py)
+# - Reader for TGF files (maybe should move to graphs.py)
 
 ### Parser for transitions and pieces of transitions
 
@@ -46,16 +40,19 @@ def parse_set(s):
 def string_to_state(s):
     """s is a string possibly preceded by > or @."""
     s = syntax.lexer(s)
-    flags = set()
+    attrs = {}
     while True:
-        if s.cur in '>@':
-            flags.add(s.cur)
+        if s.cur == '>':
+            attrs['start'] = True
+            s.pos += 1
+        elif s.cur == '@':
+            attrs['accept'] = True
             s.pos += 1
         else:
             break
     x = syntax.parse_symbol(s)
     syntax.parse_end(s)
-    return x, flags
+    return x, attrs
 
 def string_to_store(s):
     s = syntax.lexer(s)
@@ -110,126 +107,3 @@ def single_value(s):
     if len(s) != 1:
         raise ValueError()
     return s.pop()
-
-### Top-level functions for reading and writing machines in various formats.
-
-def from_table(table):
-    transitions = []
-
-    # Header row has one dummy cell, and then each cell has lhs values
-    # for the input and any additional stores.
-    lhs = []
-    for j, cell in enumerate(table[0][1:], 1):
-        try:
-            lhs.append(string_to_config(cell))
-        except Exception as e:
-            e.message = "cell %s1: %s" % (chr(ord('A')+j), e.message)
-            raise
-    try:
-        num_stores = single_value(map(len, lhs))+1
-    except ValueError:
-        raise ValueError("row 1: left-hand sides must all have same size")
-    m = machines.Machine(num_stores, state=0, input=1)
-    m.add_accept_config(["ACCEPT"] + [[]]*(num_stores-1))
-
-    # Body
-    for i, row in enumerate(table[1:], 1):
-        if sum(len(cell.strip()) for cell in row) == 0:
-            continue
-        try:
-            q, flags = string_to_state(row[0])
-            if '>' in flags:
-                if m.start_config is not None:
-                    raise ValueError("more than one start state")
-                m.set_start_state(q)
-            if '@' in flags:
-                m.add_accept_state(q)
-        except Exception as e:
-            e.message = "cell A%d: %s" % (i+1, e.message)
-            raise
-
-        rhs = []
-        for j, cell in enumerate(row[1:], 1):
-            try:
-                rhs.append(string_to_configs(cell))
-            except Exception as e:
-                e.message = "cell %s%d: %s" % (chr(ord('A')+j), i+1, e.message)
-                raise
-
-        for l, rs in zip(lhs, rhs):
-            l = ([q],) + l
-            for r in rs:
-                m.add_transition(l, r)
-    return m
-
-def read_csv(filename):
-    """Reads a CSV file containing a tabular description of a transition function,
-       as found in Sipser. Major difference: instead of multiple header rows,
-       only a single header row whose entries might be tuples.
-       """
-
-    with open(filename) as file:
-        table = list(csv.reader(file))
-    m = from_table(table)
-    return m
-
-def read_excel(filename, sheet=None):
-    """Reads an Excel file containing a tabular description of a transition function,
-       as found in Sipser. Major difference: instead of multiple header rows,
-       only a single header row whose entries might be tuples.
-       """
-
-    from openpyxl import load_workbook
-    wb = load_workbook(filename)
-    if sheet is None:
-        ws = wb.active
-    else:
-        ws = wb.get_sheet_by_name(sheet)
-    table = [[cell.value or "" for cell in row] for row in ws.rows]
-    return from_table(table)
-
-def read_tgf(infilename):
-    """Reads a file in Trivial Graph Format."""
-
-    with open(infilename) as infile:
-        states = {}
-        transitions = []
-        flags = {}
-
-        # Nodes
-        for line in infile:
-            line = line.strip()
-            if line == "": 
-                continue
-            elif line == "#":
-                break
-            i, q = line.split(None, 1)
-            states[i], flags[i] = string_to_state(q)
-
-        # Edges
-        for line in infile:
-            line = line.strip()
-            if line == "": 
-                continue
-            i, j, t = line.split(None, 2)
-            q, r = states[i], states[j]
-            t = string_to_transition(t)
-            transitions.append((([q],)+t.lhs, ([r],)+t.rhs))
-
-    num_stores = single_value(len(lhs) for lhs, rhs in transitions)
-    m = machines.Machine(num_stores, state=0, input=1)
-    m.add_accept_config(["ACCEPT"] + [[]]*(num_stores-1))
-
-    for i in states:
-        if '>' in flags[i]:
-            if m.start_config is not None:
-                raise ValueError("more than one start state")
-            m.set_start_state(states[i])
-        if '@' in flags[i]:
-            m.add_accept_state(states[i])
-
-    for lhs, rhs in transitions:
-        m.add_transition(lhs, rhs)
-
-    return m
-

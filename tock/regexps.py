@@ -1,12 +1,12 @@
 from . import machines
 from . import syntax
 
-__all__ = ['convert_regexp']
+__all__ = ['from_regexp']
 
 def zero_pad(n, i):
     return str(i).zfill(len(str(n)))
 
-def convert_regexp(s, offset=0):
+def from_regexp(s, offset=0):
     s = syntax.lexer(s)
     s.offset = offset
     m = machines.Machine(2, state=0, input=1)

@@ -1,10 +1,12 @@
 from . import machines
 from . import syntax
 
+__all__ = ['from_grammar']
+
 def zero_pad(n, i):
     return str(i).zfill(len(str(n)))
 
-def convert_grammar(rules):
+def from_grammar(rules):
     """Argument `rules` is a file-like object or sequence of strings.
        Each is of the form lhs -> rhs, where lhs is a nonterminal and
        rhs is a space-separated sequence of terminals or nonterminals.

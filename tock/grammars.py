@@ -26,10 +26,10 @@ def convert_grammar(rules):
     rules = parsed_rules
     start = rules[0][0]
 
-    m = machines.Machine(3, input=1)
+    m = machines.Machine(3, state=0, input=1)
 
     q1 = "%s.1" % zero_pad(len(rules)+1, 0)
-    m.set_start_config(("start", [], []))
+    m.set_start_state("start")
     m.add_transition(("start", [], []), (q1,     "$"))
     m.add_transition((q1,      [], []), ("loop", start))
 
@@ -56,7 +56,7 @@ def convert_grammar(rules):
                 q = q1
 
     m.add_transition(("loop", [], "$"), ("accept", []))
-    m.add_accept_config(["accept", syntax.BLANK, []])
+    m.add_accept_state("accept")
 
     for a in symbols - nonterminals:
         m.add_transition(("loop", a, a), ("loop", []))

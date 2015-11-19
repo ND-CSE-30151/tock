@@ -129,7 +129,7 @@ def convert_table(table):
         num_stores = single_value(map(len, lhs))+1
     except ValueError:
         raise ValueError("row 1: left-hand sides must all have same size")
-    m = machines.Machine(num_stores, input=1)
+    m = machines.Machine(num_stores, state=0, input=1)
     m.add_accept_config(["ACCEPT"] + [[]]*(num_stores-1))
 
     # Body
@@ -141,9 +141,9 @@ def convert_table(table):
             if '>' in flags:
                 if m.start_config is not None:
                     raise ValueError("more than one start state")
-                m.set_start_config([q] + [[]] * (num_stores-2))
+                m.set_start_state(q)
             if '@' in flags:
-                m.add_accept_config([q, syntax.BLANK] + [[]]*(num_stores-2))
+                m.add_accept_state(q)
         except Exception as e:
             e.message = "cell A%d: %s" % (i+1, e.message)
             raise
@@ -217,16 +217,16 @@ def read_tgf(infilename):
             transitions.append((([q],)+t.lhs, ([r],)+t.rhs))
 
     num_stores = single_value(len(lhs) for lhs, rhs in transitions)
-    m = machines.Machine(num_stores, input=1)
+    m = machines.Machine(num_stores, state=0, input=1)
     m.add_accept_config(["ACCEPT"] + [[]]*(num_stores-1))
 
     for i in states:
         if '>' in flags[i]:
             if m.start_config is not None:
                 raise ValueError("more than one start state")
-            m.set_start_config([states[i]] + [[]] * (num_stores-2))
+            m.set_start_state(states[i])
         if '@' in flags[i]:
-            m.add_accept_config([states[i], syntax.BLANK] + [[]] * (num_stores-2))
+            m.add_accept_state(states[i])
 
     for lhs, rhs in transitions:
         m.add_transition(lhs, rhs)

@@ -9,11 +9,11 @@ def zero_pad(n, i):
 def convert_regexp(s, offset=0):
     s = syntax.lexer(s)
     s.offset = offset
-    m = machines.Machine(2, input=1)
+    m = machines.Machine(2, state=0, input=1)
     initial, finals = parse_union(s, m)
-    m.set_start_config([initial])
+    m.set_start_state(initial)
     for q in finals:
-        m.add_accept_config([q, [syntax.BLANK]])
+        m.add_accept_state(q)
     return m
 
 def parse_union(s, m):

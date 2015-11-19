@@ -134,9 +134,10 @@ class Transition(object):
                              ",".join(map(str, self.rhs)))
 
 class Machine(object):
-    def __init__(self, num_stores, input=None):
+    def __init__(self, num_stores, state=None, input=None):
         self.transitions = []
         self.num_stores = num_stores
+        self.state = state
         self.input = input
 
         self.start_config = None
@@ -150,7 +151,7 @@ class Machine(object):
         if self.input is not None and len(config) == self.num_stores-1:
             config = list(config)
             config[self.input:self.input] = [[]]
-        # since there is no Configuration object, make a fake Transition
+        # Since there is no Configuration object, make a fake Transition
         t = Transition([[]]*self.num_stores, config)
         self.start_config = t.rhs
 
@@ -158,8 +159,23 @@ class Machine(object):
         from .readers import string_to_config
         if isinstance(config, six.string_types):
             config = string_to_config(config)
+        # Since there is no Configuration object, make a fake Transition
         t = Transition(config, [[]]*self.num_stores)
         self.accept_configs.add(t.lhs)
+
+    def set_start_state(self, q):
+        if self.state is None: raise ValueError("no state defined")
+        config = [[]] * self.num_stores
+        config[self.state] = q
+        self.set_start_config(config)
+
+    def add_accept_state(self, q):
+        if self.state is None: raise ValueError("no state defined")
+        config = [[]] * self.num_stores
+        config[self.state] = q
+        if self.input: # and self.has_input(self.input):
+            config[self.input] = [syntax.BLANK]
+        self.add_accept_config(config)
 
     def add_transition(self, *args):
         if len(args) == 1 and isinstance(args[0], Transition):
@@ -181,7 +197,7 @@ class Machine(object):
         self.transitions.append(t)
 
     def get_transitions(self):
-        one_way_input = self.has_input(self.input)
+        one_way_input = self.input and self.has_input(self.input)
         for t in self.transitions:
             if one_way_input:
                 rhs = list(t.rhs)
@@ -196,7 +212,6 @@ class Machine(object):
         from IPython.display import display
         from .writers import display_graph
         display(display_graph(self))
-
 
     ### Testing for different types of automata
 

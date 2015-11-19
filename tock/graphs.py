@@ -1,9 +1,6 @@
 from . import machines
 
-__all__ = ['display_graph', 'to_graph']
-
-def display_graph(m):
-    to_graph(m)._ipython_display_()
+__all__ = ['to_graph', 'write_dot']
 
 class Graph(object):
     def __init__(self):
@@ -26,7 +23,7 @@ class Graph(object):
     def __getitem__(self, u):
         return self.edges[u]
 
-    def _ipython_display_(self):
+    def _repr_dot_(self):
         result = []
         result.append('digraph {')
         for key, val in self.attrs.items():
@@ -63,10 +60,20 @@ class Graph(object):
                 result.append('  {} -> {}[label=<{}>];'.format(index[u], index[v], label))
 
         result.append('}')
+        return '\n'.join(result)
 
+    def _ipython_display_(self):
         from IPython.display import display
         from .viz import viz
-        display(viz('\n'.join(result)))
+        display(viz(self._repr_dot_()))
+
+def write_dot(x, filename):
+    if isinstance(x, machines.Machine):
+        x = to_graph(x)
+    if not isinstance(x, Graph):
+        raise TypeError("Only Machines and Graphs can be written as DOT files")
+    with open(filename, "w") as file:
+        file.write(x._repr_dot_())
 
 def to_graph(m):
     g = Graph()

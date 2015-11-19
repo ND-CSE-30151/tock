@@ -25,14 +25,12 @@ whitespace_re = re.compile(r"\s*(//.*)?")
 # Symbols can be |- -| # $ or any string of alphanumerics or _ .
 symbol_re = re.compile(r"\|-|-\||#|\$|[A-Za-z0-9_.]+")
 class Symbol(str):
-    def __repr__(self):
-        return "Symbol(%s)" % self
+    pass
 
 # Operators
 operator_re = re.compile(r"->|[&^(){},@>|*]")
 class Operator(str):
-    def __repr__(self):
-        return "Operator(%s)" % self
+    pass
 
 def lexer(s):
     i = 0

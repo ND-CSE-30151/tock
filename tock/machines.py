@@ -224,8 +224,6 @@ class Machine(object):
 
     def _ipython_display_(self):
         from IPython.display import display
-        #from .writers import display_graph
-        #display(display_graph(self))
         from .graphs import to_graph
         display(to_graph(self))
 

@@ -113,7 +113,7 @@ def single_value(s):
 
 ### Top-level functions for reading and writing machines in various formats.
 
-def convert_table(table):
+def from_table(table):
     transitions = []
 
     # Header row has one dummy cell, and then each cell has lhs values
@@ -170,7 +170,7 @@ def read_csv(filename):
 
     with open(filename) as file:
         table = list(csv.reader(file))
-    m = convert_table(table)
+    m = from_table(table)
     return m
 
 def read_excel(filename, sheet=None):
@@ -186,7 +186,7 @@ def read_excel(filename, sheet=None):
     else:
         ws = wb.get_sheet_by_name(sheet)
     table = [[cell.value or "" for cell in row] for row in ws.rows]
-    return convert_table(table)
+    return from_table(table)
 
 def read_tgf(infilename):
     """Reads a file in Trivial Graph Format."""

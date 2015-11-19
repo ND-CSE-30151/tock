@@ -70,6 +70,10 @@ class Store(object):
             result.append("^")
         return " ".join(result)
 
+    def _repr_html_(self):
+        # nothing fancy
+        return str(self).replace('&','&epsilon;')
+
 class Transition(object):
     def __init__(self, *args):
         from .readers import string_to_transition
@@ -130,8 +134,18 @@ class Transition(object):
         return stores
 
     def __str__(self):
-        return "%s -> %s" % (",".join(map(str, self.lhs)), 
-                             ",".join(map(str, self.rhs)))
+        if len(self.rhs) > 0:
+            return "%s -> %s" % (",".join(map(str, self.lhs)), 
+                                 ",".join(map(str, self.rhs)))
+        else:
+            return ",".join(map(str, self.lhs))
+
+    def _repr_html_(self):
+        if len(self.rhs) > 0:
+            return "%s &rarr; %s" % (",".join(s._repr_html_() for s in self.lhs), 
+                                 ",".join(s._repr_html_() for s in self.rhs))
+        else:
+            return ",".join(s._repr_html_() for s in self.lhs)
 
 class Machine(object):
     def __init__(self, num_stores, state=None, input=None):
@@ -173,7 +187,7 @@ class Machine(object):
         if self.state is None: raise ValueError("no state defined")
         config = [[]] * self.num_stores
         config[self.state] = q
-        if self.input: # and self.has_input(self.input):
+        if self.input is not None: # and self.has_input(self.input):
             config[self.input] = [syntax.BLANK]
         self.add_accept_config(config)
 
@@ -197,7 +211,7 @@ class Machine(object):
         self.transitions.append(t)
 
     def get_transitions(self):
-        one_way_input = self.input and self.has_input(self.input)
+        one_way_input = self.input is not None and self.has_input(self.input)
         for t in self.transitions:
             if one_way_input:
                 rhs = list(t.rhs)
@@ -210,8 +224,10 @@ class Machine(object):
 
     def _ipython_display_(self):
         from IPython.display import display
-        from .writers import display_graph
-        display(display_graph(self))
+        #from .writers import display_graph
+        #display(display_graph(self))
+        from .graphs import to_graph
+        display(to_graph(self))
 
     ### Testing for different types of automata
 

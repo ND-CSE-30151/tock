@@ -96,6 +96,100 @@ def parse_end(s):
     if s.pos < len(s):
         raise ValueError("unexpected %s" % (s.cur))
 
-if __name__ == "__main__":
-    import sys
-    print(list(lexer(sys.argv[1])))
+def parse_store(s):
+    from machines import Store
+    position = None
+    if s.cur == '^':
+        s.pos += 1
+        position = -1
+    x = parse_string(s)
+    if s.pos < len(s) and s.cur == '^':
+        s.pos += 1
+        if position is not None:
+            raise ValueError("head is only allowed to be in one position")
+        position = len(x)
+    if position is None:
+        position = 0
+    return Store(x, position)
+
+def parse_tuple(s):
+    parse_character(s, '(')
+    value = tuple(parse_multiple(s, parse_store))
+    parse_character(s, ')')
+    return value
+
+def parse_set(s):
+    parse_character(s, '{')
+    if s.cur == '(':
+        value = set(parse_multiple(s, parse_tuple))
+    else:
+        value = {(x,) for x in parse_multiple(s, parse_store)}
+    parse_character(s, '}')
+    return value
+
+def string_to_state(s):
+    """s is a string possibly preceded by > or @."""
+    s = lexer(s)
+    attrs = {}
+    while True:
+        if s.cur == '>':
+            attrs['start'] = True
+            s.pos += 1
+        elif s.cur == '@':
+            attrs['accept'] = True
+            s.pos += 1
+        else:
+            break
+    x = parse_symbol(s)
+    parse_end(s)
+    return x, attrs
+
+def string_to_store(s):
+    s = lexer(s)
+    x = parse_store(s)
+    parse_end(s)
+    return x
+
+def string_to_config(s):
+    """s is a comma-separated list of stores."""
+    s = lexer(s)
+    x = parse_multiple(s, parse_store)
+    parse_end(s)
+    return tuple(x)
+
+def string_to_configs(s):
+    """s is a string in one of the following formats:
+       - x,y
+       - (x,y)
+       - {x,y}
+       - {(w,x),(y,z)}
+       In any case, returns a set of tuples of stores.
+    """
+
+    s = lexer(s)
+    value = None
+    if s.pos == len(s):
+        value = set()
+    elif s.cur == '{':
+        value = parse_set(s)
+    elif s.cur == '(':
+        value = {parse_tuple(s)}
+    else:
+        value = {tuple(parse_multiple(s, parse_store))}
+    parse_end(s)
+
+    return value
+
+def string_to_transition(s):
+    """s is a string of the form a,b or a,b->c,d"""
+    from machines import Transition
+    s = lexer(s)
+    lhs = parse_multiple(s, parse_store)
+    if s.pos < len(s) and s.cur == "->":
+        s.pos += 1
+        rhs = parse_multiple(s, parse_store)
+    else:
+        rhs = ()
+    parse_end(s)
+    return Transition(lhs, rhs)
+

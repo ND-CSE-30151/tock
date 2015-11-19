@@ -1,7 +1,6 @@
 import collections
 import csv
 from . import machines
-from . import readers
 from . import syntax
 
 try:
@@ -40,6 +39,12 @@ class Table(object):
         result.append('</table>')
         return '\n'.join(result)
 
+def single_value(s):
+    s = set(s)
+    if len(s) != 1:
+        raise ValueError()
+    return s.pop()
+
 def from_table(table):
     transitions = []
 
@@ -48,12 +53,12 @@ def from_table(table):
     lhs = []
     for j, cell in enumerate(table[0][1:], 1):
         try:
-            lhs.append(readers.string_to_config(cell))
+            lhs.append(syntax.string_to_config(cell))
         except Exception as e:
             e.message = "cell %s1: %s" % (chr(ord('A')+j), e.message)
             raise
     try:
-        num_stores = readers.single_value(map(len, lhs))+1
+        num_stores = single_value(map(len, lhs))+1
     except ValueError:
         raise ValueError("row 1: left-hand sides must all have same size")
     m = machines.Machine(num_stores, state=0, input=1)
@@ -64,7 +69,7 @@ def from_table(table):
         if sum(len(cell.strip()) for cell in row) == 0:
             continue
         try:
-            q, attrs = readers.string_to_state(row[0])
+            q, attrs = syntax.string_to_state(row[0])
             if attrs.get('start', False):
                 if m.start_config is not None:
                     raise ValueError("more than one start state")
@@ -78,7 +83,7 @@ def from_table(table):
         rhs = []
         for j, cell in enumerate(row[1:], 1):
             try:
-                rhs.append(readers.string_to_configs(cell))
+                rhs.append(syntax.string_to_configs(cell))
             except Exception as e:
                 e.message = "cell %s%d: %s" % (chr(ord('A')+j), i+1, e.message)
                 raise

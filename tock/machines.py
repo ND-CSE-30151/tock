@@ -8,12 +8,11 @@ class Store(object):
        position."""
 
     def __init__(self, values=None, position=None):
-        from .readers import string_to_store
         self.position = 0
         if values is None:
             self.values = []
         elif isinstance(values, six.string_types):
-            other = string_to_store(values)
+            other = syntax.string_to_store(values)
             self.values = other.values
             self.position = other.position
         else:
@@ -76,11 +75,10 @@ class Store(object):
 
 class Transition(object):
     def __init__(self, *args):
-        from .readers import string_to_transition
         if len(args) == 1:
             arg = args[0]
             if isinstance(arg, six.string_types):
-                arg = string_to_transition(arg)
+                arg = syntax.string_to_transition(arg)
                 self.lhs = arg.lhs
                 self.rhs = arg.rhs
             else:
@@ -158,9 +156,8 @@ class Machine(object):
         self.accept_configs = set()
 
     def set_start_config(self, config):
-        from .readers import string_to_config
         if isinstance(config, six.string_types):
-            config = string_to_config(config)
+            config = syntax.string_to_config(config)
         # If input is missing, supply &
         if self.input is not None and len(config) == self.num_stores-1:
             config = list(config)
@@ -170,9 +167,8 @@ class Machine(object):
         self.start_config = t.rhs
 
     def add_accept_config(self, config):
-        from .readers import string_to_config
         if isinstance(config, six.string_types):
-            config = string_to_config(config)
+            config = syntax.string_to_config(config)
         # Since there is no Configuration object, make a fake Transition
         t = Transition(config, [[]]*self.num_stores)
         self.accept_configs.add(t.lhs)

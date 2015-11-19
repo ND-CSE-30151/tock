@@ -1,4 +1,3 @@
-from .readers import *
 from .tables import *
 from .graphs import *
 from .regexps import *

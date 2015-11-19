@@ -1,5 +1,4 @@
 from . import machines
-from . import readers
 
 __all__ = ['to_graph', 'write_dot', 'read_tgf']
 
@@ -63,6 +62,8 @@ class Graph(object):
         result.append('}')
         return '\n'.join(result)
 
+    graphviz_impl = None
+
     def _ipython_display_(self):
         from IPython.display import display
         from .viz import viz
@@ -82,7 +83,7 @@ def read_tgf(filename):
             elif line == "#":
                 break
             i, q = line.split(None, 1)
-            q, attrs = readers.string_to_state(q)
+            q, attrs = syntax.string_to_state(q)
             states[i] = q
             g.add_node(q, attrs)
 
@@ -93,10 +94,16 @@ def read_tgf(filename):
                 continue
             i, j, t = line.split(None, 2)
             q, r = states[i], states[j]
-            t = readers.string_to_transition(t)
+            t = syntax.string_to_transition(t)
             g.add_edge(q, r, {'label':t})
 
     return from_graph(g)
+
+def single_value(s):
+    s = set(s)
+    if len(s) != 1:
+        raise ValueError()
+    return s.pop()
 
 def from_graph(g):
     transitions = []
@@ -107,7 +114,7 @@ def from_graph(g):
                 t = e['label']
                 transitions.append((([q],)+t.lhs, ([r],)+t.rhs))
 
-    num_stores = readers.single_value(len(lhs) for lhs, rhs in transitions)
+    num_stores = single_value(len(lhs) for lhs, rhs in transitions)
     m = machines.Machine(num_stores, state=0, input=1)
     m.add_accept_config(["ACCEPT"] + [[]]*(num_stores-1))
 

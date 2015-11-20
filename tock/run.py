@@ -1,8 +1,12 @@
 import collections
 from . import machines
 from . import syntax
+from . import graphs
 
 __all__ = ['run', 'run_bfs', 'run_pda']
+
+# to do:
+# Configuration objects are created at the last minute, but should be used throughout
 
 def run(m, w, trace=False, steps=1000, show_stack=3):
     """Runs an automaton, automatically selecting a search method."""
@@ -33,7 +37,7 @@ def run(m, w, trace=False, steps=1000, show_stack=3):
 
 def run_bfs(m, w, trace=False, steps=1000):
     """Runs an automaton using breadth-first search."""
-    from .machines import Store, Transition
+    from .machines import Store, Configuration, Transition
 
     agenda = collections.deque()
     chart = {}
@@ -46,8 +50,9 @@ def run_bfs(m, w, trace=False, steps=1000):
 
     chart[config] = 0
     agenda.append(config)
-    run = Run(m)
-    run.set_start_config(config)
+    run = graphs.Graph()
+    run.attrs['rankdir'] = 'TB'
+    run.add_node(Configuration(config), {'start': True})
 
     # Final configurations
     # Since there is no Configuration class, we need to make a fake Transition
@@ -62,11 +67,11 @@ def run_bfs(m, w, trace=False, steps=1000):
 
         for t in final_transitions:
             if t.match(tconfig):
-                run.add_accept_config(tconfig)
+                run.add_node(Configuration(tconfig), {'accept': True})
 
         if chart[tconfig] == steps:
             if trace: print("maximum number of steps reached")
-            run.add_ellipsis(tconfig, None)
+            run.add_node(Configuration(tconfig), {'incomplete': True})
             continue
 
         for rule in m.transitions:
@@ -81,7 +86,14 @@ def run_bfs(m, w, trace=False, steps=1000):
                     chart[nconfig] = chart[tconfig]+1
                     if trace: print("add: {}".format(nconfig))
                     agenda.append(nconfig)
-                run.add_edge(tconfig, nconfig)
+                run.add_edge(Configuration(tconfig), Configuration(nconfig))
+
+    # If input tape is one-way, then rank all nodes by input position
+    if m.has_input(m.input):
+        for q in run.nodes:
+            ql = list(q)
+            run.nodes[q]['rank'] = ql.pop(m.input)
+            run.nodes[q]['label'] = Configuration(ql)
 
     return run
 
@@ -126,16 +138,14 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
 
     """
 
-    from .machines import Store, Transition
+    from .machines import Store, Configuration, Transition
 
     agenda = collections.deque()
-    goals = []
     chart = set()
     index_left = collections.defaultdict(set)
     index_right = collections.defaultdict(set)
     backpointers = collections.defaultdict(set)
-    visible = set()
-    run = Run(m)
+    run = graphs.Graph()
 
     # which position the state, input and stack are in
     if not m.has_stack(stack):
@@ -152,18 +162,24 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
     config[m.input] = Store(input_tokens)
     config = tuple(config)
 
-    def simplify(parent, child):
-        """Map a parent=>child item into a node in the run graph.
-           If parent is not None, just append a ..."""
-        if parent is None:
-            return child
-        else:
+    def get_node(parent, child):
+        if parent is not None:
+            # In the run graph, we don't show the parent,
+            # but if there is one, add a ...
             child = list(child)
             child[stack] = Store(child[stack].values + ["..."], child[stack].position)
-            return tuple(child)
+        return Configuration(child)
+
+    def add_node(parent, child, attrs=None):
+        node = get_node(parent, child)
+        attrs = {} if attrs is None else dict(attrs)
+        label = list(node)
+        attrs['rank'] = label.pop(m.input)
+        attrs['label'] = Configuration(label)
+        run.add_node(node, attrs)
 
     agenda.append((None, config))
-    run.set_start_config(simplify(None, config))
+    add_node(None, config, {'start': True})
 
     # Final configurations
     # Since there is no Configuration class, we need to make a fake Transition
@@ -185,7 +201,7 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
 
         for t in final_transitions:
             if t.match(child) and (parent is None or len(child[stack]) == show_stack):
-                run.add_accept_config(simplify(parent, child))
+                add_node(parent, child, {'accept': True})
 
         # The stack shows too many items (push)
         if len(child[stack]) > show_stack:
@@ -193,16 +209,16 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
             del grandchild[stack].values[-1]
             add(child, grandchild)
             index_right[child].add(parent)
-            for ant in backpointers[simplify(parent, child)]:
-                backpointers[simplify(child, grandchild)].add(ant)
+            for ant in backpointers[get_node(parent, child)]:
+                backpointers[get_node(child, grandchild)].add(ant)
 
             # This item can also be the left antecedent of the Pop rule
             for grandchild in index_left[child]:
                 grandchild = tuple(s.copy() for s in grandchild)
                 grandchild[stack].values.append(child[stack][-1])
                 add(parent, grandchild)
-                for ant in backpointers[simplify(parent, child)]:
-                    backpointers[simplify(parent, grandchild)].add(ant)
+                for ant in backpointers[get_node(parent, child)]:
+                    backpointers[get_node(parent, grandchild)].add(ant)
 
         # The stack shows too few items (pop)
         elif parent is not None and len(child[stack]) < show_stack:
@@ -216,148 +232,22 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
             for grandparent in index_right[parent]:
                 add(grandparent, aunt)
 
-            for ant in backpointers[simplify(parent, child)]:
-                backpointers[simplify(grandparent, aunt)].add(ant)
+            for ant in backpointers[get_node(parent, child)]:
+                backpointers[get_node(grandparent, aunt)].add(ant)
 
         # The stack is just right
         else:
-            run.configs.add(simplify(parent, child))
+            add_node(parent, child)
             for transition in m.transitions:
                 if transition.match(child):
                     sister = transition.apply(child)
                     add(parent, sister)
-                    backpointers[simplify(parent, sister)].add(simplify(parent, child))
+                    backpointers[get_node(parent, sister)].add(get_node(parent, child))
 
     # Add run edges only between configurations whose stack is
     # just right
-    for config2 in run.configs:
+    for config2 in run.nodes:
         for config1 in backpointers[config2]:
             run.add_edge(config1, config2)
 
     return run
-
-def ascii_to_html(s):
-    s = str(s)
-    s = s.replace("&", "&epsilon;")
-    s = s.replace("->", "&rarr;")
-    s = s.replace(">", "&gt;")
-    s = s.replace("...", "&hellip;")
-    return s
-
-class Run(object):
-    def __init__(self, machine):
-        self.machine = machine
-        self.configs = set()
-        self.edges = set()
-        self.ellipses = set()
-        self.start_config = None
-        self.accept_configs = set()
-
-    def add_edge(self, from_config, to_config):
-        self.configs.add(from_config)
-        self.configs.add(to_config)
-        self.edges.add((from_config, to_config))
-
-    def add_ellipsis(self, from_config, to_config):
-        if from_config is not None:
-            self.configs.add(from_config)
-        if to_config is not None:
-            self.configs.add(to_config)
-        self.ellipses.add((from_config, to_config))
-
-    def set_start_config(self, config):
-        self.start_config = config
-        self.configs.add(config)
-
-    def add_accept_config(self, config):
-        self.accept_configs.add(config)
-        self.configs.add(config)
-
-    def _ipython_display_(self):
-        def label(config): 
-            # Label nodes by config
-            return ascii_to_html(','.join(map(str, (config[0][0],) + config[1:])))
-        def label_no_input(config): 
-            # Label nodes by config sans input (second store)
-            return ascii_to_html(','.join(map(str, (config[0][0],) + config[2:])))
-        def rank(config): 
-            # Rank nodes by input position
-            l = len([x for x in config[self.machine.input] if x != syntax.BLANK])
-            return (-l, config[1])
-
-        result = []
-        result.append("digraph {")
-        result.append("  rankdir=TB;")
-        result.append('  node [fontname=Courier,fontsize=10,shape=box,style=rounded,height=0,width=0,margin="0.055,0.042"];')
-        result.append("  edge [arrowhead=vee,arrowsize=0.5];")
-
-        result.append('  START[shape=none,label=""];\n')
-
-        one_way_input = self.machine.has_input(self.machine.input)
-
-        # assign an id to each config
-        config_id = {}
-        for config in self.configs:
-            if config not in config_id:
-                config_id[config] = len(config_id)
-
-        for config in self.configs:
-            attrs = {}
-            if one_way_input:
-                attrs['label'] = '<{}>'.format(label_no_input(config))
-            else:
-                attrs['label'] = '<{}>'.format(label(config))
-
-            if config in self.accept_configs:
-                attrs['peripheries'] = 2
-
-            result.append('  %s[%s];' % (config_id[config], ','.join('{}={}'.format(key,val) for key,val in attrs.items())))
-            if config == self.start_config:
-                result.append('  START -> %s;' % (config_id[config]))
-
-        if one_way_input:
-            # If a node has a predecessor in a previous rank
-            # as well as in the same rank, let the former determine
-            # the position of the node
-
-            nonepsilon = set()
-            for from_config, to_config in self.edges:
-                if rank(to_config) > rank(from_config):
-                    nonepsilon.add(to_config)
-            for from_config, to_config in self.edges:
-                if rank(to_config) == rank(from_config) and to_config in nonepsilon:
-                    result.append("  %s -> %s[constraint=false];" % (config_id[from_config], config_id[to_config]))
-                else:
-                    result.append("  %s -> %s;" % (config_id[from_config], config_id[to_config]))
-
-        else:
-            for from_config, to_config in self.edges:
-                result.append("  %s -> %s;" % (config_id[from_config], config_id[to_config]))
-
-        for from_config, to_config in self.ellipses:
-            if to_config is None:
-                cid = config_id[from_config]
-                result.append('  DOTS_%s[shape=none,label=""];\n' % (cid,))
-                result.append("  %s -> DOTS_%s[dir=none,style=dotted];" % (cid, cid))
-            elif from_config is None:
-                cid = config_id[to_config]
-                result.append('  DOTS_%s[shape=none,label=""];\n' % (cid,))
-                result.append("  DOTS_%s -> %s[dir=none,style=dotted];" % (cid, cid))
-
-        if one_way_input:
-            ranks = collections.defaultdict(list)
-            for config in self.configs:
-                ranks[rank(config)].append(str(config_id[config]))
-            prev_ri = None
-            for ri, ((level, rank), nodes) in enumerate(sorted(ranks.items())):
-                result.append('  rank%s[shape=plaintext,label=<%s>];' % (ri, ascii_to_html(str(rank))))
-                result.append("{ rank=same; rank%s %s }" % (ri, " ".join(nodes)))
-                if prev_ri is not None:
-                    result.append('  rank%s -> rank%s[style=invis];' % (prev_ri, ri))
-                prev_ri = ri
-
-        result.append("}")
-
-        from IPython.display import display
-        from .viz import viz
-        display(viz("\n".join(result)))

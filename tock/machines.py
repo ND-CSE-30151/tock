@@ -71,7 +71,27 @@ class Store(object):
 
     def _repr_html_(self):
         # nothing fancy
-        return str(self).replace('&','&epsilon;')
+        return str(self).replace('&', '&epsilon;').replace('...', '&hellip;')
+
+# not yet consistently used
+class Configuration(object):
+    def __init__(self, stores):
+        self.stores = tuple(stores)
+
+    def __str__(self):
+        return str(self.stores)
+    def _repr_html_(self):
+        return ','.join(s._repr_html_() for s in self.stores)
+
+    def __eq__(self, other):
+        return self.stores == other.stores
+    def __hash__(self):
+        return hash(self.stores)
+
+    def __len__(self):
+        return len(self.stores)
+    def __getitem__(self, i):
+        return self.stores[i]
 
 class Transition(object):
     def __init__(self, *args):

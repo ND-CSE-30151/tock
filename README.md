@@ -9,7 +9,6 @@ or tapes.
 
 The documentation is contained in a series of [IPython] notebooks:
 
-- [Introduction](Introduction.ipynb)
 - [Deterministic finite automata](DFAs.ipynb)
 - [Nondeterministic finite automata](NFAs.ipynb)
 - [Regular expressions](Regexps.ipynb)
@@ -20,23 +19,32 @@ The documentation is contained in a series of [IPython] notebooks:
 Installation
 ------------
 
-In order to view these notebooks, you'll need [IPython] and
-[GraphViz]. The easiest way to get them is:
+Tock depends on the following:
+
+- Python 2.7 or 3.x (required)
+- [six] (required)
+- [GraphViz] (to draw graphs)
+- [IPython] (to view notebooks)
+- [openpyxl] (to open Excel files)
+
+The easiest way to get started is:
 
 1. Install [Miniconda]. Either Python 2.7 or 3.x is fine.
-2. Run `conda install six`.
-3. Install [IPython] by running `conda install jupyter`.
-4. If you don't have [GraphViz] already, don't worry; Tock downloads
-   and uses [Viz.js] instead.
+2. Run `conda install six jupyter openpyxl`.
+
+If you don't have GraphViz, don't worry -- Tock will attempt to
+download and use [Viz.js], which is slower but otherwise identical.
 
 Then, run `ipython notebook` in the Tock directory. A web browser
 should open, showing you the contents of the directory. Click on one
 of the `.ipynb` files to view it.
 
+[six]: https://pypi.python.org/pypi/six
+[openpyxl]: https://pypi.python.org/pypi/openpyxl
 [Miniconda]: http://conda.pydata.org/miniconda.html
 [IPython]: http://ipython.org
 [Graphviz]: http://www.graphviz.org
-[Viz.js]: http://github.com/mdaines/viz.js/
+[Viz.js]: http://github.com/mdaines/viz.js
 
 Copying
 -------

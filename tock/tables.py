@@ -89,7 +89,7 @@ def from_table(table):
                 raise
 
         for l, rs in zip(lhs, rhs):
-            l = ([q],) + l
+            l = [[q]] + list(l)
             for r in rs:
                 m.add_transition(l, r)
     return m

@@ -1,5 +1,6 @@
 import collections
 from . import machines
+from . import syntax
 
 __all__ = ['to_graph', 'write_dot', 'read_tgf']
 
@@ -181,7 +182,7 @@ def from_graph(g):
         for r in g.edges[q]:
             for e in g.edges[q][r]:
                 t = e['label']
-                transitions.append((([q],)+t.lhs, ([r],)+t.rhs))
+                transitions.append(([[q]]+list(t.lhs), [[r]]+list(t.rhs)))
 
     num_stores = single_value(len(lhs) for lhs, rhs in transitions)
     m = machines.Machine(num_stores, state=0, input=1)

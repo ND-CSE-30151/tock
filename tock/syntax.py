@@ -152,10 +152,11 @@ def string_to_store(s):
 
 def string_to_config(s):
     """s is a comma-separated list of stores."""
+    from machines import Configuration
     s = lexer(s)
     x = parse_multiple(s, parse_store)
     parse_end(s)
-    return tuple(x)
+    return Configuration(x)
 
 def string_to_configs(s):
     """s is a string in one of the following formats:

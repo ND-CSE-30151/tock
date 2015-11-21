@@ -46,32 +46,26 @@ def run_bfs(m, w, trace=False, steps=1000):
     input_tokens = syntax.lexer(w)
     config = list(m.start_config)
     config[m.input] = Store(input_tokens)
-    config = tuple(config)
+    config = Configuration(config)
 
     chart[config] = 0
     agenda.append(config)
     run = graphs.Graph()
     run.attrs['rankdir'] = 'TB'
-    run.add_node(Configuration(config), {'start': True})
-
-    # Final configurations
-    # Since there is no Configuration class, we need to make a fake Transition
-    final_transitions = []
-    for config in m.accept_configs:
-        final_transitions.append(Transition(config, [[]]*m.num_stores))
+    run.add_node(config, {'start': True})
 
     while len(agenda) > 0:
         tconfig = agenda.popleft()
 
         if trace: print("trigger: {}".format(tconfig))
 
-        for t in final_transitions:
-            if t.match(tconfig):
-                run.add_node(Configuration(tconfig), {'accept': True})
+        for aconfig in m.accept_configs:
+            if aconfig.match(tconfig):
+                run.add_node(tconfig, {'accept': True})
 
         if chart[tconfig] == steps:
             if trace: print("maximum number of steps reached")
-            run.add_node(Configuration(tconfig), {'incomplete': True})
+            run.add_node(tconfig, {'incomplete': True})
             continue
 
         for rule in m.transitions:
@@ -86,7 +80,7 @@ def run_bfs(m, w, trace=False, steps=1000):
                     chart[nconfig] = chart[tconfig]+1
                     if trace: print("add: {}".format(nconfig))
                     agenda.append(nconfig)
-                run.add_edge(Configuration(tconfig), Configuration(nconfig))
+                run.add_edge(tconfig, nconfig)
 
     # If input tape is one-way, then rank all nodes by input position
     if m.has_input(m.input):
@@ -160,7 +154,7 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
     input_tokens = syntax.lexer(w)
     config = list(m.start_config)
     config[m.input] = Store(input_tokens)
-    config = tuple(config)
+    config = Configuration(config)
 
     def get_node(parent, child):
         if parent is not None:
@@ -181,12 +175,6 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
     agenda.append((None, config))
     add_node(None, config, {'start': True})
 
-    # Final configurations
-    # Since there is no Configuration class, we need to make a fake Transition
-    final_transitions = []
-    for config in m.accept_configs:
-        final_transitions.append(Transition(config, [[]]*m.num_stores))
-
     def add(parent, child):
         if (parent, child) in chart:
             if trace: print("merge: {} => {}".format(parent, child))
@@ -199,13 +187,13 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
         parent, child = agenda.popleft()
         if trace: print("trigger: {} => {}".format(parent, child))
 
-        for t in final_transitions:
-            if t.match(child) and (parent is None or len(child[stack]) == show_stack):
+        for aconfig in m.accept_configs:
+            if aconfig.match(child) and (parent is None or len(child[stack]) == show_stack):
                 add_node(parent, child, {'accept': True})
 
         # The stack shows too many items (push)
         if len(child[stack]) > show_stack:
-            grandchild = tuple(s.copy() for s in child)
+            grandchild = child.deepcopy()
             del grandchild[stack].values[-1]
             add(child, grandchild)
             index_right[child].add(parent)
@@ -214,7 +202,7 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
 
             # This item can also be the left antecedent of the Pop rule
             for grandchild in index_left[child]:
-                grandchild = tuple(s.copy() for s in grandchild)
+                grandchild = grandchild.deepcopy()
                 grandchild[stack].values.append(child[stack][-1])
                 add(parent, grandchild)
                 for ant in backpointers[get_node(parent, child)]:
@@ -222,7 +210,7 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
 
         # The stack shows too few items (pop)
         elif parent is not None and len(child[stack]) < show_stack:
-            aunt = tuple(s.copy() for s in child)
+            aunt = child.deepcopy()
             if len(parent[stack]) == 0:
                 assert False
             else:

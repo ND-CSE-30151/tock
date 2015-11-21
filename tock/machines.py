@@ -20,7 +20,7 @@ class Store(object):
         if position is not None:
             self.position = position
 
-    def copy(self):
+    def deepcopy(self):
         return Store(self.values, self.position)
 
     def __eq__(self, other):
@@ -73,13 +73,22 @@ class Store(object):
         # nothing fancy
         return str(self).replace('&', '&epsilon;').replace('...', '&hellip;')
 
-# not yet consistently used
 class Configuration(object):
-    def __init__(self, stores):
-        self.stores = tuple(stores)
+    def __init__(self, arg):
+        if isinstance(arg, Configuration):
+            self.stores = arg.stores
+        elif isinstance(arg, six.string_types):
+            self.stores = syntax.string_to_config(arg).stores
+        elif isinstance(arg, (list, tuple)):
+            self.stores = tuple(x if isinstance(x, Store) else Store(x) for x in arg)
+        else:
+            raise TypeError("can't construct Configuration from {}".format(type(arg)))
+
+    def deepcopy(self):
+        return Configuration([s.deepcopy() for s in self.stores])
 
     def __str__(self):
-        return str(self.stores)
+        return ','.join(map(str, self.stores))
     def _repr_html_(self):
         return ','.join(s._repr_html_() for s in self.stores)
 
@@ -93,6 +102,24 @@ class Configuration(object):
     def __getitem__(self, i):
         return self.stores[i]
 
+    def match(self, other):
+        """Returns true iff self (as a pattern) matches other (as a
+        configuration). Note that this is asymmetric: other is allowed
+        to have symbols that aren't found in self."""
+
+        if len(self) != len(other):
+            raise ValueError()
+        for s1, s2 in zip(self, other):
+            i = s2.position - s1.position
+            if i < 0:
+                return False
+            n = len(s1)
+            while i+n > len(s2) and s1[n-1] == syntax.BLANK:
+                n -= 1
+            if s2.values[i:i+n] != s1.values[:n]:
+                return False
+        return True
+
 class Transition(object):
     def __init__(self, *args):
         if len(args) == 1:
@@ -105,30 +132,20 @@ class Transition(object):
                 raise TypeError("can't construct Transition from {}".format(type(arg)))
         elif len(args) == 2:
             lhs, rhs = args
-            self.lhs = tuple(x if isinstance(x, Store) else Store(x) for x in lhs)
-            self.rhs = tuple(x if isinstance(x, Store) else Store(x) for x in rhs)
+            self.lhs = Configuration(lhs)
+            self.rhs = Configuration(rhs)
 
         else:
             raise TypeError("invalid arguments to Transition")
 
-    def match(self, stores):
-        if len(self.lhs) != len(stores):
-            raise ValueError()
-        for x, store in zip(self.lhs, stores):
-            i = store.position - x.position
-            if i < 0:
-                return False
-            n = len(x)
-            while i+n > len(store) and x[n-1] == syntax.BLANK:
-                n -= 1
-            if store.values[i:i+n] != x.values[:n]:
-                return False
-        return True
+    def match(self, config):
+        """Returns True iff self can be applied to config."""
+        return self.lhs.match(config)
 
-    def apply(self, stores):
-        stores = tuple(store.copy() for store in stores)
+    def apply(self, config):
+        config = config.deepcopy()
 
-        for x, y, store in zip(self.lhs, self.rhs, stores):
+        for x, y, store in zip(self.lhs, self.rhs, config):
             i = store.position - x.position
             if i < 0:
                 raise ValueError("transition cannot apply")
@@ -149,21 +166,19 @@ class Transition(object):
             while len(store)-1 > store.position and store[-1] == syntax.BLANK:
                 store.values[-1:] = []
 
-        return stores
+        return config
 
     def __str__(self):
         if len(self.rhs) > 0:
-            return "%s -> %s" % (",".join(map(str, self.lhs)), 
-                                 ",".join(map(str, self.rhs)))
+            return "{} -> {}".format(self.lhs, self.rhs)
         else:
-            return ",".join(map(str, self.lhs))
+            return str(self.lhs)
 
     def _repr_html_(self):
         if len(self.rhs) > 0:
-            return "%s &rarr; %s" % (",".join(s._repr_html_() for s in self.lhs), 
-                                 ",".join(s._repr_html_() for s in self.rhs))
+            return "{} &rarr; {}".format(self.lhs._repr_html_(), self.rhs._repr_html_())
         else:
-            return ",".join(s._repr_html_() for s in self.lhs)
+            return self.lhs._repr_html_()
 
 class Machine(object):
     def __init__(self, num_stores, state=None, input=None):
@@ -217,7 +232,7 @@ class Machine(object):
         if self.input is not None and len(t.rhs) == self.num_stores-1:
             t.rhs = list(t.rhs)
             t.rhs[self.input:self.input] = [Store()]
-            t.rhs = tuple(t.rhs)
+            t.rhs = Configuration(t.rhs)
 
         if len(t.lhs) != self.num_stores:
             raise TypeError("wrong number of stores on left-hand side")

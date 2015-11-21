@@ -43,16 +43,9 @@ class Graph(object):
         result.append('  node [fontname=Courier,fontsize=10,shape=box,style=rounded,height=0,width=0,margin="0.055,0.042"];')
         result.append('  edge [arrowhead=vee,arrowsize=0.5,fontname=Courier,fontsize=9];')
 
-        # Only show nodes that have edges
-        nodes = set()
-        for u in self.edges:
-            nodes.add(u)
-            for v in self.edges[u]:
-                nodes.add(v)
-
         # Draw nodes
         index = {}
-        for i, q in enumerate(sorted(nodes)):
+        for i, q in enumerate(sorted(self.nodes)):
             index[q] = i
 
             if 'label' in self.nodes[q]:
@@ -68,7 +61,7 @@ class Graph(object):
                 result.append('  {}[label="{}"];'.format(i, label))
 
         # Draw edges to nowhere
-        for q in nodes:
+        for q in self.nodes:
             i = index[q]
             if self.nodes[q].get('start', False):
                 result.append('  START[shape=none,label=""];\n')
@@ -81,7 +74,7 @@ class Graph(object):
         # Organize nodes into ranks, if any
         rank_nodes = collections.defaultdict(set)
         has_rank = set()
-        for v in nodes:
+        for v in self.nodes:
             if 'rank' in self.nodes[v]:
                 has_rank.add(v)
                 rank = self.nodes[v]['rank']
@@ -184,9 +177,18 @@ def from_graph(g):
                 t = e['label']
                 transitions.append(([[q]]+list(t.lhs), [[r]]+list(t.rhs)))
 
-    num_stores = single_value(len(lhs) for lhs, rhs in transitions)
-    m = machines.Machine(num_stores, state=0, input=1)
-    m.add_accept_config(["ACCEPT"] + [[]]*(num_stores-1))
+    lhs_size = single_value(len(lhs) for lhs, rhs in transitions)
+    rhs_size = single_value(len(rhs) for lhs, rhs in transitions)
+    if lhs_size == rhs_size:
+        num_stores = lhs_size
+        oneway = False
+    elif lhs_size-1 == rhs_size:
+        num_stores = lhs_size
+        oneway = True
+    else:
+        raise ValueError("right-hand sides must either be same size or one smaller than left-hand sides")
+
+    m = machines.Machine(num_stores, state=0, input=1, oneway=oneway)
 
     for q in g.nodes:
         if g.nodes[q].get('start', False):

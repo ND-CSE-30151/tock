@@ -14,10 +14,11 @@ def run(m, w, trace=False, steps=1000, show_stack=3):
     # Check to see whether run_pda can handle it.
     is_pda = True
     stack = None
+    if not m.oneway:
+        is_pda = False
     for s in range(m.num_stores):
         if s == m.input:
-            if not m.has_input(s):
-                is_pda = False
+            pass
         elif m.has_cell(s): # anything with finite number of configs would do
             pass
         elif m.has_stack(s):
@@ -30,7 +31,7 @@ def run(m, w, trace=False, steps=1000, show_stack=3):
 
     if is_pda and stack is not None:
         if trace: print("using modified Lang algorithm")
-        return run_pda(m, w, trace=trace, show_stack=show_stack)
+        return run_pda(m, w, stack=stack, trace=trace, show_stack=show_stack)
     else:
         if trace: print("using breadth-first search")
         return run_bfs(m, w, trace=trace, steps=steps)
@@ -83,7 +84,7 @@ def run_bfs(m, w, trace=False, steps=1000):
                 run.add_edge(tconfig, nconfig)
 
     # If input tape is one-way, then rank all nodes by input position
-    if m.has_input(m.input):
+    if m.oneway:
         for q in run.nodes:
             ql = list(q)
             run.nodes[q]['rank'] = ql.pop(m.input)

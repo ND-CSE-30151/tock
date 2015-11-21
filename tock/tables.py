@@ -39,58 +39,85 @@ class Table(object):
         result.append('</table>')
         return '\n'.join(result)
 
-def single_value(s):
-    s = set(s)
-    if len(s) != 1:
-        raise ValueError()
-    return s.pop()
-
 def from_table(table):
-    transitions = []
+    # Ignore blank lines, but keep the line numbers for error reporting
+    etable = []
+    for i, row in enumerate(table):
+        if sum(len(cell.strip()) for cell in row) != 0:
+            etable.append((i, row))
 
-    # Header row has one dummy cell, and then each cell has lhs values
-    # for the input and any additional stores.
-    lhs = []
-    for j, cell in enumerate(table[0][1:], 1):
-        try:
-            lhs.append(syntax.string_to_config(cell))
-        except Exception as e:
-            e.message = "cell %s1: %s" % (chr(ord('A')+j), e.message)
-            raise
-    try:
-        num_stores = single_value(map(len, lhs))+1
-    except ValueError:
-        raise ValueError("row 1: left-hand sides must all have same size")
-    m = machines.Machine(num_stores, state=0, input=1)
-    m.add_accept_config(["ACCEPT"] + [[]]*(num_stores-1))
-
-    # Body
-    for i, row in enumerate(table[1:], 1):
-        if sum(len(cell.strip()) for cell in row) == 0:
-            continue
+    # Header column has lhs values for the first store
+    lhs1 = []
+    start_state = None
+    accept_states = set()
+    for i, row in etable[1:]:
         try:
             q, attrs = syntax.string_to_state(row[0])
             if attrs.get('start', False):
-                if m.start_config is not None:
+                if start_state is not None:
                     raise ValueError("more than one start state")
-                m.set_start_state(q)
+                start_state = q
             if attrs.get('accept', False):
-                m.add_accept_state(q)
+                accept_states.add(q)
+            lhs1.append((q,))
         except Exception as e:
-            e.message = "cell A%d: %s" % (i+1, e.message)
+            e.message = "cell A%s: %s" % (i+1, e.message)
             raise
 
-        rhs = []
+    # Header row has lhs values for all stores other than the first
+    lhs2 = []
+    lhs_size = None
+    i, row = etable[0]
+    for j, cell in enumerate(row[1:], 1):
+        try:
+            cell = syntax.string_to_config(cell)
+            if lhs_size is None:
+                lhs_size = 1+len(cell)
+            elif 1+len(cell) != lhs_size:
+                raise ValueError("left-hand side has wrong size")
+            lhs2.append(cell)
+        except Exception as e:
+            e.message = "cell %s%s: %s" % (chr(ord('A')+j), i, e.message)
+            raise
+
+    # Body has right-hand sides
+    rhs = []
+    rhs_size = None
+    for i, row in etable[1:]:
+        rhs_row = []
         for j, cell in enumerate(row[1:], 1):
             try:
-                rhs.append(syntax.string_to_configs(cell))
+                cell = syntax.string_to_configs(cell)
+                for r in cell:
+                    if rhs_size is None:
+                        rhs_size = len(r)
+                    elif len(r) != rhs_size:
+                        raise ValueError("right-hand side has wrong size")
+                rhs_row.append(cell)
             except Exception as e:
                 e.message = "cell %s%d: %s" % (chr(ord('A')+j), i+1, e.message)
                 raise
+        rhs.append(rhs_row)
 
-        for l, rs in zip(lhs, rhs):
-            l = [[q]] + list(l)
-            for r in rs:
+    if lhs_size == rhs_size:
+        num_stores = lhs_size
+        oneway = False
+    elif lhs_size-1 == rhs_size:
+        num_stores = lhs_size
+        oneway = True
+    else:
+        raise ValueError("right-hand sides must either be same size or one smaller than left-hand sides")
+
+    m = machines.Machine(num_stores, state=0, input=1, oneway=oneway)
+
+    m.set_start_state(start_state)
+    for q in accept_states:
+        m.add_accept_state(q)
+
+    for i in range(len(lhs1)):
+        for j in range(len(lhs2)):
+            l = list(lhs1[i]) + list(lhs2[j])
+            for r in rhs[i][j]:
                 m.add_transition(l, r)
     return m
 
@@ -125,7 +152,7 @@ def to_table(m):
 
     states = set()
     initial_state = m.start_config[m.state][0]
-    final_states = [config[m.state][0] for config in m.accept_configs if list(config[m.input]) == [syntax.BLANK]]
+    final_states = [config[m.state][0] for config in m.accept_configs]
     conditions = set()
     transitions = collections.defaultdict(list)
 

@@ -2,6 +2,8 @@ import collections
 import six
 from . import syntax
 
+__all__ = ['Machine', 'FiniteAutomaton', 'PushdownAutomaton', 'TuringMachine']
+
 class Store(object):
     """A (configuration of a) store, which could be a tape, stack, or
        state. It consists of a string together with a head
@@ -180,12 +182,29 @@ class Transition(object):
         else:
             return self.lhs._repr_html_()
 
+# Define some standard automaton types.
+
+def FiniteAutomaton(): return Machine(2, state=0, input=1, oneway=True)
+def PushdownAutomaton(): return Machine(3, state=0, input=1, oneway=True)
+def TuringMachine(): return Machine(2, state=0, input=1)
+
 class Machine(object):
-    def __init__(self, num_stores, state=None, input=None):
+    def __init__(self, num_stores, state=None, input=None, oneway=False):
+
+        """An automaton.
+        num_stores: How many stores the machine should have.
+        state: Which store is the state; used by set_accept_state and
+               add_accept_config.
+        input: Which store is the input.
+        oneway: Whether the input is consumed from left to right, or
+                can be read and written in both directions.
+        """
+
         self.transitions = []
         self.num_stores = num_stores
         self.state = state
         self.input = input
+        self.oneway = input is not None and oneway
 
         self.start_config = None
         self.accept_configs = set()
@@ -194,33 +213,35 @@ class Machine(object):
         if isinstance(config, six.string_types):
             config = syntax.string_to_config(config)
         # If input is missing, supply &
-        if self.input is not None and len(config) == self.num_stores-1:
+        if self.oneway:
             config = list(config)
             config[self.input:self.input] = [[]]
-        # Since there is no Configuration object, make a fake Transition
-        t = Transition([[]]*self.num_stores, config)
-        self.start_config = t.rhs
+            config = Configuration(config)
+        self.start_config = config
 
     def add_accept_config(self, config):
-        if isinstance(config, six.string_types):
-            config = syntax.string_to_config(config)
-        # Since there is no Configuration object, make a fake Transition
-        t = Transition(config, [[]]*self.num_stores)
-        self.accept_configs.add(t.lhs)
+        # If self.oneway, should we require end of input?
+        self.accept_configs.add(Configuration(config))
 
     def set_start_state(self, q):
-        if self.state is None: raise ValueError("no state defined")
         config = [[]] * self.num_stores
+
+        if self.state is None: raise ValueError("no state defined")
         config[self.state] = q
-        self.set_start_config(config)
+
+        self.start_config = Configuration(config)
 
     def add_accept_state(self, q):
-        if self.state is None: raise ValueError("no state defined")
         config = [[]] * self.num_stores
+
+        if self.state is None: raise ValueError("no state defined")
         config[self.state] = q
-        if self.input is not None: # and self.has_input(self.input):
+
+        # If input is one-way, accept only at the end of the input
+        if self.oneway:
             config[self.input] = [syntax.BLANK]
-        self.add_accept_config(config)
+
+        self.accept_configs.add(Configuration(config))
 
     def add_transition(self, *args):
         if len(args) == 1 and isinstance(args[0], Transition):
@@ -228,8 +249,8 @@ class Machine(object):
         else:
             t = Transition(*args)
 
-        # If input is missing on the rhs, fill in &
-        if self.input is not None and len(t.rhs) == self.num_stores-1:
+        # If input is one-way, fill in & for the rhs
+        if self.oneway:
             t.rhs = list(t.rhs)
             t.rhs[self.input:self.input] = [Store()]
             t.rhs = Configuration(t.rhs)
@@ -242,9 +263,8 @@ class Machine(object):
         self.transitions.append(t)
 
     def get_transitions(self):
-        one_way_input = self.input is not None and self.has_input(self.input)
         for t in self.transitions:
-            if one_way_input:
+            if self.oneway:
                 rhs = list(t.rhs)
                 del rhs[self.input]
                 t = Transition(t.lhs, rhs)

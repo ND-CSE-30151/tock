@@ -220,8 +220,23 @@ class Machine(object):
         self.start_config = config
 
     def add_accept_config(self, config):
-        # If self.oneway, should we require end of input?
-        self.accept_configs.add(Configuration(config))
+        if self.oneway:
+            end = Store([syntax.BLANK])
+            s = config[self.input]
+            if len(config[self.input]) == 0:
+                config = list(config)
+                config[self.input] = end
+            config = Configuration(config)
+
+            if config[self.input] != end:
+                raise ValueError("machine can only accept at end of input")
+        else:
+            config = Configuration(config)
+        self.accept_configs.add(config)
+
+    def add_accept_configs(self, configs):
+        for c in configs:
+            self.add_accept_state(c)
 
     def set_start_state(self, q):
         config = [[]] * self.num_stores
@@ -237,11 +252,11 @@ class Machine(object):
         if self.state is None: raise ValueError("no state defined")
         config[self.state] = q
 
-        # If input is one-way, accept only at the end of the input
-        if self.oneway:
-            config[self.input] = [syntax.BLANK]
+        self.add_accept_config(config)
 
-        self.accept_configs.add(Configuration(config))
+    def add_accept_states(self, qs):
+        for q in qs:
+            self.add_accept_state(q)
 
     def add_transition(self, *args):
         if len(args) == 1 and isinstance(args[0], Transition):
@@ -261,6 +276,10 @@ class Machine(object):
             raise TypeError("wrong number of stores on right-hand side")
 
         self.transitions.append(t)
+
+    def add_transitions(self, transitions):
+        for t in transitions:
+            self.add_transition(t)
 
     def get_transitions(self):
         for t in self.transitions:

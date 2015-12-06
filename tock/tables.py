@@ -84,6 +84,8 @@ def from_table(table):
     rhs = []
     rhs_size = None
     for i, row in etable[1:]:
+        if len(row[1:]) != len(lhs2):
+            raise ValueError("row %s: row has wrong number of cells" % i)
         rhs_row = []
         for j, cell in enumerate(row[1:], 1):
             try:

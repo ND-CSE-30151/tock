@@ -258,6 +258,11 @@ class Machine(object):
         for q in qs:
             self.add_accept_state(q)
 
+    @property
+    def states(self):
+        if self.state is None: raise ValueError("no state defined")
+        return set(t.lhs[self.state] for t in self.transitions)
+
     def add_transition(self, *args):
         if len(args) == 1 and isinstance(args[0], Transition):
             t = args[0]

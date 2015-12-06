@@ -25,6 +25,29 @@ class Graph(object):
         self.edges[u].setdefault(v, [])
         self.edges[u][v].append(attrs)
 
+    def shortest_path(self):
+        """Finds the shortest path from the start node to an accept node. If
+        there is more than one, chooses one arbitrarily."""
+
+        start = [v for v in self.nodes if self.nodes[v].get('start', False)]
+        if len(start) != 1: raise ValueError("graph does not have exactly one start node")
+        frontier = collections.deque(start)
+        pred = {start[0]: None}
+        while len(frontier) > 0:
+            u = frontier.popleft()
+            for v in self.edges.get(u, ()):
+                if v not in pred:
+                    frontier.append(v)
+                    pred[v] = u
+                    if self.nodes[v].get('accept', False):
+                        path = []
+                        while v is not None:
+                            path.append(v)
+                            v = pred[v]
+                        path.reverse()
+                        return path
+        raise ValueError("graph does not have an accepting path")
+
     def __getitem__(self, u):
         return self.edges[u]
 

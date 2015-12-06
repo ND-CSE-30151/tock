@@ -1,12 +1,8 @@
 import collections
 from . import machines
-from . import syntax
 from . import graphs
 
 __all__ = ['run', 'run_bfs', 'run_pda']
-
-# to do:
-# Configuration objects are created at the last minute, but should be used throughout
 
 def run(m, w, trace=False, steps=1000, show_stack=3):
     """Runs an automaton, automatically selecting a search method."""
@@ -44,9 +40,8 @@ def run_bfs(m, w, trace=False, steps=1000):
     chart = {}
 
     # Initial configuration
-    input_tokens = syntax.lexer(w)
     config = list(m.start_config)
-    config[m.input] = Store(input_tokens)
+    config[m.input] = Store(w)
     config = Configuration(config)
 
     chart[config] = 0
@@ -152,9 +147,8 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
                      max(len(c[stack]) for c in m.accept_configs))
 
     # Axiom
-    input_tokens = syntax.lexer(w)
     config = list(m.start_config)
-    config[m.input] = Store(input_tokens)
+    config[m.input] = Store(w)
     config = Configuration(config)
 
     def get_node(parent, child):

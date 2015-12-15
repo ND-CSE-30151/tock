@@ -2,7 +2,7 @@ import collections
 import six
 from . import syntax
 
-__all__ = ['Machine', 'FiniteAutomaton', 'PushdownAutomaton', 'TuringMachine']
+__all__ = ['Machine', 'FiniteAutomaton', 'PushdownAutomaton', 'TuringMachine', 'determinize']
 
 class Store(object):
     """A (configuration of a) store, which could be a tape, stack, or
@@ -44,9 +44,9 @@ class Store(object):
 
     def __repr__(self):
         if self.position == 0:
-            return "Store(%s)" % (repr(" ".join(self.values)),)
+            return "Store({})".format(repr(self.values))
         else:
-            return "Store(%s, %s)" % (repr(" ".join(self.values)), self.position)
+            return "Store({}, {})".format(repr(self.values), self.position)
     def __str__(self):
         if len(self) == 0:
             if self.position == 0:
@@ -57,14 +57,14 @@ class Store(object):
                 raise ValueError()
 
         elif len(self) == 1 and self.position == 0:
-            return self.values[0]
+            return str(self.values[0])
 
         result = []
         if self.position == -1:
             result.append("^")
         for i, x in enumerate(self.values):
             if i == self.position:
-                result.append("[%s]" % (x,))
+                result.append("[{}]".format(x))
             else:
                 result.append(str(x))
         if self.position == len(self.values):
@@ -236,13 +236,21 @@ class Machine(object):
 
     def add_accept_configs(self, configs):
         for c in configs:
-            self.add_accept_state(c)
+            self.add_accept_config(c)
+
+    def get_start_state(self):
+        if self.state is None:
+            raise ValueError("no state defined")
+        if sum(len(store) for store in self.start_config) != 1:
+            raise ValueError("machine does not have a start state")
+        [q] = self.start_config[self.state]
+        return q
 
     def set_start_state(self, q):
         config = [[]] * self.num_stores
 
         if self.state is None: raise ValueError("no state defined")
-        config[self.state] = q
+        config[self.state] = [q]
 
         self.start_config = Configuration(config)
 
@@ -250,7 +258,7 @@ class Machine(object):
         config = [[]] * self.num_stores
 
         if self.state is None: raise ValueError("no state defined")
-        config[self.state] = q
+        config[self.state] = [q]
 
         self.add_accept_config(config)
 
@@ -258,6 +266,11 @@ class Machine(object):
         for q in qs:
             self.add_accept_state(q)
 
+    def get_accept_states(self):
+        if self.state is None: raise ValueError("no state defined")
+        # to do: error checking
+        return [config[self.state][0] for config in self.accept_configs]
+        
     @property
     def states(self):
         if self.state is None: raise ValueError("no state defined")
@@ -323,6 +336,7 @@ class Machine(object):
         """Tests whether store `s` is a one-way input, that is, it only deletes and
         never moves from position 0."""
 
+        # to do: check start_config
         for t in self.transitions:
             if t.lhs[s].position != 0:
                 return False
@@ -359,38 +373,17 @@ class Machine(object):
         return True
 
     def is_finite(self):
-        """Tests whether machine is finite state, in a broad sense.
-        It should have one input and any number of cells."""
-        cells = set()
-        inputs = set()
-        for s in range(self.num_stores):
-            if self.has_cell(s):
-                cells.add(s)
-            if self.has_input(s):
-                inputs.add(s)
-        # It's possible to be both a cell and an input,
-        # and we just need to check that there is some way to 
-        # designate exactly 1 stack and num_store-1 cells
-        return (len(cells|inputs) == self.num_stores and 
-                len(inputs) >= 1 and 
-                len(cells) >= self.num_stores-1)
+        """Tests whether machine is a finite automaton."""
+        return (self.num_stores == 2 and
+                self.state == 0 and self.has_cell(0) and
+                self.input == 1 and self.has_input(1))
 
     def is_pushdown(self):
-        """Tests whether machine is a pushdown automaton, in a broad sense.
-        It should have one input and one stack, and any number of cells."""
-        cells = set()
-        inputs = set()
-        stacks = set()
-        for s in range(self.num_stores):
-            if self.has_cell(s):
-                cells.add(s)
-            if self.has_input(s):
-                inputs.add(s)
-            if self.has_stack(s):
-                stacks.add(s)
-        return (len(cells|inputs|stacks) == self.num_stores and
-                len(inputs) >= 1 and
-                len(cells) >= self.num_stores-2)
+        """Tests whether machine is a pushdown automaton."""
+        return (self.num_stores == 3 and
+                self.state == 0 and self.has_cell(0) and
+                self.input == 1 and self.has_input(1) and
+                self.has_stack(2))
 
     def is_deterministic(self):
         """Tests whether machine is deterministic."""
@@ -411,3 +404,60 @@ class Machine(object):
                     return False
         return True
 
+def determinize(m):
+    """Determinizes a finite automaton."""
+    if not m.is_finite():
+        raise TypeError("machine must be a finite automaton")
+
+    transitions = collections.defaultdict(lambda: collections.defaultdict(set))
+    for transition in m.get_transitions():
+        [[lstate], read] = transition.lhs
+        [[rstate]] = transition.rhs
+        if len(read) > 1:
+            raise NotSupportedException("multiple input symbols on transition not supported")
+        transitions[lstate][tuple(read)].add(rstate)
+
+    class StateSet(frozenset):
+        def __str__(self):
+            return "{{{}}}".format(",".join(map(str, sorted(self))))
+
+    def eclosure(states):
+        """Find epsilon-closure of set of states"""
+        states = set(states)
+        frontier = set(states)
+        while len(frontier) > 0:
+            lstate = frontier.pop()
+            for rstate in transitions[lstate][()]:
+                if rstate not in states:
+                    states.add(rstate)
+                    frontier.add(rstate)
+        return states
+
+    dm = FiniteAutomaton()
+
+    start_state = StateSet(eclosure([m.get_start_state()]))
+    dm.set_start_state(start_state)
+
+    frontier = {start_state}
+    visited = set()
+    while len(frontier) > 0:
+        lstates = frontier.pop()
+        if lstates in visited:
+            continue
+        visited.add(lstates)
+        dtransitions = collections.defaultdict(set)
+        for lstate in lstates:
+            for read in transitions[lstate]:
+                if read != ():
+                    dtransitions[read] |= transitions[lstate][read]
+        for read in dtransitions:
+            rstates = StateSet(eclosure(dtransitions[read]))
+            dm.add_transition([[lstates], read], [[rstates]])
+            frontier.add(rstates)
+
+    accept_states = set(m.get_accept_states())
+    for states in visited:
+        if len(states & accept_states) > 0:
+            dm.add_accept_state(states)
+
+    return dm

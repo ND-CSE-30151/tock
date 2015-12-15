@@ -1,7 +1,8 @@
 from . import machines
 from . import syntax
+from . import graphs
 
-__all__ = ['from_regexp']
+__all__ = ['from_regexp', 'to_regexp']
 
 def zero_pad(n, i):
     return str(i).zfill(len(str(n)))
@@ -88,6 +89,25 @@ def parse_base(s, m):
     else:
         assert False
 
+def to_regexp(m):
+    if not (m.is_finite() and m.num_stores == 2):
+        raise TypeError("machine must be a finite automaton")
+
+    states = list(m.states)
+
+    g = graphs.Graph()
+    for t in m.get_transitions():
+        [q] = t.lhs[0]
+        [r] = t.rhs[0]
+        g.add_edge(q, r, {'regexp': t.lhs[1]})
+
+    while len(states) > 0:
+        s = states.pop()
+        for q in states:
+            for r in states:
+                e[q,r] 
+
 if __name__ == "__main__":
     import sys
     print(convert_regexp(sys.argv[1]))
+    

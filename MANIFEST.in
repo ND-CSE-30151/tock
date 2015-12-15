@@ -1,4 +1,4 @@
-include *.md
-include *.ipynb
+include README.ipynb README.rst LICENSE.txt
+recursive-include doc *.ipynb
 recursive-include examples *.csv *.tgf
 

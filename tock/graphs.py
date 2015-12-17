@@ -5,10 +5,11 @@ from . import syntax
 __all__ = ['to_graph', 'write_dot', 'read_tgf']
 
 class Graph(object):
-    def __init__(self):
+    def __init__(self, attrs=None):
         self.nodes = {}
         self.edges = {}
-        self.attrs = {}
+        if attrs is None: attrs = {}
+        self.attrs = attrs
 
     def add_node(self, v, attrs=None):
         if attrs is None: attrs = {}
@@ -17,6 +18,13 @@ class Graph(object):
         else:
             self.nodes[v] = attrs
 
+    def remove_node(self, v):
+        del self.nodes[v]
+        del self.edges[v]
+        for u in self.nodes:
+            if u in self.edges and v in self.edges[u]:
+                del self.edges[u][v]
+
     def add_edge(self, u, v, attrs=None):
         if attrs is None: attrs = {}
         if u not in self.nodes: self.nodes[u] = {}
@@ -24,6 +32,14 @@ class Graph(object):
         self.edges.setdefault(u, {})
         self.edges[u].setdefault(v, [])
         self.edges[u][v].append(attrs)
+
+    def has_edge(self, u, v):
+        return u in self.edges and v in self.edges[u] and len(self.edges[u][v]) > 0
+
+    def get_edges(self, u, v):
+        self.edges.setdefault(u, {})
+        self.edges[u].setdefault(v, [])
+        return self.edges[u][v]
 
     def shortest_path(self):
         """Finds the shortest path from the start node to an accept node. If
@@ -54,9 +70,9 @@ class Graph(object):
     def _repr_dot_(self):
 
         def repr_html(x):
-            try:
+            if hasattr(x, '_repr_html_'):
                 return x._repr_html_()
-            except:
+            else:
                 return str(x)
             
         result = []
@@ -67,6 +83,7 @@ class Graph(object):
         result.append('  edge [arrowhead=vee,arrowsize=0.5,fontname=Courier,fontsize=9];')
 
         # Draw nodes
+        result.append('  _START[shape=none,label=""];\n')
         index = {}
         for i, q in enumerate(sorted(self.nodes)):
             index[q] = i
@@ -87,12 +104,11 @@ class Graph(object):
         for q in self.nodes:
             i = index[q]
             if self.nodes[q].get('start', False):
-                result.append('  START[shape=none,label=""];\n')
-                result.append('  START -> {}'.format(i))
+                result.append('  _START -> {}'.format(i))
 
             if self.nodes[q].get('incomplete', False):
-                result.append('  DOTS_{}[shape=none,label=""];\n'.format(i))
-                result.append('  {} -> DOTS_{}[dir=none,style=dotted]'.format(i, i))
+                result.append('  _DOTS_{}[shape=none,label=""];\n'.format(i))
+                result.append('  {} -> _DOTS_{}[dir=none,style=dotted]'.format(i, i))
 
         # Organize nodes into ranks, if any
         rank_nodes = collections.defaultdict(set)
@@ -133,7 +149,7 @@ class Graph(object):
                 labels = []
                 for e in self.edges[u][v]:
                     if 'label' in e:
-                        labels.append('<tr><td>{}</td></tr>'.format(e['label']._repr_html_()))
+                        labels.append('<tr><td>{}</td></tr>'.format(repr_html(e['label'])))
                 if labels:
                     attrs['label'] = '<<table border="0" cellpadding="1">{}</table>>'.format(''.join(labels))
 

@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from . import machines
 from . import syntax
 from . import graphs
@@ -89,25 +91,138 @@ def parse_base(s, m):
     else:
         assert False
 
-def to_regexp(m):
-    if not (m.is_finite() and m.num_stores == 2):
+class Union(object):
+    def __init__(self, args):
+        self.args = tuple(args)
+    def __str__(self):
+        if len(self.args) == 0:
+            return 'null'
+        else:
+            return '|'.join(map(str, self.args))
+    def _repr_html_(self):
+        if len(self.args) == 0:
+            return '&empty;'
+        else:
+            return '|'.join(arg._repr_html_() for arg in self.args)
+
+def union(args):
+    newargs = []
+    for arg in args:
+        if isinstance(arg, Union):
+            newargs.extend(arg.args)
+        else:
+            newargs.append(arg)
+    if len(newargs) == 1:
+        return newargs[0]
+    else:
+        return Union(newargs)
+
+class Concatenation(object):
+    def __init__(self, args):
+        self.args = tuple(args)
+    def __str__(self):
+        if len(self.args) == 0:
+            return '&'
+        else:
+            return ' '.join('({})'.format(arg) if isinstance(arg, Union) else str(arg) for arg in self.args)
+    def _repr_html_(self):
+        if len(self.args) == 0:
+            return '&epsilon;'
+        else:
+            return ' '.join('({})'.format(arg._repr_html_()) if isinstance(arg, Union) else arg._repr_html_() for arg in self.args)
+
+def concatenation(args):
+    newargs = []
+    for arg in args:
+        if isinstance(arg, Union) and len(arg.args) == 0: # empty set
+            return Union()
+        if isinstance(arg, Concatenation):
+            newargs.extend(arg.args)
+        else:
+            newargs.append(arg)
+    if len(newargs) == 1:
+        return newargs[0]
+    else:
+        return Concatenation(newargs)
+
+class Star(object):
+    def __init__(self, arg):
+        self.arg = arg
+    def __str__(self):
+        if isinstance(self.arg, Symbol):
+            return '{}*'.format(self.arg)
+        else:
+            return '({})*'.format(self.arg)
+    def _repr_html_(self):
+        if isinstance(self.arg, Symbol):
+            return '{}*'.format(self.arg._repr_html_())
+        else:
+            return '({})*'.format(self.arg._repr_html_())
+
+def star(arg):
+    if isinstance(arg, (Union, Concatenation)) and len(arg.args) == 0:
+        return Concatenation()
+    else:
+        return Star(arg)
+
+class Symbol(object):
+    def __init__(self, arg):
+        self.arg = arg
+    def __str__(self):
+        return str(self.arg)
+    def _repr_html_(self):
+        return str(self)
+
+def to_regexp(m, display_steps=False):
+    if display_steps:
+        from IPython.display import display, HTML
+
+    if not m.is_finite():
         raise TypeError("machine must be a finite automaton")
 
-    states = list(m.states)
+    states = sorted(q for [q] in m.states)
 
-    g = graphs.Graph()
+    g = graphs.Graph({'rankdir': 'LR'})
     for t in m.get_transitions():
-        [q] = t.lhs[0]
-        [r] = t.rhs[0]
-        g.add_edge(q, r, {'regexp': t.lhs[1]})
+        [[lstate], read] = t.lhs
+        [[rstate]] = t.rhs
+        g.add_edge(lstate, rstate, {'label': concatenation(Symbol(x) for x in read)})
+
+    # Add new start and accept nodes
+    assert 'START' not in m.states
+    g.add_node('START', {'start': True})
+    g.add_edge('START', m.get_start_state(), {'label': concatenation([])})
+    assert 'ACCEPT' not in m.states
+    g.add_node('ACCEPT', {'accept': True})
+    for q in m.get_accept_states():
+        g.add_edge(q, 'ACCEPT', {'label': concatenation([])})
+
+    if display_steps:
+        display(g)
 
     while len(states) > 0:
         s = states.pop()
-        for q in states:
-            for r in states:
-                e[q,r] 
+        display(HTML("eliminate " + s))
+        for q in states + ['START']:
+            for r in states + ['ACCEPT']:
+                try:
+                    inexpr = union(e['label'] for e in g.edges[q][s])
+                    outexpr = union(e['label'] for e in g.edges[s][r])
+                except KeyError:
+                    continue
+                if g.has_edge(s,s):
+                    loopexpr = union(e['label'] for e in g.edges[s][s])
+                    expr = concatenation([inexpr, star(loopexpr), outexpr])
+                else:
+                    expr = Concatenation([inexpr, outexpr])
+                g.add_edge(q, r, {'label': expr})
+        g.remove_node(s)
 
-if __name__ == "__main__":
-    import sys
-    print(convert_regexp(sys.argv[1]))
-    
+        if display_steps:
+            display(g)
+
+    if g.has_edge('START', 'ACCEPT'):
+        return union(e['label'] for e in g.edges['START']['ACCEPT'])
+    else:
+        return union([])
+

@@ -254,8 +254,9 @@ def to_graph(m):
     g = Graph()
     g.attrs['rankdir'] = 'LR'
     if m.state is None: raise ValueError("no state defined")
-    [q] = m.start_config[m.state]
-    g.add_node(q, {'start': True})
+    if m.start_config is not None:
+        [q] = m.start_config[m.state]
+        g.add_node(q, {'start': True})
     for config in m.accept_configs:
         [q] = config[m.state]
         g.add_node(q, {'accept': True})

@@ -212,6 +212,13 @@ def from_regexp(e, display_steps=False):
     return m
 
 def to_regexp(m, display_steps=False):
+
+    def union_edge(q, r, e):
+        if g.has_edge(q, r):
+            g[q][r][0]['label'] = union([g[q][r][0]['label'], e])
+        else:
+            g.add_edge(q, r, {'label': e})
+
     if display_steps:
         from IPython.display import display, HTML
 
@@ -224,7 +231,7 @@ def to_regexp(m, display_steps=False):
     for t in m.get_transitions():
         [[lstate], read] = t.lhs
         [[rstate]] = t.rhs
-        g.add_edge(lstate, rstate, {'label': concatenation(symbol(x) for x in read)})
+        union_edge(lstate, rstate, concatenation(symbol(x) for x in read))
 
     # Add new start and accept nodes
     assert 'START' not in m.states
@@ -254,14 +261,14 @@ def to_regexp(m, display_steps=False):
                     expr = concatenation([inexpr, star(loopexpr), outexpr])
                 else:
                     expr = concatenation([inexpr, outexpr])
-                g.add_edge(q, r, {'label': expr})
+                union_edge(q, r, expr)
         g.remove_node(s)
 
         if display_steps:
             display(g)
 
     if g.has_edge('START', 'ACCEPT'):
-        return union(e['label'] for e in g.edges['START']['ACCEPT'])
+        return g.edges['START']['ACCEPT'][0]['label']
     else:
         return union([])
 

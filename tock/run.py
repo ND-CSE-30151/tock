@@ -41,13 +41,14 @@ def run_bfs(m, w, trace=False, steps=1000):
 
     # Initial configuration
     config = list(m.start_config)
-    config[m.input] = Store(w)
+    w = Store(w)
+    config[m.input] = w
     config = Configuration(config)
 
     chart[config] = 0
     agenda.append(config)
     run = graphs.Graph()
-    run.attrs['rankdir'] = 'TB'
+    run.attrs['rankdir'] = 'LR'
     run.add_node(config, {'start': True})
 
     while len(agenda) > 0:
@@ -84,6 +85,12 @@ def run_bfs(m, w, trace=False, steps=1000):
             ql = list(q)
             run.nodes[q]['rank'] = ql.pop(m.input)
             run.nodes[q]['label'] = Configuration(ql)
+        for i in range(len(w)+1):
+            r = 'rank{}'.format(i)
+            run.add_node(r, {'rank' : Store(w[i:]), 'style' : 'invisible'})
+            if i > 0:
+                run.add_edge(rprev, r, {'color': 'white', 'label' : w[i-1]})
+            rprev = r
 
     return run
 
@@ -136,6 +143,7 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
     index_right = collections.defaultdict(set)
     backpointers = collections.defaultdict(set)
     run = graphs.Graph()
+    run.attrs['rankdir'] = 'LR'
 
     # which position the state, input and stack are in
     if not m.has_stack(stack):
@@ -148,8 +156,17 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
 
     # Axiom
     config = list(m.start_config)
-    config[m.input] = Store(w)
+    w = Store(w)
+    config[m.input] = w
     config = Configuration(config)
+
+    # draw input symbols
+    for i in range(len(w)+1):
+        r = 'rank{}'.format(i)
+        run.add_node(r, {'rank' : Store(w[i:]), 'style' : 'invisible'})
+        if i > 0:
+            run.add_edge(rprev, r, {'color': 'white', 'label' : w[i-1]})
+        rprev = r
 
     def get_node(parent, child):
         if parent is not None:

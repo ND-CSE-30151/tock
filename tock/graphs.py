@@ -88,17 +88,20 @@ class Graph(object):
         for i, q in enumerate(sorted(self.nodes)):
             index[q] = i
 
-            if 'label' in self.nodes[q]:
-                label = self.nodes[q]['label']
-            else:
-                label = q
+            attrs = {}
+            for key, val in self.nodes[q].items():
+                if key in ['label', 'style']:
+                    attrs[key] = val
 
-            label = repr_html(label)
+            if 'label' not in attrs:
+                attrs['label'] = q
+            attrs['label'] = '<'+repr_html(attrs['label'])+'>'
 
             if self.nodes[q].get('accept', False):
-                result.append('  {}[label="{}",peripheries=2];'.format(i, label))
-            else:
-                result.append('  {}[label="{}"];'.format(i, label))
+                attrs['peripheries'] = 2
+
+            attrs = ','.join('{}={}'.format(key, val) for (key, val) in attrs.items())
+            result.append('  {}[{}];'.format(i, attrs))
 
         # Draw edges to nowhere
         for q in self.nodes:
@@ -120,12 +123,8 @@ class Graph(object):
                 rank_nodes[rank].add(v)
 
         if len(has_rank) > 0:
-            # For each rank, horizontally align nodes and rank label
-            rank_index = {}
-            for i, rank in enumerate(rank_nodes):
-                rank_index[rank] = i
-                result.append('  rank{}[shape=plaintext,label=<{}>];'.format(i, repr_html(rank)))
-                result.append('  {{ rank=same; rank{} {} }}'.format(i, ' '.join(str(index[v]) for v in rank_nodes[rank])))
+            for rank in rank_nodes:
+                result.append('  {{ rank=same; {} }}'.format(' '.join(str(index[v]) for v in rank_nodes[rank])))
 
             node_has_constraint = set()
             rank_has_constraint = set()
@@ -136,8 +135,6 @@ class Graph(object):
                         vr = self.nodes[v]['rank']
                         if ur != vr:
                             if vr not in rank_has_constraint:
-                                # Align rank label
-                                result.append('  rank{} -> rank{}[style=invis];'.format(rank_index[ur], rank_index[vr]))
                                 rank_has_constraint.add(vr)
                             node_has_constraint.add(v)
 
@@ -148,8 +145,12 @@ class Graph(object):
 
                 labels = []
                 for e in self.edges[u][v]:
-                    if 'label' in e:
-                        labels.append('<tr><td>{}</td></tr>'.format(repr_html(e['label'])))
+                    for key, val in e.items():
+                        if key == 'label':
+                            labels.append('<tr><td>{}</td></tr>'.format(repr_html(e['label'])))
+                        elif key in ['style', 'color']:
+                            attrs[key] = val
+
                 if labels:
                     attrs['label'] = '<<table border="0" cellpadding="1">{}</table>>'.format(''.join(labels))
 

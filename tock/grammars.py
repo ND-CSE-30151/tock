@@ -28,7 +28,7 @@ def from_grammar(rules):
     rules = parsed_rules
     start = rules[0][0]
 
-    m = machines.Machine(3, state=0, input=1)
+    m = machines.PushdownAutomaton()
 
     q1 = "%s.1" % zero_pad(len(rules)+1, 0)
     m.set_start_state("start")
@@ -64,3 +64,48 @@ def from_grammar(rules):
         m.add_transition(("loop", a, a), ("loop", []))
                                 
     return m
+
+def to_grammar(m):
+    if not m.is_pushdown():
+        raise TypeError("only pushdown automata can be converted to (context-free) grammars")
+
+    states = set()
+    transitions = []
+    stack_alphabet = set()
+    for t in m.get_transitions():
+        ([q], a, x) = t.lhs
+        ([r], y) = t.rhs
+        states.add(q)
+        states.add(r)
+        if len(a) > 1 or len(x) > 1 or len(y) > y:
+            raise NotSupportedException("multiple symbols in transition not supported")
+        stack_alphabet |= x
+        stack_alphabet |= y
+        transitions.append((q, a, x, r, y))
+
+    # Automaton should have the following properties:
+    # - no multiple symbols
+    # - no pop+push rules
+    # - empties stack at end
+    # - single accept state
+
+    # Create new accept state and hallucinate empty transitions from
+    # real accept states to it.
+    accept_state = "accept"
+    start_var = (m.get_start_state(), accept_state)
+
+    # For each p, q, r, s \in Q, u \in \Gamma, and a, b \in \Sigma_\epsilon,
+    # if \delta(p, a, \epsilon) contains (r, u) and \delta(s, b, u) contains
+    # (q, \epsilon), put the rule A_{pq} -> a A_{rs} b in G.
+
+    # For each p, q, r \in Q, put the rule A_{pq} -> A_{pr} A_{rq} in G.
+    for p in m.states:
+        for q in m.states:
+            for r in m.states:
+                rules.append(((p,q), [(p,r), (r,q)]))
+
+    # For each p \in Q, put the rule A_{pp} -> \epsilon in G
+    for p in m.states:
+        rules.append(((p,p), []))
+
+    return rules

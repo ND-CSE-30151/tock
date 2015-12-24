@@ -211,6 +211,11 @@ def from_regexp(e, display_steps=False):
     m, _ = visit(e, 1)
     return m
 
+def fresh(s, alphabet):
+    while s in alphabet:
+        s += "'"
+    return s
+
 def to_regexp(m, display_steps=False):
 
     def union_edge(q, r, e):
@@ -225,7 +230,7 @@ def to_regexp(m, display_steps=False):
     if not m.is_finite():
         raise TypeError("machine must be a finite automaton")
 
-    states = sorted(q for [q] in m.states)
+    states = sorted(m.states)
 
     g = graphs.Graph({'rankdir': 'LR'})
     for t in m.get_transitions():
@@ -234,13 +239,13 @@ def to_regexp(m, display_steps=False):
         union_edge(lstate, rstate, concatenation(symbol(x) for x in read))
 
     # Add new start and accept nodes
-    assert 'START' not in m.states
-    g.add_node('START', {'start': True})
-    g.add_edge('START', m.get_start_state(), {'label': concatenation([])})
-    assert 'ACCEPT' not in m.states
-    g.add_node('ACCEPT', {'accept': True})
+    start = fresh('start', m.states)
+    g.add_node(start, {'start': True})
+    g.add_edge(start, m.get_start_state(), {'label': concatenation([])})
+    accept = fresh('accept', m.states)
+    g.add_node(accept, {'accept': True})
     for q in m.get_accept_states():
-        g.add_edge(q, 'ACCEPT', {'label': concatenation([])})
+        g.add_edge(q, accept, {'label': concatenation([])})
 
     if display_steps:
         display(g)
@@ -249,8 +254,8 @@ def to_regexp(m, display_steps=False):
         s = states.pop()
         if display_steps:
             display(HTML("eliminate " + s))
-        for q in states + ['START']:
-            for r in states + ['ACCEPT']:
+        for q in states + [start]:
+            for r in states + [accept]:
                 try:
                     inexpr = union(e['label'] for e in g.edges[q][s])
                     outexpr = union(e['label'] for e in g.edges[s][r])
@@ -267,8 +272,8 @@ def to_regexp(m, display_steps=False):
         if display_steps:
             display(g)
 
-    if g.has_edge('START', 'ACCEPT'):
-        return g.edges['START']['ACCEPT'][0]['label']
+    if g.has_edge(start, accept):
+        return g.edges[start][accept][0]['label']
     else:
         return union([])
 

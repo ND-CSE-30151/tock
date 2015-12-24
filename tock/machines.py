@@ -9,7 +9,7 @@ class Store(object):
        state. It consists of a string together with a head
        position."""
 
-    def __init__(self, values=None, position=None):
+    def __init__(self, values=None, position="default"):
         self.position = 0
         if values is None:
             self.values = []
@@ -19,7 +19,7 @@ class Store(object):
             self.position = other.position
         else:
             self.values = list(values)
-        if position is not None:
+        if position != "default":
             self.position = position
 
     def deepcopy(self):
@@ -49,7 +49,7 @@ class Store(object):
             return "Store({}, {})".format(repr(self.values), self.position)
     def __str__(self):
         if len(self) == 0:
-            if self.position == 0:
+            if self.position in [0, None]:
                 return "&"
             elif self.position == -1:
                 return "^ &"
@@ -274,7 +274,7 @@ class Machine(object):
     @property
     def states(self):
         if self.state is None: raise ValueError("no state defined")
-        return set(t.lhs[self.state] for t in self.transitions)
+        return set(t.lhs[self.state][0] for t in self.transitions)
 
     def add_transition(self, *args):
         if len(args) == 1 and isinstance(args[0], Transition):
@@ -417,9 +417,11 @@ def determinize(m):
             raise NotSupportedException("multiple input symbols on transition not supported")
         transitions[lstate][tuple(read)].add(rstate)
 
-    class StateSet(frozenset):
+    class Set(frozenset):
         def __str__(self):
             return "{{{}}}".format(",".join(map(str, sorted(self))))
+        def _repr_html_(self):
+            return "{{{}}}".format(",".join(x._repr_html_() for x in sorted(self)))
 
     def eclosure(states):
         """Find epsilon-closure of set of states"""
@@ -435,7 +437,7 @@ def determinize(m):
 
     dm = FiniteAutomaton()
 
-    start_state = StateSet(eclosure([m.get_start_state()]))
+    start_state = Set(eclosure([m.get_start_state()]))
     dm.set_start_state(start_state)
 
     frontier = {start_state}
@@ -451,7 +453,7 @@ def determinize(m):
                 if read != ():
                     dtransitions[read] |= transitions[lstate][read]
         for read in dtransitions:
-            rstates = StateSet(eclosure(dtransitions[read]))
+            rstates = Set(eclosure(dtransitions[read]))
             dm.add_transition([[lstates], read], [[rstates]])
             frontier.add(rstates)
 

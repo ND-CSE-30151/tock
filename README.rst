@@ -15,20 +15,24 @@ Tock depends on the following:
 -  Python 2.7 or 3.x (required)
 -  `six <https://pypi.python.org/pypi/six>`__ (required)
 -  `GraphViz <http://www.graphviz.org>`__ (to draw graphs)
--  `IPython <http://ipython.org>`__ (to view notebooks)
+-  `Jupyter <http://jupyter.org>`__/`IPython <http://ipython.org>`__ (to
+   view notebooks)
 -  `openpyxl <https://pypi.python.org/pypi/openpyxl>`__ (to open Excel
    files)
 
-The easiest way to get started is:
+Steps:
 
-1. Install `Miniconda <http://conda.pydata.org/miniconda.html>`__.
-   Either Python 2.7 or 3.x is fine.
-2. Run ``conda install six jupyter openpyxl``.
-3. In the root of the Tock directory, run ``python setup.py``.
+1. Run ``pip install tock``.
 
-If you don't have GraphViz, Tock will attempt to download and use
-`Viz.js <https://github.com/mdaines/viz.js>`__, which is slower but
-otherwise identical.
+2. Install
+   `Jupyter <http://jupyter.org>`__/`IPython <http://ipython.org>`__ by
+   running ``pip install jupyter`` (or ``conda install jupyter`` if you
+   use Anaconda).
+
+3. Install `GraphViz <http://www.graphviz.org>`__. But if you don't have
+   it, Tock will attempt to download and use
+   `Viz.js <https://github.com/mdaines/viz.js>`__, which is slower but
+   otherwise identical.
 
 Documentation
 -------------

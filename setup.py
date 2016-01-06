@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(name='tock',
-      version='0.12',
+      version='0.1',
       description='Theory of Computing Toolkit',
       author='David Chiang',
       author_email='dchiang@nd.edu',
@@ -20,5 +20,5 @@ setup(name='tock',
         'Programming Language :: Python :: 3',
         ],
       packages=['tock'],
-      install_requires=['six'],
+      install_requires=['six', 'openpyxl'],
       )

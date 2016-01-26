@@ -7,7 +7,7 @@ setup(name='tock',
       description='Theory of Computing Toolkit',
       author='David Chiang',
       author_email='dchiang@nd.edu',
-      url='https://github.org/davidweichiang/tock',
+      url='https://github.org/ND-CSE-30151/tock',
       license='MIT',
       classifiers=[
         'Development Status :: 3 - Alpha',

@@ -188,6 +188,7 @@ def from_regexp(e, display_steps=False):
                 start = "q" + zero_pad(i)
                 i += 1
                 m.set_start_state(start)
+                m.add_accept_state(start)
                 start1 = margs[0].get_start_state()
                 m.add_transition((start, []), (start1,))
                 for q in margs[0].get_accept_states():

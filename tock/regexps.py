@@ -160,6 +160,12 @@ def from_regexp(e, display_steps=False):
             m.add_accept_state(accept)
             m.add_transition((start, e.args[0]), (accept,))
 
+        elif e.op == 'concatenation' and len(e.args) == 0: # empty string
+            start = "q" + zero_pad(i)
+            i += 1
+            m.set_start_state(start)
+            m.add_accept_state(start)
+
         else:
             margs = []
             for arg in e.args:

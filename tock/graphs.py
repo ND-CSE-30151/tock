@@ -51,18 +51,25 @@ class Graph(object):
         pred = {start[0]: None}
         while len(frontier) > 0:
             u = frontier.popleft()
+            if self.nodes[u].get('accept', False):
+                path = []
+                while u is not None:
+                    path.append(u)
+                    u = pred[u]
+                path.reverse()
+                return path
             for v in self.edges.get(u, ()):
                 if v not in pred:
                     frontier.append(v)
                     pred[v] = u
-                    if self.nodes[v].get('accept', False):
-                        path = []
-                        while v is not None:
-                            path.append(v)
-                            v = pred[v]
-                        path.reverse()
-                        return path
         raise ValueError("graph does not have an accepting path")
+
+    def has_path(self):
+        try:
+            self.shortest_path()
+            return True
+        except:
+            return False
 
     def __getitem__(self, u):
         return self.edges[u]

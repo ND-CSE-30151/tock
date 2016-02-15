@@ -25,7 +25,8 @@ whitespace_re = re.compile(r"\s*(//.*)?")
 # Symbols can be |- -| # $ or any string of alphanumerics or _ .
 symbol_re = re.compile(r"\|-|-\||#|\$|[A-Za-z0-9_.]+")
 class Symbol(str):
-    pass
+    def _repr_html_(self):
+        return self
 
 # Operators
 operator_re = re.compile(r"->|[&^(){},@>|*]")

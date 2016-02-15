@@ -18,7 +18,7 @@ class Store(object):
             self.values = other.values
             self.position = other.position
         else:
-            self.values = list(values)
+            self.values = list(syntax.Symbol(x) for x in values)
         if position != "default":
             self.position = position
 
@@ -517,7 +517,9 @@ def equivalent(m1, m2):
                 s.append((r1, r2))
 
     cls = {}
-    f = set(m1.get_accept_states()) | set(m2.get_accept_states())
+    f = ( {(1, q) for q in m1.get_accept_states()} | 
+          {(2, q) for q in m2.get_accept_states()} )
+
     for q in u:
         if u[q] not in cls:
             cls[u[q]] = q in f

@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(name='tock',
-      version='0.12',
+      version='0.13',
       description='Theory of Computing Toolkit',
       author='David Chiang',
       author_email='dchiang@nd.edu',

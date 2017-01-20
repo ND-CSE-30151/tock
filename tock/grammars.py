@@ -37,12 +37,17 @@ def fresh(s, alphabet):
         s += "'"
     return s
 
-def from_grammar(rules):
+def from_grammar(rules, method="topdown"):
     """Argument `rules` is a file-like object or sequence of strings.
        Each is of the form lhs -> rhs, where lhs is a nonterminal and
        rhs is a space-separated sequence of terminals or nonterminals.
        The lhs of the first rule is taken to be the start symbol."""
+    if method == "topdown":
+        return from_grammar_topdown(rules)
+    else:
+        raise ValueError("unknown method '{}'".format(method))
 
+def _read_rules(rules):
     parsed_rules = []
     for rule in rules:
         tokens = syntax.lexer(rule)
@@ -56,8 +61,15 @@ def from_grammar(rules):
             while tokens.pos < len(tokens):
                 rhs.append(syntax.parse_symbol(tokens))
         parsed_rules.append((lhs, rhs))
-    rules = parsed_rules
-    start = rules[0][0]
+    return parsed_rules, parsed_rules[0][0]
+
+def from_grammar_topdown(rules):
+    """Argument `rules` is a file-like object or sequence of strings.
+       Each is of the form lhs -> rhs, where lhs is a nonterminal and
+       rhs is a space-separated sequence of terminals or nonterminals.
+       The lhs of the first rule is taken to be the start symbol."""
+
+    rules, start = _read_rules(rules)
 
     m = machines.PushdownAutomaton()
 

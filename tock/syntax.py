@@ -98,7 +98,7 @@ def parse_end(s):
         raise ValueError("unexpected %s" % (s.cur))
 
 def parse_store(s):
-    from machines import Store
+    from .machines import Store
     position = None
     if s.cur == '^':
         s.pos += 1
@@ -153,7 +153,7 @@ def string_to_store(s):
 
 def string_to_config(s):
     """s is a comma-separated list of stores."""
-    from machines import Configuration
+    from .machines import Configuration
     s = lexer(s)
     x = parse_multiple(s, parse_store)
     parse_end(s)
@@ -184,7 +184,7 @@ def string_to_configs(s):
 
 def string_to_transition(s):
     """s is a string of the form a,b or a,b->c,d"""
-    from machines import Transition
+    from .machines import Transition
     s = lexer(s)
     lhs = parse_multiple(s, parse_store)
     if s.pos < len(s) and s.cur == "->":

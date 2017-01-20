@@ -113,7 +113,7 @@ class Graph(object):
         # Draw nodes
         result.append('  _START[shape=none,label=""];\n')
         index = {}
-        for i, q in enumerate(sorted(self.nodes)):
+        for i, q in enumerate(sorted(self.nodes, key=id)):
             index[q] = i
 
             attrs = {}

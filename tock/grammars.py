@@ -6,9 +6,14 @@ __all__ = ['from_grammar', 'to_grammar']
 
 class Grammar(object):
     def __init__(self, start):
-        self.start = start
+        self.start = syntax.Symbol(start)
+        self.nonterminals = set()
+        self.add_nonterminal(start)
         self.rules = []
 
+    def add_nonterminal(self, x):
+        self.nonterminals.add(syntax.Symbol(x))
+        
     def add_rule(self, lhs, rhs):
         self.rules.append((machines.Store(lhs, None), machines.Store(rhs, None)))
 
@@ -29,6 +34,59 @@ class Grammar(object):
             result.append('{} &rarr; {}'.format(lhs._repr_html_(), rhs._repr_html_()))
         return '<br>\n'.join(result)
 
+    def is_contextfree(self):
+        """Returns True iff the grammar is context-free."""
+        for lhs, rhs in self.rules:
+            if len(lhs) != 1:
+                return False
+            if lhs[0] not in self.nonterminals:
+                return False
+        return True
+
+    def remove_useless(self):
+        """Returns a new grammar containing just useful rules."""
+        if not self.is_contextfree():
+            raise ValueError("grammar must be context-free")
+        by_lhs = collections.defaultdict(list)
+        by_rhs = collections.defaultdict(list)
+        for [lhs], rhs in self.rules:
+            by_lhs[lhs].append((lhs, rhs))
+            for y in rhs:
+                if y in self.nonterminals:
+                    by_rhs[y].append((lhs, rhs))
+            
+        agenda = collections.deque([self.start])
+        reachable = set()
+        while len(agenda) > 0:
+            x = agenda.popleft()
+            if x in reachable: continue
+            reachable.add(x)
+            for _, rhs in by_lhs[x]:
+                for y in rhs:
+                    if y in by_lhs:
+                        agenda.append(y)
+
+        agenda = collections.deque()
+        productive = set()
+        for [lhs], rhs in self.rules:
+            if all(y not in self.nonterminals for y in rhs):
+                agenda.append(lhs)
+        while len(agenda) > 0:
+            y = agenda.popleft()
+            if y in productive: continue
+            productive.add(y)
+            for lhs, rhs in by_rhs[y]:
+                if all(y not in self.nonterminals or y in productive for y in rhs):
+                    agenda.append(lhs)
+
+        g = Grammar(self.start)
+
+        for [lhs], rhs in self.rules:
+            if (lhs in reachable & productive and
+                all(y not in self.nonterminals or y in reachable & productive for y in rhs)):
+                g.add_rule([lhs], rhs)
+        return g
+            
 def zero_pad(n, i):
     return str(i).zfill(len(str(n)))
 
@@ -133,10 +191,12 @@ def to_grammar(m):
         elif len(x) == 1 and len(y) == 0:
             pop[x[0]].append((q, a, x, r, y))
         else:
-            raise NotImplementedError("transitions must either push or pop but not both")
+            raise NotImplementedError("transitions must either push or pop but not both or neither")
 
+    # Add bottom symbol to stack
     start = fresh('start', m.states)
     bottom = fresh('$', stack_alphabet)
+    stack_alphabet.add(bottom)
     push[bottom].append((start, [], [], m.get_start_state(), [bottom]))
 
     # Make automaton empty its stack before accepting
@@ -144,11 +204,8 @@ def to_grammar(m):
     empty = fresh('empty', m.states)
     for x in stack_alphabet:
         for q in m.get_accept_states():
-            pop[x].append((q, [], [x], empty, []))
-        pop[x].append((empty, [], [x], empty, []))
-    for q in m.get_accept_states():
-        pop[bottom].append((q, [], [bottom], accept, []))
-    pop[bottom].append((empty, [], [bottom], accept, []))
+            pop[x].append((q, [], [x], accept if x == bottom else empty, []))
+        pop[x].append((empty, [], [x], accept if x == bottom else empty, []))
 
     g = Grammar(Tuple((start, accept)))
 
@@ -158,16 +215,19 @@ def to_grammar(m):
     for u in stack_alphabet:
         for p, a, _, r, _ in push[u]:
             for s, b, _, q, _ in pop[u]:
+                g.add_nonterminal(Tuple((p,q)))
                 g.add_rule([Tuple((p,q))], list(a) + [Tuple((r,s))] + list(b))
 
     # For each p, q, r \in Q, put the rule A_{pq} -> A_{pr} A_{rq} in G.
     for p in m.states:
         for q in m.states:
             for r in m.states:
+                g.add_nonterminal(Tuple((p,q)))
                 g.add_rule([Tuple((p,q))], [Tuple((p,r)), Tuple((r,q))])
 
     # For each p \in Q, put the rule A_{pp} -> \epsilon in G
     for p in m.states:
+        g.add_nonterminal(Tuple((p,p)))
         g.add_rule([Tuple((p,p))], [])
 
     return g

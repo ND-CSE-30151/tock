@@ -2,14 +2,43 @@ import collections
 from . import machines
 from . import syntax
 
-__all__ = ['from_grammar', 'to_grammar']
+__all__ = ['Grammar', 'from_grammar', 'to_grammar']
 
 class Grammar(object):
-    def __init__(self, start):
-        self.start = syntax.Symbol(start)
+    def __init__(self):
         self.nonterminals = set()
-        self.add_nonterminal(start)
         self.rules = []
+
+    @classmethod
+    def from_file(cls, filename):
+        with open(filename) as f:
+            return cls.from_lines(f)
+        
+    @classmethod
+    def from_lines(cls, lines):
+        g = cls()
+        parsed_rules = []
+        first = True
+        for line in lines:
+            tokens = syntax.lexer(line)
+            lhs = syntax.parse_symbol(tokens)
+            if first:
+                g.set_start(lhs)
+                first = False
+            syntax.parse_character(tokens, '->')
+            rhs = []
+            if tokens.cur == '&':
+                syntax.parse_character(tokens, '&')
+                syntax.parse_end(tokens)
+            else:
+                while tokens.pos < len(tokens):
+                    rhs.append(syntax.parse_symbol(tokens))
+            g.add_rule(lhs, rhs)
+        return g
+
+    def set_start(self, x):
+        self.add_nonterminal(x)
+        self.start = x
 
     def add_nonterminal(self, x):
         self.nonterminals.add(syntax.Symbol(x))
@@ -79,7 +108,8 @@ class Grammar(object):
                 if all(y not in self.nonterminals or y in productive for y in rhs):
                     agenda.append(lhs)
 
-        g = Grammar(self.start)
+        g = Grammar()
+        g.set_start(self.start)
 
         for [lhs], rhs in self.rules:
             if (lhs in reachable & productive and
@@ -95,67 +125,40 @@ def fresh(s, alphabet):
         s += "'"
     return s
 
-def from_grammar(rules, method="topdown"):
-    """Argument `rules` is a file-like object or sequence of strings.
-       Each is of the form lhs -> rhs, where lhs is a nonterminal and
-       rhs is a space-separated sequence of terminals or nonterminals.
-       The lhs of the first rule is taken to be the start symbol."""
+def from_grammar(g, method="topdown"):
     if method == "topdown":
-        return from_grammar_topdown(rules)
+        return from_grammar_topdown(g)
+    elif method == "bottomup":
+        return from_grammar_bottomup(g)
     else:
         raise ValueError("unknown method '{}'".format(method))
 
-def _read_rules(rules):
-    parsed_rules = []
-    for rule in rules:
-        tokens = syntax.lexer(rule)
-        lhs = syntax.parse_symbol(tokens)
-        syntax.parse_character(tokens, '->')
-        rhs = []
-        if tokens.cur == '&':
-            syntax.parse_character(tokens, '&')
-            syntax.parse_end(tokens)
-        else:
-            while tokens.pos < len(tokens):
-                rhs.append(syntax.parse_symbol(tokens))
-        parsed_rules.append((lhs, rhs))
-    return parsed_rules, parsed_rules[0][0]
-
-def from_grammar_topdown(rules):
-    """Argument `rules` is a file-like object or sequence of strings.
-       Each is of the form lhs -> rhs, where lhs is a nonterminal and
-       rhs is a space-separated sequence of terminals or nonterminals.
-       The lhs of the first rule is taken to be the start symbol."""
-
-    rules, start = _read_rules(rules)
-
+def from_grammar_topdown(g):
     m = machines.PushdownAutomaton()
 
-    q1 = "%s.1" % zero_pad(len(rules)+1, 0)
+    q1 = "%s.1" % zero_pad(len(g.rules)+1, 0)
     m.set_start_state("start")
     m.add_transition(("start", [], []), (q1,     "$"))
-    m.add_transition((q1,      [], []), ("loop", start))
+    m.add_transition((q1,      [], []), ("loop", g.start))
 
-    nonterminals = set([start])
+    nonterminals = set([g.start])
     symbols = set()
-    for ri, (lhs, rhs) in enumerate(rules):
+    for ri, [[lhs], rhs] in enumerate(g.rules):
         nonterminals.add(lhs)
         symbols.add(lhs)
         symbols.update(rhs)
         if len(rhs) == 0:
             m.add_transition(("loop", [], lhs), ("loop", []))
-
         else:
             q = "loop"
             for si, r in reversed(list(enumerate(rhs))):
                 if si > 0:
-                    q1 = "%s.%s" % (zero_pad(len(rules)+1, ri+1), 
+                    q1 = "%s.%s" % (zero_pad(len(g.rules)+1, ri+1), 
                                     zero_pad(len(rhs)+1, si))
                 else:
                     q1 = "loop"
                 m.add_transition((q, [], lhs if si==len(rhs)-1 else []),
                                  (q1, r))
-
                 q = q1
 
     m.add_transition(("loop", [], "$"), ("accept", []))
@@ -163,6 +166,41 @@ def from_grammar_topdown(rules):
 
     for a in symbols - nonterminals:
         m.add_transition(("loop", a, a), ("loop", []))
+                                
+    return m
+
+def from_grammar_bottomup(g):
+    m = machines.PushdownAutomaton()
+
+    m.set_start_state("start")
+    m.add_transition(("start", [], []), ("loop", "$"))
+
+    nonterminals = set([g.start])
+    symbols = set()
+    for ri, [[lhs], rhs] in enumerate(g.rules):
+        nonterminals.add(lhs)
+        symbols.add(lhs)
+        symbols.update(rhs)
+        if len(rhs) == 0:
+            m.add_transition(("loop", [], []), ("loop", lhs))
+        else:
+            q = "loop"
+            for si, r in reversed(list(enumerate(rhs))):
+                if si > 0:
+                    q1 = "%s.%s" % (zero_pad(len(g.rules)+1, ri+1), 
+                                    zero_pad(len(rhs)+1, si))
+                else:
+                    q1 = "loop"
+                m.add_transition((q, [], r),
+                                 (q1, lhs if si==0 else []))
+                q = q1
+
+    m.add_transition(("loop",    [], g.start), ("accept1", []))
+    m.add_transition(("accept1", [], "$"),     ("accept2", []))
+    m.add_accept_state("accept2")
+
+    for a in symbols - nonterminals:
+        m.add_transition(("loop", a, []), ("loop", a))
                                 
     return m
 
@@ -207,7 +245,8 @@ def to_grammar(m):
             pop[x].append((q, [], [x], accept if x == bottom else empty, []))
         pop[x].append((empty, [], [x], accept if x == bottom else empty, []))
 
-    g = Grammar(Tuple((start, accept)))
+    g = Grammar()
+    g.set_start(Tuple((start, accept)))
 
     # For each p, q, r, s \in Q, u \in \Gamma, and a, b \in \Sigma_\epsilon,
     # if \delta(p, a, \epsilon) contains (r, u) and \delta(s, b, u) contains

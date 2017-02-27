@@ -37,6 +37,7 @@ class Grammar(object):
         return g
 
     def set_start(self, x):
+        x = syntax.Symbol(x)
         self.add_nonterminal(x)
         self.start = x
 
@@ -125,13 +126,13 @@ def fresh(s, alphabet):
         s += "'"
     return s
 
-def from_grammar(g, method="topdown"):
-    if method == "topdown":
+def from_grammar(g, mode="topdown"):
+    if mode == "topdown":
         return from_grammar_topdown(g)
-    elif method == "bottomup":
+    elif mode == "bottomup":
         return from_grammar_bottomup(g)
     else:
-        raise ValueError("unknown method '{}'".format(method))
+        raise ValueError("unknown mode '{}'".format(mode))
 
 def from_grammar_topdown(g):
     m = machines.PushdownAutomaton()
@@ -195,9 +196,9 @@ def from_grammar_bottomup(g):
                                  (q1, lhs if si==0 else []))
                 q = q1
 
-    m.add_transition(("loop",    [], g.start), ("accept1", []))
-    m.add_transition(("accept1", [], "$"),     ("accept2", []))
-    m.add_accept_state("accept2")
+    m.add_transition(("loop",    [], g.start), ("0.1",    []))
+    m.add_transition(("0.1",     [], "$"),     ("accept", []))
+    m.add_accept_state("accept")
 
     for a in symbols - nonterminals:
         m.add_transition(("loop", a, []), ("loop", a))

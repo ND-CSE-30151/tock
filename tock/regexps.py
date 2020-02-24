@@ -90,8 +90,22 @@ def symbol(arg):
 ### Parser for regular expressions
 
 def string_to_regexp(s):
+    """Converts a string to a regular expression.
+
+    Regular expressions allow the following operations:
+    - Symbols
+    - Empty string (&)
+    - Union (|)
+    - Concatenation: Two concatenated symbols must be separated by a
+      space. For example, "a b" is "a" concatenated with "b", but "ab"
+      is a single symbol.
+    - Kleene star (*)
+    """
     s = syntax.lexer(s)
-    return parse_union(s)
+    r = parse_union(s)
+    if s.pos < len(s):
+        raise ValueError("unexpected characters {} after regular expression".format(s[s.pos:]))
+    return r
 
 def parse_union(s):
     i = s.pos
@@ -134,7 +148,11 @@ def parse_base(s):
         assert False
 
 def from_regexp(e, display_steps=False):
+    """Convert a regular expression to a NFA.
 
+    display_steps: if True and if run inside a Jupyter notebook,
+    displays all steps of the conversion.
+    """
     def count(e):
         """Predetermine number of states we will need."""
         if e.op == 'union':
@@ -224,7 +242,10 @@ def fresh(s, alphabet):
     return s
 
 def to_regexp(m, display_steps=False):
+    """Convert a finite automaton to a regular expression.
 
+    display_steps: if True and if run inside a Jupyter notebook,
+    displays all steps of the conversion."""
     def union_edge(q, r, e):
         if g.has_edge(q, r):
             g[q][r][0]['label'] = union([g[q][r][0]['label'], e])

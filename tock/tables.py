@@ -31,9 +31,9 @@ class Table(object):
                 cell = cell.replace('&', '&epsilon;')
                 cell = cell.replace('>', '&gt;')
                 if i == 0 or j == 0:
-                    result.append('    <th>{}</th>'.format(cell))
+                    result.append('    <th style="text-align: left">{}</th>'.format(cell))
                 else:
-                    result.append('    <td>{}</td>'.format(cell))
+                    result.append('    <td style="text-align: left">{}</td>'.format(cell))
             result.append('  </tr>')
         
         result.append('</table>')

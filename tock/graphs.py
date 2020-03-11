@@ -60,7 +60,7 @@ class Graph(object):
                 raise ValueError("graph does not have exactly one path")
             [v] = vs
 
-        return path
+        return machines.Path(path)
 
     def shortest_path(self):
         """Finds the shortest path from the start node to an accept node. If
@@ -78,7 +78,7 @@ class Graph(object):
                     path.append(u)
                     u = pred[u]
                 path.reverse()
-                return path
+                return machines.Path(path)
             for v in self.edges.get(u, ()):
                 if v not in pred:
                     frontier.append(v)

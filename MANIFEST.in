@@ -1,4 +1,4 @@
-include README.ipynb README.rst LICENSE.txt
+include README.ipynb README.md LICENSE.txt
 include doc/*.ipynb
 include examples/*.csv examples/*.tgf
-
+prune unused

@@ -168,21 +168,21 @@ class Transition(object):
             if i < 0:
                 raise ValueError("transition cannot apply")
             n = len(x)
-            while i+n > len(store) and x[n-1] == syntax.BLANK:
+            # Pad store with blanks to fit x
+            while i+n > len(store) and x[len(store)-i] == syntax.BLANK:
                 store.values.append(syntax.BLANK)
             if store.values[i:i+n] != x.values:
                 raise ValueError("transition cannot apply")
             store.values[i:i+n] = y.values
             store.position = i + y.position
 
-            # don't move off left end
+            # Don't move off left end
             store.position = max(0, store.position)
 
-            # pad or clip the store
-            while len(store) <= store.position-1:
+            # Pad store with blanks,
+            # unless store is empty (so don't pad the empty stack)
+            while store.position > 0 and len(store)-1 < store.position:
                 store.values.append(syntax.BLANK)
-            while len(store)-1 > store.position and store[-1] == syntax.BLANK:
-                store.values[-1:] = []
 
         return config
 

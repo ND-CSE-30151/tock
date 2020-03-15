@@ -36,13 +36,13 @@ Documentation
 
 The documentation is contained in a series of [Jupyter](https://jupyter.org) notebooks:
 
-- [Introduction](Introduction.ipynb)
-- [Deterministic finite automata](DFAs.ipynb)
-- [Nondeterministic finite automata](NFAs.ipynb)
-- [Regular expressions](Regexps.ipynb)
-- [Pushdown automata](PDAs.ipynb)
-- [Context free grammars](CFGs.ipynb)
-- [Turing machines](TMs.ipynb)
+- [Introduction](doc/Introduction.ipynb)
+- [Deterministic finite automata](doc/DFAs.ipynb)
+- [Nondeterministic finite automata](doc/NFAs.ipynb)
+- [Regular expressions](doc/Regexps.ipynb)
+- [Pushdown automata](doc/PDAs.ipynb)
+- [Context free grammars](doc/CFGs.ipynb)
+- [Turing machines](doc/TMs.ipynb)
 
 To open them, run `jupyter notebook` in the Tock directory. A web
 browser should open, showing you the contents of the directory. Click on

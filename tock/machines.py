@@ -1,6 +1,6 @@
 import collections
 import six
-from . import syntax
+from . import syntax, settings
 
 __all__ = ['Machine', 'FiniteAutomaton', 'PushdownAutomaton', 'TuringMachine', 'determinize', 'equivalent']
 
@@ -52,7 +52,10 @@ class Store(object):
             if self.position in [0, None]:
                 return "&"
             elif self.position == -1:
-                return "^ &"
+                if settings.display_direction_as == 'caret':
+                    return "^ &"
+                elif settings.display_direction_as == 'alpha':
+                    return "&,L"
             else:
                 raise ValueError()
 
@@ -60,16 +63,24 @@ class Store(object):
             return str(self.values[0])
 
         result = []
-        if self.position == -1:
+        if self.position == -1 and settings.display_direction_as == 'caret':
             result.append("^")
         for i, x in enumerate(self.values):
             if i == self.position:
                 result.append("[{}]".format(x))
             else:
                 result.append(str(x))
-        if self.position == len(self.values):
+        if self.position == len(self.values) and settings.display_direction_as == 'caret':
             result.append("^")
-        return " ".join(result)
+        result = " ".join(result)
+
+        if settings.display_direction_as == 'alpha':
+            if self.position == -1:
+                result = result + ",L"
+            elif self.position == len(self.values):
+                result = result + ",R"
+                
+        return result
 
     def _repr_html_(self):
         # nothing fancy

@@ -63,6 +63,8 @@ def from_table(table):
         except Exception as e:
             e.message = "cell A%s: %s" % (i+1, e.message)
             raise
+    if start_state is None:
+        raise ValueError("missing start state")
 
     # Header row has lhs values for all stores other than the first
     lhs2 = []

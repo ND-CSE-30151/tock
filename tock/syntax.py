@@ -1,4 +1,5 @@
 import re
+from . import settings
 
 BLANK = '_'
 
@@ -19,6 +20,9 @@ class Tokens(object):
     @property
     def cur(self):
         return self.tokens[self.pos]
+    @property
+    def next(self):
+        return self.tokens[self.pos+1]
 
 whitespace_re = re.compile(r"\s*(//.*)?")
 
@@ -109,6 +113,14 @@ def parse_store(s):
         if position is not None:
             raise ValueError("head is only allowed to be in one position")
         position = len(x)
+    if settings.display_direction_as == 'alpha':
+        if s.pos+1 < len(s) and s.cur == ',':
+            if s.next == 'L':
+                s.pos += 2
+                position = -1
+            elif s.next == 'R':
+                s.pos += 2
+                position = len(x)
     if position is None:
         position = 0
     return Store(x, position)

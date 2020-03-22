@@ -265,6 +265,8 @@ def from_graph(g):
             m.set_start_state(q)
         if g.nodes[q].get('accept', False):
             m.add_accept_state(q)
+    if m.start_config is None:
+        raise ValueError("missing start state")
 
     for lhs, rhs in transitions:
         m.add_transition(lhs, rhs)

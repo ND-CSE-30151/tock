@@ -10,6 +10,7 @@ __all__ = ['from_regexp', 'to_regexp', 'string_to_regexp']
 ### Regular expression objects
 
 class RegularExpression(object):
+    """A (abstract syntax tree of a) regular expression."""
     def __init__(self, op, args, start=None, end=None):
         self.op = op
         self.args = tuple(args)

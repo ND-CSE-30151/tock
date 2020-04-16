@@ -87,6 +87,7 @@ class Store(object):
         return str(self).replace('&', '&epsilon;').replace('...', '&hellip;')
 
 class Configuration(object):
+    """A configuration, which is essentially a tuple of `Store`s."""
     def __init__(self, arg):
         if isinstance(arg, Configuration):
             self.stores = arg.stores
@@ -134,6 +135,7 @@ class Configuration(object):
         return True
 
 class Path(object):
+    """A path through a `Graph`."""
     def __init__(self, configs):
         self.configs = configs
 
@@ -150,6 +152,7 @@ class Path(object):
         return ''.join(html)
 
 class Transition(object):
+    """A transition from one `Configuration` to another `Configuration`."""
     def __init__(self, *args):
         if len(args) == 1:
             arg = args[0]
@@ -211,9 +214,15 @@ class Transition(object):
 
 # Define some standard automaton types.
 
-def FiniteAutomaton(): return Machine(2, state=0, input=1, oneway=True)
-def PushdownAutomaton(): return Machine(3, state=0, input=1, oneway=True)
-def TuringMachine(): return Machine(2, state=0, input=1)
+def FiniteAutomaton():
+    """A deterministic or nondeterministic finite automaton."""
+    return Machine(2, state=0, input=1, oneway=True)
+def PushdownAutomaton():
+    """A deterministic or nondeterministic pushdown automaton."""
+    return Machine(3, state=0, input=1, oneway=True)
+def TuringMachine():
+    """A deterministic or nondeterministic Turing machine."""
+    return Machine(2, state=0, input=1)
 
 class Machine(object):
     def __init__(self, num_stores, state=None, input=None, oneway=False):
@@ -237,6 +246,7 @@ class Machine(object):
         self.accept_configs = set()
 
     def set_start_config(self, config):
+        """Define the starting configuration."""
         if isinstance(config, six.string_types):
             config = syntax.string_to_config(config)
         # If input is missing, supply &
@@ -247,6 +257,7 @@ class Machine(object):
         self.start_config = config
 
     def add_accept_config(self, config):
+        """Add a possible accepting configuration."""
         if self.oneway:
             end = Store([syntax.BLANK])
             s = config[self.input]
@@ -262,10 +273,12 @@ class Machine(object):
         self.accept_configs.add(config)
 
     def add_accept_configs(self, configs):
+        """Add a list of possible accepting configurations."""
         for c in configs:
             self.add_accept_config(c)
 
     def get_start_state(self):
+        """Return the start state."""
         if self.state is None:
             raise ValueError("no state defined")
         if sum(len(store) for store in self.start_config) != 1:
@@ -274,6 +287,7 @@ class Machine(object):
         return q
 
     def set_start_state(self, q):
+        """Set the start state. All other stores will be initialized to empty."""
         config = [[]] * self.num_stores
 
         if self.state is None: raise ValueError("no state defined")
@@ -282,6 +296,7 @@ class Machine(object):
         self.start_config = Configuration(config)
 
     def add_accept_state(self, q):
+        """Add an accept state."""
         config = [[]] * self.num_stores
 
         if self.state is None: raise ValueError("no state defined")
@@ -290,21 +305,25 @@ class Machine(object):
         self.add_accept_config(config)
 
     def add_accept_states(self, qs):
+        """Add a list of accept states."""
         for q in qs:
             self.add_accept_state(q)
 
     def get_accept_states(self):
+        """Return the list of accept states."""
         if self.state is None: raise ValueError("no state defined")
         # to do: error checking
         return [config[self.state][0] for config in self.accept_configs]
         
     @property
     def states(self):
+        """All possible states."""
         if self.state is None: raise ValueError("no state defined")
         return (set(t.lhs[self.state][0] for t in self.transitions) | 
                 set(t.rhs[self.state][0] for t in self.transitions))
 
     def add_transition(self, *args):
+        """Add a transition."""
         if len(args) == 1 and isinstance(args[0], Transition):
             t = args[0]
         else:
@@ -324,6 +343,7 @@ class Machine(object):
         self.transitions.append(t)
 
     def add_transitions(self, transitions):
+        """Add a list of transitions."""
         for t in transitions:
             self.add_transition(t)
 
@@ -347,7 +367,7 @@ class Machine(object):
 
     def has_cell(self, s):
         """Tests whether store `s` is a cell, that is, it uses exactly one
-        cell, and there can take on only a finite number of states)."""
+        cell, and therefore can take on only a finite number of states)."""
 
         for t in self.transitions:
             if len(t.lhs[s]) != 1:
@@ -455,7 +475,7 @@ def determinize(m):
             return "{{{}}}".format(",".join(x._repr_html_() for x in sorted(self)))
 
     def eclosure(states):
-        """Find epsilon-closure of set of states"""
+        """Find epsilon-closure of set of states."""
         states = set(states)
         frontier = set(states)
         while len(frontier) > 0:
@@ -495,7 +515,7 @@ def determinize(m):
     return dm
 
 def equivalent(m1, m2):
-    """Hopcroft-Karp algorithm."""
+    """Test whether two DFAs are equivalent, using the Hopcroft-Karp algorithm."""
     if not m1.is_finite() and m1.is_deterministic():
         raise TypeError("machine must be a deterministic finite automaton")
     if not m2.is_finite() and m2.is_deterministic():

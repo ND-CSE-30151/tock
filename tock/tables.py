@@ -13,7 +13,7 @@ __all__ = ['from_table', 'read_csv', 'read_excel', 'to_table']
 
 class Table(object):
     """A simple class that just stores a list of lists of strings.
-    Compared to Graph, this is a lower-level representation."""
+    Compared to `Graph`, this is a lower-level representation."""
     def __init__(self, rows):
         self.rows = rows
     def __getitem__(self, i):
@@ -40,6 +40,7 @@ class Table(object):
         return '\n'.join(result)
 
 def from_table(table):
+    """Convert a `Table` to a `Machine`."""
     # Ignore blank lines, but keep the line numbers for error reporting
     etable = []
     for i, row in enumerate(table):
@@ -152,6 +153,7 @@ def read_excel(filename, sheet=None):
     return from_table(table)
 
 def to_table(m):
+    """Converts a `Machine` to a `Table`."""
     rows = []
 
     states = set()

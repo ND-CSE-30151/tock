@@ -5,6 +5,14 @@ from . import syntax
 __all__ = ['to_graph', 'write_dot', 'read_tgf']
 
 class Graph(object):
+    """A directed graph. Both nodes and edges can have a `dict` of attributes.
+
+    Nodes can be any object that implements `__hash__` and `__eq__`.
+
+    If `g` is a `Graph` and `v` is a node, `v`'s attributes can be
+    accessed as `g.nodes[v]`. If `u` and `v` are nodes, edge (`u`,
+    `v`)'s attributes can be accessed as `g.edges[u][v]`.
+    """
     def __init__(self, attrs=None):
         self.nodes = {}
         self.edges = {}
@@ -12,6 +20,7 @@ class Graph(object):
         self.attrs = attrs
 
     def add_node(self, v, attrs=None):
+        """Add node `v` to graph with attributes `attrs`."""
         if attrs is None: attrs = {}
         if v in self.nodes:
             self.nodes[v].update(attrs)
@@ -19,6 +28,7 @@ class Graph(object):
             self.nodes[v] = attrs
 
     def remove_node(self, v):
+        """Remove node `v`, as well as any edges incident to `v`."""
         del self.nodes[v]
         del self.edges[v]
         for u in self.nodes:
@@ -26,6 +36,7 @@ class Graph(object):
                 del self.edges[u][v]
 
     def add_edge(self, u, v, attrs=None):
+        """Add edge from `u` to `v` to graph with attributes `attrs`."""
         if attrs is None: attrs = {}
         if u not in self.nodes: self.nodes[u] = {}
         if v not in self.nodes: self.nodes[v] = {}
@@ -34,6 +45,7 @@ class Graph(object):
         self.edges[u][v].append(attrs)
 
     def has_edge(self, u, v):
+        """Remove edge from `u` to `v`."""
         return u in self.edges and v in self.edges[u] and len(self.edges[u][v]) > 0
 
     def get_edges(self, u, v):
@@ -86,6 +98,7 @@ class Graph(object):
         raise ValueError("graph does not have an accepting path")
 
     def has_path(self):
+        """Returns `True` iff there is a path from the start node to an accept node."""
         try:
             self.shortest_path()
             return True
@@ -96,7 +109,6 @@ class Graph(object):
         return self.edges[u]
 
     def _repr_dot_(self):
-
         def repr_html(x):
             if hasattr(x, '_repr_html_'):
                 return x._repr_html_()
@@ -201,7 +213,8 @@ class Graph(object):
         display(run_dot(self._repr_dot_()))
 
 def read_tgf(filename):
-    """Reads a file in Trivial Graph Format."""
+    """Reads a file in Trivial Graph Format. Edge labels are read into the
+    `label` attribute."""
     g = Graph()
     with open(filename) as file:
         states = {}
@@ -227,7 +240,6 @@ def read_tgf(filename):
             q, r = states[i], states[j]
             t = syntax.string_to_transition(t)
             g.add_edge(q, r, {'label':t})
-
     return from_graph(g)
 
 def single_value(s):
@@ -237,6 +249,7 @@ def single_value(s):
     return s.pop()
 
 def from_graph(g):
+    """Converts a `Graph` to a `Machine`."""
     transitions = []
 
     for q in g.edges:
@@ -245,6 +258,9 @@ def from_graph(g):
                 t = e['label']
                 transitions.append(([[q]]+list(t.lhs), [[r]]+list(t.rhs)))
 
+    if len(transitions) == 0:
+        raise ValueError("no transitions")
+        
     lhs_size = single_value(len(lhs) for lhs, rhs in transitions)
     rhs_size = single_value(len(rhs) for lhs, rhs in transitions)
     if lhs_size == rhs_size:
@@ -274,6 +290,7 @@ def from_graph(g):
     return m
 
 def write_dot(x, filename):
+    """Writes a `Machine` or `Graph` to file named `filename` in GraphViz (DOT) format."""
     if isinstance(x, machines.Machine):
         x = to_graph(x)
     if not isinstance(x, Graph):
@@ -282,6 +299,7 @@ def write_dot(x, filename):
         file.write(x._repr_dot_())
 
 def to_graph(m):
+    """Converts a `Machine` to a `Graph`."""
     g = Graph()
     g.attrs['rankdir'] = 'LR'
     if m.state is None: raise ValueError("no state defined")

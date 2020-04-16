@@ -50,12 +50,12 @@ class Store(object):
     def __str__(self):
         if len(self) == 0:
             if self.position in [0, None]:
-                return "&"
+                return "ε"
             elif self.position == -1:
                 if settings.display_direction_as == 'caret':
-                    return "^ &"
+                    return "^ ε"
                 elif settings.display_direction_as == 'alpha':
-                    return "&,L"
+                    return "ε,L"
             else:
                 raise ValueError()
 
@@ -84,7 +84,7 @@ class Store(object):
 
     def _repr_html_(self):
         # nothing fancy
-        return str(self).replace('&', '&epsilon;').replace('...', '&hellip;')
+        return str(self).replace('...', '&hellip;')
 
 class Configuration(object):
     """A configuration, which is essentially a tuple of `Store`s."""
@@ -202,7 +202,7 @@ class Transition(object):
 
     def __str__(self):
         if len(self.rhs) > 0:
-            return "{} -> {}".format(self.lhs, self.rhs)
+            return "{} → {}".format(self.lhs, self.rhs)
         else:
             return str(self.lhs)
 
@@ -413,6 +413,14 @@ class Machine(object):
                 return False
         return True
 
+    def has_tape(self, s):
+        """Tests whether store `s` is a tape, that is, it never inserts or
+        deletes symbols."""
+        for t in self.transitions:
+            if len(t.lhs) != len(t.rhs):
+                return False
+        return True
+
     def has_readonly(self, s):
         """Tests whether store `s` is read-only."""
         for t in self.transitions:
@@ -432,6 +440,12 @@ class Machine(object):
                 self.state == 0 and self.has_cell(0) and
                 self.input == 1 and self.has_input(1) and
                 self.has_stack(2))
+
+    def is_turing(self):
+        """Tests whether machine is a Turing machine."""
+        return (self.num_stores == 2 and
+                self.state == 0 and self.has_cell(0) and
+                self.input == 1 and self.has_tape(1))
 
     def is_deterministic(self):
         """Tests whether machine is deterministic."""

@@ -1,8 +1,6 @@
 import re
 from . import settings
 
-BLANK = '_'
-
 class Tokens(object):
     def __init__(self, tokens):
         self.tokens = tokens
@@ -27,15 +25,29 @@ class Tokens(object):
 whitespace_re = re.compile(r"\s*(//.*)?")
 
 # Symbols can be |- -| # $ or any string of alphanumerics or _ .
-symbol_re = re.compile(r"\|-|-\||#|\$|[A-Za-z0-9_.]+")
+symbol_re = re.compile(r"\|-|⊢|-\||⊣|#|\$|¢|␣|[A-Za-z0-9_.]+")
+symbol_mappings = {'|-': '⊢', '-|': '⊣', '_': '␣'}
 class Symbol(str):
+    def __new__(cls, s):
+        s = symbol_mappings.get(s, s)
+        return str.__new__(cls, s)
     def _repr_html_(self):
         return self
+BLANK = Symbol('_')
+EPSILON = Symbol('&')
 
 # Operators
 operator_re = re.compile(r"->|[&^(){},@>|*]")
+operator_mappings = {
+    '->': '→',
+    '&': 'ε',
+    '|': '∪'
+}
 class Operator(str):
-    pass
+    def __new__(cls, s):
+        s = operator_mappings.get(s, s)
+        return str.__new__(cls, s)
+ARROW = Operator('->')
 
 def lexer(s):
     i = 0
@@ -199,7 +211,7 @@ def string_to_transition(s):
     from .machines import Transition
     s = lexer(s)
     lhs = parse_multiple(s, parse_store)
-    if s.pos < len(s) and s.cur == "->":
+    if s.pos < len(s) and s.cur == ARROW:
         s.pos += 1
         rhs = parse_multiple(s, parse_store)
     else:

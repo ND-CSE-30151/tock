@@ -34,10 +34,10 @@ class Grammar(object):
             if first:
                 g.set_start(lhs)
                 first = False
-            syntax.parse_character(tokens, '->')
+            syntax.parse_character(tokens, syntax.ARROW)
             rhs = []
-            if tokens.cur == '&':
-                syntax.parse_character(tokens, '&')
+            if tokens.cur == syntax.EPSILON:
+                syntax.parse_character(tokens, syntax.EPSILON)
                 syntax.parse_end(tokens)
             else:
                 while tokens.pos < len(tokens):
@@ -66,7 +66,7 @@ class Grammar(object):
         result = []
         result.append('start: {}'.format(self.start))
         for lhs, rhs in self.rules:
-            result.append('{} -> {}'.format(lhs, rhs))
+            result.append('{} → {}'.format(lhs, rhs))
         return '\n'.join(result)
 
     def _repr_html_(self):

@@ -9,6 +9,11 @@ __all__ = ['from_regexp', 'to_regexp', 'string_to_regexp']
 
 ### Regular expression objects
 
+UNION = syntax.Operator('|')
+STAR = syntax.Operator('*')
+LPAREN = syntax.Operator('(')
+RPAREN = syntax.Operator(')')
+
 class RegularExpression(object):
     """A (abstract syntax tree of a) regular expression."""
     def __init__(self, op, args, start=None, end=None):
@@ -20,9 +25,9 @@ class RegularExpression(object):
     def __str__(self, format='ascii'):
         if self.op == 'union':
             if len(self.args) > 0:
-                return '|'.join(arg.__str__(format=format) for arg in self.args)
+                return UNION.join(arg.__str__(format=format) for arg in self.args)
             else:
-                return '&empty;' if format == 'html' else '{}'
+                return '∅'
 
         elif self.op == 'concatenation':
             if len(self.args) > 0:
@@ -34,14 +39,14 @@ class RegularExpression(object):
                     args.append(s)
                 return ' '.join(args)
             else:
-                return '&epsilon;' if format == 'html' else '&'
+                return syntax.EPSILON
 
         elif self.op == 'star':
             [arg] = self.args
             s = arg.__str__(format=format)
             if arg.op != 'symbol':
                 s = '('+s+')'
-            return s+'*'
+            return s+STAR
 
         elif self.op == 'symbol':
             [arg] = self.args
@@ -111,36 +116,36 @@ def string_to_regexp(s):
 def parse_union(s):
     i = s.pos
     args = [parse_concatenation(s)]
-    while s.pos < len(s) and s.cur == '|':
-        syntax.parse_character(s, '|')
+    while s.pos < len(s) and s.cur == UNION:
+        syntax.parse_character(s, UNION)
         args.append(parse_concatenation(s))
     return union(args)
 
 def parse_concatenation(s):
     args = [parse_star(s)]
-    while s.pos < len(s) and s.cur not in '|)':
+    while s.pos < len(s) and s.cur not in [UNION, RPAREN]:
         args.append(parse_star(s))
     return concatenation(args)
 
 def parse_star(s):
     i = s.pos
     arg = parse_base(s)
-    if s.pos < len(s) and s.cur == '*':
-        syntax.parse_character(s, '*')
+    if s.pos < len(s) and s.cur == STAR:
+        syntax.parse_character(s, STAR)
         return star(arg)
     else:
         return arg
 
 def parse_base(s):
-    if s.pos < len(s) and s.cur == '(':
-        syntax.parse_character(s, '(')
+    if s.pos < len(s) and s.cur == LPAREN:
+        syntax.parse_character(s, LPAREN)
         e = parse_union(s)
-        syntax.parse_character(s, ')')
+        syntax.parse_character(s, RPAREN)
         return e
-    elif s.pos == len(s) or s.cur in ')|':
-        raise ValueError("expected symbol, found nothing (use & for the empty string)")
-    elif s.pos < len(s) and s.cur == '&':
-        syntax.parse_character(s, '&')
+    elif s.pos == len(s) or s.cur in [UNION, RPAREN]:
+        raise ValueError("expected symbol, found nothing (use ε or & for the empty string)")
+    elif s.pos < len(s) and s.cur == syntax.EPSILON:
+        syntax.parse_character(s, syntax.EPSILON)
         return concatenation([])
     elif s.pos < len(s):
         a = syntax.parse_symbol(s)

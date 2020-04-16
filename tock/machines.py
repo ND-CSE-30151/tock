@@ -135,9 +135,14 @@ class Configuration(object):
         return True
 
 class Path(object):
-    """A path through a `Graph`."""
+    """A sequence of `Configurations`."""
     def __init__(self, configs):
         self.configs = configs
+
+    def __len__(self):
+        return len(self.configs)
+    def __getitem__(self, i):
+        return self.configs[i]
 
     def __str__(self):
         return '\n'.join(map(str, self.configs))

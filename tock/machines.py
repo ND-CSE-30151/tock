@@ -1,9 +1,11 @@
 import collections
 import six
+import functools
 from . import syntax, settings
 
 __all__ = ['Machine', 'FiniteAutomaton', 'PushdownAutomaton', 'TuringMachine', 'determinize', 'equivalent']
 
+@functools.total_ordering
 class Store(object):
     """A `Store` consists of a string together with a head position. It
     can be used as a tape, stack, or state.
@@ -30,21 +32,17 @@ class Store(object):
         return Store(self.values, self.position)
 
     def __eq__(self, other):
-        return type(other) == Store and self.values == other.values and self.position == other.position
-    def __ne__(self, other):
-        return not self == other
+        return isinstance(other, Store) and (self.values, self.position) == (other.values, other.position)
     def __hash__(self):
         return hash((tuple(self.values), self.position))
 
     def __lt__(self, other):
-        return self.values < other.values
+        return (self.values, self.position) < (other.values, other.position)
 
     def __len__(self):
         return len(self.values)
     def __getitem__(self, i):
         return self.values[i]
-    def __setitem__(self, i, x):
-        self.values[i] = x
 
     def __repr__(self):
         if self.position == 0:

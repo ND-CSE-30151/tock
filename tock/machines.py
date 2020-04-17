@@ -5,9 +5,13 @@ from . import syntax, settings
 __all__ = ['Machine', 'FiniteAutomaton', 'PushdownAutomaton', 'TuringMachine', 'determinize', 'equivalent']
 
 class Store(object):
-    """A (configuration of a) store, which could be a tape, stack, or
-       state. It consists of a string together with a head
-       position."""
+    """A `Store` consists of a string together with a head position. It
+    can be used as a tape, stack, or state.
+    
+    The `position` can also be `None`, which is used for the left-hand
+    and right-hand sides of `Grammar` rules. To do: create a `String`
+    class for this purpose.
+    """
 
     def __init__(self, values=None, position="default"):
         self.position = 0
@@ -59,6 +63,7 @@ class Store(object):
             else:
                 raise ValueError()
 
+        # Special case to avoid printing states as [q]
         elif len(self) == 1 and self.position == 0:
             return str(self.values[0])
 
@@ -251,19 +256,20 @@ class Machine(object):
         self.accept_configs = set()
 
     def set_start_config(self, config):
-        """Define the starting configuration."""
+        """Define the starting configuration, which should have a value
+        for each store except for the input."""
         if isinstance(config, six.string_types):
             config = syntax.string_to_config(config)
-        # If input is missing, supply &
-        if self.oneway:
+        if self.oneway: # bug: shouldn't this be done for non-oneway too?
             config = list(config)
             config[self.input:self.input] = [[]]
             config = Configuration(config)
         self.start_config = config
 
     def add_accept_config(self, config):
-        """Add a possible accepting configuration."""
+        """Add an accepting configuration."""
         if self.oneway:
+            # bug: instead expect config not to have anything for input
             end = Store([syntax.BLANK])
             s = config[self.input]
             if len(config[self.input]) == 0:
@@ -278,7 +284,7 @@ class Machine(object):
         self.accept_configs.add(config)
 
     def add_accept_configs(self, configs):
-        """Add a list of possible accepting configurations."""
+        """Add a list of accepting configurations."""
         for c in configs:
             self.add_accept_config(c)
 

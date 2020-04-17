@@ -8,6 +8,7 @@ def run(m, w, trace=False, steps=1000, show_stack=3):
     """Runs an automaton, automatically selecting a search method."""
 
     # Check to see whether run_pda can handle it.
+    # To do: use is_pushdown
     is_pda = True
     stack = None
     if not m.oneway:

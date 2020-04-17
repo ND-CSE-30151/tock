@@ -2,6 +2,7 @@ import re
 from . import settings
 
 class Tokens(object):
+    """To do: merge with `Store`."""
     def __init__(self, tokens):
         self.tokens = tokens
         self.pos = 0
@@ -25,7 +26,7 @@ class Tokens(object):
 whitespace_re = re.compile(r"\s*(//.*)?")
 
 # Symbols can be |- -| # $ or any string of alphanumerics or _ .
-symbol_re = re.compile(r"\|-|⊢|-\||⊣|#|\$|¢|␣|[A-Za-z0-9_.]+")
+symbol_re = re.compile(r"\|-|-\||[⊢⊣#$¢␣]|[A-Za-z0-9_.]+")
 symbol_mappings = {'|-': '⊢', '-|': '⊣', '_': '␣'}
 class Symbol(str):
     def __new__(cls, s):
@@ -34,10 +35,9 @@ class Symbol(str):
     def _repr_html_(self):
         return self
 BLANK = Symbol('_')
-EPSILON = Symbol('&')
 
 # Operators
-operator_re = re.compile(r"->|[&^(){},@>|*]")
+operator_re = re.compile(r"->|[→&ε^(){},@>|∅∪*]")
 operator_mappings = {
     '->': '→',
     '&': 'ε',
@@ -48,6 +48,7 @@ class Operator(str):
         s = operator_mappings.get(s, s)
         return str.__new__(cls, s)
 ARROW = Operator('->')
+EPSILON = Operator('&')
 
 def lexer(s):
     i = 0
@@ -64,7 +65,7 @@ def lexer(s):
             if m:
                 token = Operator(m.group())
             else:
-                raise ValueError("couldn't understand input: %s" % s[i:])
+                raise ValueError("couldn't understand input: {}".format(s[i:]))
         tokens.append(token)
         i = m.end()
         m = whitespace_re.match(s, i)

@@ -1,5 +1,3 @@
-# coding=utf-8
-
 from . import machines
 from . import syntax
 from . import graphs
@@ -22,10 +20,15 @@ class RegularExpression(object):
         self.start = start
         self.end = end
 
+    def __eq__(self, other):
+        return (isinstance(other, RegularExpression) and
+                self.op == other.op and
+                all(schild == ochild for schild, ochild in zip(self.args, other.args)))
+
     def __str__(self, format='ascii'):
         if self.op == 'union':
             if len(self.args) > 0:
-                return UNION.join(arg.__str__(format=format) for arg in self.args)
+                return (' '+UNION+' ').join(arg.__str__(format=format) for arg in self.args)
             else:
                 return '∅'
 

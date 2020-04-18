@@ -37,22 +37,30 @@ class Store(String):
 
     position: int
 
-    def __init__(self, values=None, position=None):
-        default_position = 0
-        if values is None:
+    def __init__(self, *args):
+        if len(args) == 0:
             values = []
-        elif isinstance(values, str):
-            other = syntax.string_to_store(values)
-            values = other.values
-            default_position = other.position
+            position = 0
+        elif len(args) == 1:
+            if isinstance(args[0], Store):
+                values = args[0].values
+                position = args[0].position
+            elif isinstance(args[0], str):
+                other = syntax.string_to_store(args[0])
+                values = other.values
+                position = other.position
+            else:
+                values = tuple(args[0])
+                position = 0
+        elif len(args) == 2:
+            values = args[0]
+            position = args[1]
         else:
-            values = list(syntax.Symbol(x) for x in values)
+            raise TypeError("invalid arguments to Store")
+            
         String.__init__(self, values)
         object.__setattr__(self, 'position',
                            position if position is not None else default_position)
-
-    def deepcopy(self):
-        return Store(self.values, self.position)
 
     def __str__(self):
         if len(self) == 0:
@@ -94,6 +102,21 @@ class Store(String):
         # nothing fancy
         return str(self).replace('...', '&hellip;')
 
+    def match(self, other):
+        """Returns true iff self (as a pattern) matches other (as a
+        store). Note that this is asymmetric: other is allowed
+        to have symbols that aren't found in self."""
+
+        i = other.position - self.position
+        if i < 0:
+            return False
+        n = len(self)
+        while i+n > len(other) and self[n-1] == syntax.BLANK:
+            n -= 1
+        if other.values[i:i+n] != self.values[:n]:
+            return False
+        return True
+    
 @dataclasses.dataclass(frozen=True, order=True)
 class Configuration:
     """A configuration, which is essentially a tuple of `Store`s."""
@@ -108,9 +131,6 @@ class Configuration:
         else:
             raise TypeError("can't construct Configuration from {}".format(type(arg)))
         object.__setattr__(self, 'stores', stores)
-
-    def deepcopy(self):
-        return Configuration([s.deepcopy() for s in self.stores])
 
     def __str__(self):
         return ','.join(map(str, self.stores))
@@ -130,13 +150,7 @@ class Configuration:
         if len(self) != len(other):
             raise ValueError()
         for s1, s2 in zip(self, other):
-            i = s2.position - s1.position
-            if i < 0:
-                return False
-            n = len(s1)
-            while i+n > len(s2) and s1[n-1] == syntax.BLANK:
-                n -= 1
-            if s2.values[i:i+n] != s1.values[:n]:
+            if not s1.match(s2):
                 return False
         return True
 
@@ -267,7 +281,7 @@ class Machine(object):
         for each store except for the input."""
         config = Configuration(config)
         config = list(config)
-        config[self.input:self.input] = [None]
+        config[self.input:self.input] = [[]]
         config = Configuration(config)
         if len(config) != self.num_stores:
             raise ValueError('start configuration has wrong number of stores')

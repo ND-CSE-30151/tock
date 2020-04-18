@@ -155,6 +155,24 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
                      max(len(t.lhs[stack]) for t in m.transitions), 
                      max(len(c[stack]) for c in m.accept_configs))
 
+    def pop(config):
+        stores = []
+        for si in range(len(config)):
+            if si == stack:
+                stores.append(Store(config[si][:-1], config[si].position))
+            else:
+                stores.append(config[si])
+        return Configuration(stores)
+    
+    def push(config, x):
+        stores = []
+        for si in range(len(config)):
+            if si == stack:
+                stores.append(Store(config[si].values+(x,), config[si].position))
+            else:
+                stores.append(config[si])
+        return Configuration(stores)
+
     # Axiom
     config = list(m.start_config)
     w = Store(w)
@@ -174,7 +192,7 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
             # In the run graph, we don't show the parent,
             # but if there is one, add a ...
             child = list(child)
-            child[stack] = Store(child[stack].values + ["..."], child[stack].position)
+            child[stack] = Store(child[stack].values + ("...",), child[stack].position)
         return Configuration(child)
 
     def add_node(parent, child, attrs=None):
@@ -206,8 +224,7 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
 
         # The stack shows too many items (push)
         if len(child[stack]) > show_stack:
-            grandchild = child.deepcopy()
-            del grandchild[stack].values[-1]
+            grandchild = pop(child)
             add(child, grandchild)
             index_right[child].add(parent)
             for ant in backpointers[get_node(parent, child)]:
@@ -215,19 +232,17 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
 
             # This item can also be the left antecedent of the Pop rule
             for grandchild in index_left[child]:
-                grandchild = grandchild.deepcopy()
-                grandchild[stack].values.append(child[stack][-1])
+                grandchild = push(grandchild, child[stack][-1])
                 add(parent, grandchild)
                 for ant in backpointers[get_node(parent, child)]:
                     backpointers[get_node(parent, grandchild)].add(ant)
 
         # The stack shows too few items (pop)
         elif parent is not None and len(child[stack]) < show_stack:
-            aunt = child.deepcopy()
             if len(parent[stack]) == 0:
                 assert False
             else:
-                aunt[stack].values.append(parent[stack][-1])
+                aunt = push(child, parent[stack][-1])
             index_left[parent].add(child)
 
             for grandparent in index_right[parent]:

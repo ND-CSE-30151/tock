@@ -1,5 +1,4 @@
 import collections
-import functools
 import dataclasses
 from . import syntax, settings
 
@@ -31,39 +30,29 @@ class String:
         else:
             return ' '.join(map(str, self.values))
 
-@functools.total_ordering
-class Store(object):
+@dataclasses.dataclass(frozen=True, order=True)
+class Store(String):
     """A `Store` consists of a string together with a head position. It
     can be used as a tape, stack, or state."""
 
+    position: int
+
     def __init__(self, values=None, position=None):
-        self.position = 0
+        default_position = 0
         if values is None:
-            self.values = []
+            values = []
         elif isinstance(values, str):
             other = syntax.string_to_store(values)
-            self.values = other.values
-            self.position = other.position
+            values = other.values
+            default_position = other.position
         else:
-            self.values = list(syntax.Symbol(x) for x in values)
-        if position is not None:
-            self.position = position
+            values = list(syntax.Symbol(x) for x in values)
+        String.__init__(self, values)
+        object.__setattr__(self, 'position',
+                           position if position is not None else default_position)
 
     def deepcopy(self):
         return Store(self.values, self.position)
-
-    def __eq__(self, other):
-        return isinstance(other, Store) and (self.values, self.position) == (other.values, other.position)
-    def __hash__(self):
-        return hash((tuple(self.values), self.position))
-
-    def __lt__(self, other):
-        return (self.values, self.position) < (other.values, other.position)
-
-    def __len__(self):
-        return len(self.values)
-    def __getitem__(self, i):
-        return self.values[i]
 
     def __str__(self):
         if len(self) == 0:
@@ -105,17 +94,20 @@ class Store(object):
         # nothing fancy
         return str(self).replace('...', '&hellip;')
 
-class Configuration(object):
+@dataclasses.dataclass(frozen=True, order=True)
+class Configuration:
     """A configuration, which is essentially a tuple of `Store`s."""
+    stores: tuple
     def __init__(self, arg):
         if isinstance(arg, Configuration):
-            self.stores = arg.stores
+            stores = arg.stores
         elif isinstance(arg, str):
-            self.stores = syntax.string_to_config(arg).stores
+            stores = syntax.string_to_config(arg).stores
         elif isinstance(arg, (list, tuple)):
-            self.stores = tuple(x if isinstance(x, Store) else Store(x) for x in arg)
+            stores = tuple(x if isinstance(x, Store) else Store(x) for x in arg)
         else:
             raise TypeError("can't construct Configuration from {}".format(type(arg)))
+        object.__setattr__(self, 'stores', stores)
 
     def deepcopy(self):
         return Configuration([s.deepcopy() for s in self.stores])
@@ -124,11 +116,6 @@ class Configuration(object):
         return ','.join(map(str, self.stores))
     def _repr_html_(self):
         return ','.join(s._repr_html_() for s in self.stores)
-
-    def __eq__(self, other):
-        return isinstance(other, Configuration) and self.stores == other.stores
-    def __hash__(self):
-        return hash(self.stores)
 
     def __len__(self):
         return len(self.stores)
@@ -153,7 +140,7 @@ class Configuration(object):
                 return False
         return True
 
-class Path(object):
+class Path:
     """A sequence of `Configurations`."""
     def __init__(self, configs):
         self.configs = configs
@@ -175,58 +162,61 @@ class Path(object):
         html.append('</table>\n')
         return ''.join(html)
 
-class Transition(object):
+@dataclasses.dataclass(frozen=True, order=True)
+class Transition:
     """A transition from one `Configuration` to another `Configuration`."""
     def __init__(self, *args):
         if len(args) == 1:
             arg = args[0]
             if isinstance(arg, str):
                 arg = syntax.string_to_transition(arg)
-                self.lhs = arg.lhs
-                self.rhs = arg.rhs
+                lhs = arg.lhs
+                rhs = arg.rhs
             else:
                 raise TypeError("can't construct Transition from {}".format(type(arg)))
         elif len(args) == 2:
             lhs, rhs = args
-            self.lhs = Configuration(lhs)
-            self.rhs = Configuration(rhs)
+            lhs = Configuration(lhs)
+            rhs = Configuration(rhs)
         else:
             raise TypeError("invalid arguments to Transition")
-
-    def __eq__(self, other):
-        return isinstance(other, Transition) and (self.lhs, self.rhs) == (other.lhs, other.rhs)
-    def __hash__(self):
-        return hash((self.lhs, self.rhs))
+        object.__setattr__(self, 'lhs', lhs)
+        object.__setattr__(self, 'rhs', rhs)
 
     def match(self, config):
         """Returns True iff self can be applied to config."""
         return self.lhs.match(config)
 
     def apply(self, config):
-        config = config.deepcopy()
+        stores = []
 
         for x, y, store in zip(self.lhs, self.rhs, config):
-            i = store.position - x.position
+            values = list(store.values)
+            position = store.position
+            
+            i = position - x.position
             if i < 0:
                 raise ValueError("transition cannot apply")
             n = len(x)
             # Pad store with blanks to fit x
-            while i+n > len(store) and x[len(store)-i] == syntax.BLANK:
-                store.values.append(syntax.BLANK)
-            if store.values[i:i+n] != x.values:
+            while i+n > len(values) and x[len(values)-i] == syntax.BLANK:
+                values.append(syntax.BLANK)
+            if tuple(values[i:i+n]) != x.values:
                 raise ValueError("transition cannot apply")
-            store.values[i:i+n] = y.values
-            store.position = i + y.position
+            values[i:i+n] = y.values
+            position = i + y.position
 
             # Don't move off left end
-            store.position = max(0, store.position)
+            position = max(0, position)
 
             # Pad store with blanks,
             # unless store is empty (so don't pad the empty stack)
-            while store.position > 0 and len(store)-1 < store.position:
-                store.values.append(syntax.BLANK)
+            while position > 0 and len(values)-1 < position:
+                values.append(syntax.BLANK)
 
-        return config
+            stores.append(Store(values, position))
+
+        return Configuration(stores)
 
     def __str__(self):
         if len(self.rhs) > 0:
@@ -354,9 +344,7 @@ class Machine(object):
 
         # If input is one-way, fill in & for the rhs
         if self.oneway:
-            t.rhs = list(t.rhs)
-            t.rhs[self.input:self.input] = [Store()]
-            t.rhs = Configuration(t.rhs)
+            t = Transition(t.lhs, t.rhs[:self.input] + (Store(),) + t.rhs[self.input:])
 
         if len(t.lhs) != self.num_stores:
             raise TypeError("wrong number of stores on left-hand side")

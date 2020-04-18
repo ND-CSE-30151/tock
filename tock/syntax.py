@@ -89,7 +89,7 @@ def parse_symbol(s):
         return x
 
 def parse_string(s):
-    if s.cur == '&':
+    if s.cur == EPSILON:
         s.pos += 1
         return []
     else:
@@ -100,7 +100,7 @@ def parse_string(s):
         return result
 
 def parse_multiple(s, f, values=None):
-    """Parse multiple comma-separated elements, each of which is parsed
+    """Parse one or more comma-separated elements, each of which is parsed
        using function f."""
     if values is None: values = []
     values.append(f(s))

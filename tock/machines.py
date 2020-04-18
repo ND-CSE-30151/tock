@@ -1,5 +1,4 @@
 import collections
-import six
 import functools
 from . import syntax, settings
 
@@ -19,7 +18,7 @@ class Store(object):
         self.position = 0
         if values is None:
             self.values = []
-        elif isinstance(values, six.string_types):
+        elif isinstance(values, str):
             other = syntax.string_to_store(values)
             self.values = other.values
             self.position = other.position
@@ -44,11 +43,6 @@ class Store(object):
     def __getitem__(self, i):
         return self.values[i]
 
-    def __repr__(self):
-        if self.position == 0:
-            return "Store({})".format(repr(self.values))
-        else:
-            return "Store({}, {})".format(repr(self.values), self.position)
     def __str__(self):
         if len(self) == 0:
             if self.position in [0, None]:
@@ -94,7 +88,7 @@ class Configuration(object):
     def __init__(self, arg):
         if isinstance(arg, Configuration):
             self.stores = arg.stores
-        elif isinstance(arg, six.string_types):
+        elif isinstance(arg, str):
             self.stores = syntax.string_to_config(arg).stores
         elif isinstance(arg, (list, tuple)):
             self.stores = tuple(x if isinstance(x, Store) else Store(x) for x in arg)
@@ -110,7 +104,7 @@ class Configuration(object):
         return ','.join(s._repr_html_() for s in self.stores)
 
     def __eq__(self, other):
-        return self.stores == other.stores
+        return isinstance(other, Configuration) and self.stores == other.stores
     def __hash__(self):
         return hash(self.stores)
 
@@ -164,7 +158,7 @@ class Transition(object):
     def __init__(self, *args):
         if len(args) == 1:
             arg = args[0]
-            if isinstance(arg, six.string_types):
+            if isinstance(arg, str):
                 arg = syntax.string_to_transition(arg)
                 self.lhs = arg.lhs
                 self.rhs = arg.rhs
@@ -174,9 +168,11 @@ class Transition(object):
             lhs, rhs = args
             self.lhs = Configuration(lhs)
             self.rhs = Configuration(rhs)
-
         else:
             raise TypeError("invalid arguments to Transition")
+
+    def __eq__(self, other):
+        return isinstance(other, Transition) and (self.lhs, self.rhs) == (other.lhs, other.rhs)
 
     def match(self, config):
         """Returns True iff self can be applied to config."""
@@ -256,7 +252,7 @@ class Machine(object):
     def set_start_config(self, config):
         """Define the starting configuration, which should have a value
         for each store except for the input."""
-        if isinstance(config, six.string_types):
+        if isinstance(config, str):
             config = syntax.string_to_config(config)
         if self.oneway: # bug: shouldn't this be done for non-oneway too?
             config = list(config)

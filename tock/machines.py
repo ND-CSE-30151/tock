@@ -173,6 +173,8 @@ class Transition(object):
 
     def __eq__(self, other):
         return isinstance(other, Transition) and (self.lhs, self.rhs) == (other.lhs, other.rhs)
+    def __hash__(self):
+        return hash((self.lhs, self.rhs))
 
     def match(self, config):
         """Returns True iff self can be applied to config."""
@@ -233,8 +235,7 @@ class Machine(object):
 
         """An automaton.
         num_stores: How many stores the machine should have.
-        state: Which store is the state; used by set_accept_state and
-               add_accept_config.
+        state: Which store is the state.
         input: Which store is the input.
         oneway: Whether the input is consumed from left to right, or
                 can be read and written in both directions.
@@ -252,29 +253,19 @@ class Machine(object):
     def set_start_config(self, config):
         """Define the starting configuration, which should have a value
         for each store except for the input."""
-        if isinstance(config, str):
-            config = syntax.string_to_config(config)
-        if self.oneway: # bug: shouldn't this be done for non-oneway too?
-            config = list(config)
-            config[self.input:self.input] = [[]]
-            config = Configuration(config)
+        config = Configuration(config)
+        config = list(config)
+        config[self.input:self.input] = [None]
+        config = Configuration(config)
+        if len(config) != self.num_stores:
+            raise ValueError('start configuration has wrong number of stores')
         self.start_config = config
 
     def add_accept_config(self, config):
         """Add an accepting configuration."""
-        if self.oneway:
-            # bug: instead expect config not to have anything for input
-            end = Store([syntax.BLANK])
-            s = config[self.input]
-            if len(config[self.input]) == 0:
-                config = list(config)
-                config[self.input] = end
-            config = Configuration(config)
-
-            if config[self.input] != end:
-                raise ValueError("machine can only accept at end of input")
-        else:
-            config = Configuration(config)
+        config = Configuration(config)
+        if len(config) != self.num_stores:
+            raise ValueError('accept configuration has wrong number of stores')
         self.accept_configs.add(config)
 
     def add_accept_configs(self, configs):
@@ -284,21 +275,19 @@ class Machine(object):
 
     def get_start_state(self):
         """Return the start state."""
-        if self.state is None:
-            raise ValueError("no state defined")
-        if sum(len(store) for store in self.start_config) != 1:
-            raise ValueError("machine does not have a start state")
+        if self.state is None: raise ValueError("no state defined")
         [q] = self.start_config[self.state]
         return q
 
     def set_start_state(self, q):
         """Set the start state. All other stores will be initialized to empty."""
         config = [[]] * self.num_stores
-
-        if self.state is None: raise ValueError("no state defined")
+        if self.state is None:
+            raise ValueError("no state defined")
         config[self.state] = [q]
-
-        self.start_config = Configuration(config)
+        if self.input is not None:
+            del config[self.input]
+        self.set_start_config(config)
 
     def add_accept_state(self, q):
         """Add an accept state."""
@@ -306,6 +295,10 @@ class Machine(object):
 
         if self.state is None: raise ValueError("no state defined")
         config[self.state] = [q]
+
+        if self.input is not None and self.oneway:
+            # Machine must be at end of input to accept
+            config[self.input] = [syntax.BLANK]
 
         self.add_accept_config(config)
 
@@ -317,8 +310,11 @@ class Machine(object):
     def get_accept_states(self):
         """Return the list of accept states."""
         if self.state is None: raise ValueError("no state defined")
-        # to do: error checking
-        return [config[self.state][0] for config in self.accept_configs]
+        states = set()
+        for config in self.accept_configs:
+            [q] = config[self.state]
+            states.add(q)
+        return states
         
     @property
     def states(self):
@@ -389,22 +385,13 @@ class Machine(object):
         """Tests whether store `s` is a one-way input, that is, it only deletes and
         never moves from position 0."""
 
-        # to do: check start_config
+        for c in self.accept_configs:
+            if len(c[s]) != 1 or c[s][0] != syntax.BLANK or c[s].position != 0:
+                return False
         for t in self.transitions:
             if t.lhs[s].position != 0:
                 return False
-            if len(t.rhs[s]) != 0:
-                return False
-        return True
-
-    def has_output(self, s):
-        """Tests whether store `s` is an output, that is, it only appends and
-        is always one past the end."""
-
-        for t in self.transitions:
-            if len(t.lhs[s]) != 0:
-                return False
-            if t.rhs[s].position != len(t.rhs[s]):
+            if len(t.rhs[s]) != 0 or t.rhs[s].position != 0:
                 return False
         return True
 
@@ -436,12 +423,14 @@ class Machine(object):
     def is_finite(self):
         """Tests whether machine is a finite automaton."""
         return (self.num_stores == 2 and
+                self.oneway and
                 self.state == 0 and self.has_cell(0) and
                 self.input == 1 and self.has_input(1))
 
     def is_pushdown(self):
         """Tests whether machine is a pushdown automaton."""
         return (self.num_stores == 3 and
+                self.oneway and
                 self.state == 0 and self.has_cell(0) and
                 self.input == 1 and self.has_input(1) and
                 self.has_stack(2))
@@ -449,6 +438,7 @@ class Machine(object):
     def is_turing(self):
         """Tests whether machine is a Turing machine."""
         return (self.num_stores == 2 and
+                not self.oneway and
                 self.state == 0 and self.has_cell(0) and
                 self.input == 1 and self.has_tape(1))
 

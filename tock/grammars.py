@@ -58,9 +58,9 @@ class Grammar(object):
         
     def add_rule(self, lhs, rhs):
         """Add rule with left-hand side `lhs` and right-hand side `rhs`,
-        where `lhs` and `rhs` are both Stores.
+        where `lhs` and `rhs` are both Strings.
         """
-        self.rules.append((machines.Store(lhs, None), machines.Store(rhs, None)))
+        self.rules.append((machines.String(lhs), machines.String(rhs)))
 
     def __str__(self):
         result = []

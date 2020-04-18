@@ -170,6 +170,12 @@ def string_to_state(s):
     parse_end(s)
     return x, attrs
 
+def string_to_string(s): # unfortunate name
+    s = lexer(s)
+    x = parse_string(s)
+    parse_end(s)
+    return x
+
 def string_to_store(s):
     s = lexer(s)
     x = parse_store(s)

@@ -1,20 +1,42 @@
 import collections
 import functools
+import dataclasses
 from . import syntax, settings
 
 __all__ = ['Machine', 'FiniteAutomaton', 'PushdownAutomaton', 'TuringMachine', 'determinize', 'equivalent']
 
+@dataclasses.dataclass(frozen=True, order=True)
+class String:
+    """A `String` is just a sequence of `Symbol`s."""
+
+    values: tuple
+    
+    def __init__(self, values=None):
+        if values is None:
+            values = ()
+        elif isinstance(values, str):
+            values = tuple(syntax.string_to_string(values))
+        else:
+            values = tuple(syntax.Symbol(x) for x in values)
+        object.__setattr__(self, 'values', values)
+
+    def __len__(self):
+        return len(self.values)
+    def __getitem__(self, i):
+        return self.values[i]
+
+    def __str__(self):
+        if len(self.values) == 0:
+            return 'ε'
+        else:
+            return ' '.join(map(str, self.values))
+
 @functools.total_ordering
 class Store(object):
     """A `Store` consists of a string together with a head position. It
-    can be used as a tape, stack, or state.
-    
-    The `position` can also be `None`, which is used for the left-hand
-    and right-hand sides of `Grammar` rules. To do: create a `String`
-    class for this purpose.
-    """
+    can be used as a tape, stack, or state."""
 
-    def __init__(self, values=None, position="default"):
+    def __init__(self, values=None, position=None):
         self.position = 0
         if values is None:
             self.values = []
@@ -24,7 +46,7 @@ class Store(object):
             self.position = other.position
         else:
             self.values = list(syntax.Symbol(x) for x in values)
-        if position != "default":
+        if position is not None:
             self.position = position
 
     def deepcopy(self):

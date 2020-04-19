@@ -242,12 +242,6 @@ def read_tgf(filename):
             g.add_edge(q, r, {'label':t})
     return from_graph(g)
 
-def single_value(s):
-    s = set(s)
-    if len(s) != 1:
-        raise ValueError()
-    return s.pop()
-
 def from_graph(g):
     """Converts a `Graph` to a `Machine`."""
     transitions = []
@@ -258,36 +252,19 @@ def from_graph(g):
                 t = e['label']
                 transitions.append(([[q]]+list(t.lhs), [[r]]+list(t.rhs)))
 
-    if len(transitions) == 0:
-        raise ValueError("no transitions")
-        
-    lhs_size = single_value(len(lhs) for lhs, rhs in transitions)
-    rhs_size = single_value(len(rhs) for lhs, rhs in transitions)
-    if lhs_size == rhs_size:
-        num_stores = lhs_size
-        oneway = False
-    elif lhs_size-1 == rhs_size:
-        num_stores = lhs_size
-        oneway = True
-    else:
-        raise ValueError("right-hand sides must either be same size or one smaller than left-hand sides")
-
-    m = machines.Machine(num_stores, state=0, input=1, oneway=oneway)
-
+    start_state = None
+    accept_states = set()
     for q in g.nodes:
         if g.nodes[q].get('start', False):
-            if m.start_config is not None:
+            if start_state is not None:
                 raise ValueError("more than one start state")
-            m.set_start_state(q)
+            start_state = q
         if g.nodes[q].get('accept', False):
-            m.add_accept_state(q)
-    if m.start_config is None:
+            accept_states.add(q)
+    if start_state is None:
         raise ValueError("missing start state")
 
-    for lhs, rhs in transitions:
-        m.add_transition(lhs, rhs)
-
-    return m
+    return machines.from_transitions(transitions, start_state, accept_states)
 
 def write_dot(x, filename):
     """Writes a `Machine` or `Graph` to file named `filename` in GraphViz (DOT) format."""
@@ -317,5 +294,3 @@ def to_graph(m):
         t = machines.Transition(lhs, rhs)
         g.add_edge(q, r, {'label': t})
     return g
-
-

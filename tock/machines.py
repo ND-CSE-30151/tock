@@ -120,7 +120,9 @@ class Store(String):
 @dataclasses.dataclass(frozen=True, order=True)
 class Configuration:
     """A configuration, which is essentially a tuple of `Store`s."""
+    
     stores: tuple
+    
     def __init__(self, arg):
         if isinstance(arg, Configuration):
             stores = arg.stores
@@ -179,6 +181,10 @@ class Path:
 @dataclasses.dataclass(frozen=True, order=True)
 class Transition:
     """A transition from one `Configuration` to another `Configuration`."""
+
+    lhs: Configuration
+    rhs: Configuration
+    
     def __init__(self, *args):
         if len(args) == 1:
             arg = args[0]
@@ -606,3 +612,31 @@ def equivalent(m1, m2):
         elif (q in f) != cls[u[q]]:
             return False
     return True
+
+def single_value(s):
+    s = set(s)
+    if len(s) != 1:
+        raise ValueError()
+    return s.pop()
+
+def from_transitions(transitions, start_state, accept_states):
+    lhs_size = single_value(len(lhs) for lhs, rhs in transitions)
+    rhs_size = single_value(len(rhs) for lhs, rhs in transitions)
+    if lhs_size == rhs_size:
+        num_stores = lhs_size
+        oneway = False
+    elif lhs_size-1 == rhs_size:
+        num_stores = lhs_size
+        oneway = True
+    else:
+        raise ValueError("right-hand sides must either be same size or one smaller than left-hand sides")
+
+    m = Machine(num_stores, state=0, input=1, oneway=oneway)
+
+    m.set_start_state(start_state)
+    m.add_accept_states(accept_states)
+
+    for lhs, rhs in transitions:
+        m.add_transition(lhs, rhs)
+
+    return m

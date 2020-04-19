@@ -47,11 +47,22 @@ def from_table(table):
         if sum(len(cell.strip()) for cell in row) != 0:
             etable.append((i, row))
 
-    # Header column has lhs values for the first store
-    lhs1 = []
     start_state = None
     accept_states = set()
+    transitions = []
+    
+    # Header row has lhs values for all stores other than the first
+    lhs2 = []
+    i, row = etable[0]
+    for j, cell in enumerate(row[1:], 1):
+        try:
+            lhs2.append(tuple(syntax.string_to_config(cell)))
+        except Exception as e:
+            e.message = "cell %s%s: %s" % (chr(ord('A')+j), i, e.message)
+            raise
+
     for i, row in etable[1:]:
+        # First cell has lhs value for the first store
         try:
             q, attrs = syntax.string_to_state(row[0])
             if attrs.get('start', False):
@@ -60,71 +71,26 @@ def from_table(table):
                 start_state = q
             if attrs.get('accept', False):
                 accept_states.add(q)
-            lhs1.append((q,))
+            lhs1 = (q,)
         except Exception as e:
             e.message = "cell A%s: %s" % (i+1, e.message)
             raise
-    if start_state is None:
-        raise ValueError("missing start state")
-
-    # Header row has lhs values for all stores other than the first
-    lhs2 = []
-    lhs_size = None
-    i, row = etable[0]
-    for j, cell in enumerate(row[1:], 1):
-        try:
-            cell = syntax.string_to_config(cell)
-            if lhs_size is None:
-                lhs_size = 1+len(cell)
-            elif 1+len(cell) != lhs_size:
-                raise ValueError("left-hand side has wrong size")
-            lhs2.append(cell)
-        except Exception as e:
-            e.message = "cell %s%s: %s" % (chr(ord('A')+j), i, e.message)
-            raise
-
-    # Body has right-hand sides
-    rhs = []
-    rhs_size = None
-    for i, row in etable[1:]:
+        
+        # Rest of row has right-hand sides
         if len(row[1:]) != len(lhs2):
             raise ValueError("row %s: row has wrong number of cells" % i)
-        rhs_row = []
         for j, cell in enumerate(row[1:], 1):
             try:
-                cell = syntax.string_to_configs(cell)
-                for r in cell:
-                    if rhs_size is None:
-                        rhs_size = len(r)
-                    elif len(r) != rhs_size:
-                        raise ValueError("right-hand side has wrong size")
-                rhs_row.append(cell)
+                for rhs in syntax.string_to_configs(cell):
+                    transitions.append((lhs1+lhs2[j-1], rhs))
             except Exception as e:
                 e.message = "cell %s%d: %s" % (chr(ord('A')+j), i+1, e.message)
                 raise
-        rhs.append(rhs_row)
-
-    if lhs_size == rhs_size:
-        num_stores = lhs_size
-        oneway = False
-    elif lhs_size-1 == rhs_size:
-        num_stores = lhs_size
-        oneway = True
-    else:
-        raise ValueError("right-hand sides must either be same size or one smaller than left-hand sides")
-
-    m = machines.Machine(num_stores, state=0, input=1, oneway=oneway)
-
-    m.set_start_state(start_state)
-    for q in accept_states:
-        m.add_accept_state(q)
-
-    for i in range(len(lhs1)):
-        for j in range(len(lhs2)):
-            l = list(lhs1[i]) + list(lhs2[j])
-            for r in rhs[i][j]:
-                m.add_transition(l, r)
-    return m
+        
+    if start_state is None:
+        raise ValueError("missing start state")
+                
+    return machines.from_transitions(transitions, start_state, accept_states)
 
 def read_csv(filename):
     """Reads a CSV file containing a tabular description of a transition function,

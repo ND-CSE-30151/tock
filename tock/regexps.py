@@ -238,7 +238,7 @@ def from_regexp(e, display_steps=False):
         return m, i
 
     if display_steps:
-        from IPython.display import display, HTML
+        from IPython.display import display, HTML # type: ignore
     if isinstance(e, six.string_types):
         e = string_to_regexp(e)
     num_states = count(e)

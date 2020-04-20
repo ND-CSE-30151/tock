@@ -208,7 +208,7 @@ class Graph(object):
         return '\n'.join(result)
 
     def _ipython_display_(self):
-        from IPython.display import display
+        from IPython.display import display # type: ignore
         from .graphviz import run_dot
         display(run_dot(self._repr_dot_()))
 

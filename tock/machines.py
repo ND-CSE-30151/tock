@@ -262,7 +262,7 @@ def TuringMachine():
     """A deterministic or nondeterministic Turing machine."""
     return Machine(2, state=0, input=1)
 
-class Machine(object):
+class Machine:
     def __init__(self, num_stores, state=None, input=None, oneway=False):
 
         """An automaton.
@@ -381,7 +381,7 @@ class Machine(object):
         return "\n".join(str(t) for t in self.get_transitions())
 
     def _ipython_display_(self):
-        from IPython.display import display
+        from IPython.display import display # type: ignore
         from .graphs import to_graph
         display(to_graph(self))
 

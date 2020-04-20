@@ -3,12 +3,6 @@ import csv
 from . import machines
 from . import syntax
 
-try:
-    import IPython.display
-    from . import viz
-except ImportError:
-    pass
-
 __all__ = ['from_table', 'read_csv', 'read_excel', 'to_table']
 
 class Table(object):
@@ -109,7 +103,7 @@ def read_excel(filename, sheet=None):
        only a single header row whose entries might be tuples.
        """
 
-    from openpyxl import load_workbook
+    from openpyxl import load_workbook # type: ignore
     wb = load_workbook(filename)
     if sheet is None:
         ws = wb.active

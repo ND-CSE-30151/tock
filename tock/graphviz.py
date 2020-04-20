@@ -5,7 +5,7 @@ impl = None
 
 def guess_impl():
     """Try to guess best way to run GraphViz."""
-    from IPython.display import display, Javascript
+    from IPython.display import display, Javascript # type: ignore
     try:
         run_dot_dot("digraph { foo -> bar; }")
         return "dot"

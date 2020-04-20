@@ -123,8 +123,8 @@ def to_table(m):
     rows = []
 
     states = set()
-    initial_state = m.start_config[m.state][0]
-    final_states = [config[m.state][0] for config in m.accept_configs]
+    initial_state = m.get_start_state()
+    final_states = m.get_accept_states()
     conditions = set()
     transitions = collections.defaultdict(list)
 

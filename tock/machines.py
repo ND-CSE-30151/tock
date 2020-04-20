@@ -266,6 +266,7 @@ class Machine(object):
     def __init__(self, num_stores, state=None, input=None, oneway=False):
 
         """An automaton.
+
         num_stores: How many stores the machine should have.
         state: Which store is the state.
         input: Which store is the input.
@@ -282,32 +283,10 @@ class Machine(object):
         self.start_config = None
         self.accept_configs = set()
 
-    def set_start_config(self, config):
-        """Define the starting configuration, which should have a value
-        for each store except for the input."""
-        config = Configuration(config)
-        config = list(config)
-        config[self.input:self.input] = [[]]
-        config = Configuration(config)
-        if len(config) != self.num_stores:
-            raise ValueError('start configuration has wrong number of stores')
-        self.start_config = config
-
-    def add_accept_config(self, config):
-        """Add an accepting configuration."""
-        config = Configuration(config)
-        if len(config) != self.num_stores:
-            raise ValueError('accept configuration has wrong number of stores')
-        self.accept_configs.add(config)
-
-    def add_accept_configs(self, configs):
-        """Add a list of accepting configurations."""
-        for c in configs:
-            self.add_accept_config(c)
-
     def get_start_state(self):
         """Return the start state."""
         if self.state is None: raise ValueError("no state defined")
+        if self.start_config is None: raise ValueError("no start state")
         [q] = self.start_config[self.state]
         return q
 
@@ -317,12 +296,12 @@ class Machine(object):
         if self.state is None:
             raise ValueError("no state defined")
         config[self.state] = [q]
-        if self.input is not None:
-            del config[self.input]
-        self.set_start_config(config)
+        self.start_config = Configuration(config)
 
     def add_accept_state(self, q):
-        """Add an accept state."""
+        """Add an accept state. If the machine has a one-way input, it will
+        require the input to reach the end of the string in order to
+        accept. All other stores will not have any accepting conditions."""
         config = [[]] * self.num_stores
 
         if self.state is None: raise ValueError("no state defined")
@@ -332,10 +311,10 @@ class Machine(object):
             # Machine must be at end of input to accept
             config[self.input] = [syntax.BLANK]
 
-        self.add_accept_config(config)
+        self.accept_configs.add(Configuration(config))
 
     def add_accept_states(self, qs):
-        """Add a list of accept states."""
+        """Add a list of accept states (see `Machine.add_accept_state`)."""
         for q in qs:
             self.add_accept_state(q)
 
@@ -356,7 +335,13 @@ class Machine(object):
                 set(t.rhs[self.state][0] for t in self.transitions))
 
     def add_transition(self, *args):
-        """Add a transition."""
+        """Add a transition. The argument can either be a `Transition` or a
+        left-hand side and a right-hand side.
+
+        - If the machine has a one-way input, the transition should
+          not have an rhs for the input; an empty rhs is automatically
+          inserted.
+        """
         if len(args) == 1 and isinstance(args[0], Transition):
             t = args[0]
         else:
@@ -364,7 +349,8 @@ class Machine(object):
 
         # If input is one-way, fill in & for the rhs
         if self.oneway:
-            t = Transition(t.lhs, t.rhs[:self.input] + (Store(),) + t.rhs[self.input:])
+            t = Transition(t.lhs,
+                           t.rhs[:self.input] + (Store(),) + t.rhs[self.input:])
 
         if len(t.lhs) != self.num_stores:
             raise TypeError("wrong number of stores on left-hand side")
@@ -374,11 +360,16 @@ class Machine(object):
         self.transitions.append(t)
 
     def add_transitions(self, transitions):
-        """Add a list of transitions."""
+        """Add a list of transitions (see `Machine.add_transition`)."""
         for t in transitions:
             self.add_transition(t)
 
     def get_transitions(self):
+        """Iterate over all transitions.
+
+        - If the machine has a one-way input, the generated
+        transitions do not have an rhs for the input.
+        """
         for t in self.transitions:
             if self.oneway:
                 rhs = list(t.rhs)

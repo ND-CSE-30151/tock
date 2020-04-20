@@ -279,12 +279,9 @@ def to_graph(m):
     """Converts a `Machine` to a `Graph`."""
     g = Graph()
     g.attrs['rankdir'] = 'LR'
-    if m.state is None: raise ValueError("no state defined")
-    if m.start_config is not None:
-        [q] = m.start_config[m.state]
-        g.add_node(q, {'start': True})
-    for config in m.accept_configs:
-        [q] = config[m.state]
+    q = m.get_start_state()
+    g.add_node(q, {'start': True})
+    for q in m.get_accept_states():
         g.add_node(q, {'accept': True})
     for t in m.get_transitions():
         lhs = list(t.lhs)

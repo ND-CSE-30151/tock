@@ -364,18 +364,29 @@ class Machine:
         for t in transitions:
             self.add_transition(t)
 
-    def get_transitions(self):
+    def get_transitions(self, state_first=False):
         """Iterate over all transitions.
 
         - If the machine has a one-way input, the generated
         transitions do not have an rhs for the input.
+
+        - If `state_first` is `True`, reorder the stores so that the
+          state comes first.
         """
         for t in self.transitions:
-            if self.oneway:
-                rhs = list(t.rhs)
-                del rhs[self.input]
-                t = Transition(t.lhs, rhs)
-            yield t
+            lhs = []
+            rhs = []
+            for si in range(self.num_stores):
+                if si == self.input and self.oneway:
+                    lhs.append(t.lhs[si])
+                    assert len(t.rhs[si]) == 0
+                elif si == self.state and state_first:
+                    lhs.insert(0, t.lhs[si])
+                    rhs.insert(0, t.rhs[si])
+                else:
+                    lhs.append(t.lhs[si])
+                    rhs.append(t.rhs[si])
+            yield Transition(lhs, rhs)
 
     def __str__(self):
         return "\n".join(str(t) for t in self.get_transitions())
@@ -481,6 +492,45 @@ class Machine:
                 if match:
                     return False
         return True
+
+def from_transitions(transitions, start_state, accept_states):
+    """Create a `Machine` from transitions (in the same format returned by
+    `get_transitions`), trying to guess what kind of machine is intended.
+    
+    - Store 0 is the state.
+    - Store 1 is the input.
+    - Whether the input is one-way or not is guessed based on the size
+      of the right-hand sides of the transitions.
+
+    Not really meant to be used directly; used by `from_graph` and `from_table`.
+    """
+
+    def single_value(s):
+        s = set(s)
+        if len(s) != 1:
+            raise ValueError()
+        return s.pop()
+
+    lhs_size = single_value(len(lhs) for lhs, rhs in transitions)
+    rhs_size = single_value(len(rhs) for lhs, rhs in transitions)
+    if lhs_size == rhs_size:
+        num_stores = lhs_size
+        oneway = False
+    elif lhs_size-1 == rhs_size:
+        num_stores = lhs_size
+        oneway = True
+    else:
+        raise ValueError("right-hand sides must either be same size or one smaller than left-hand sides")
+
+    m = Machine(num_stores, state=0, input=1, oneway=oneway)
+
+    m.set_start_state(start_state)
+    m.add_accept_states(accept_states)
+
+    for lhs, rhs in transitions:
+        m.add_transition(lhs, rhs)
+
+    return m
 
 def determinize(m):
     """Determinizes a finite automaton."""
@@ -604,30 +654,3 @@ def equivalent(m1, m2):
             return False
     return True
 
-def single_value(s):
-    s = set(s)
-    if len(s) != 1:
-        raise ValueError()
-    return s.pop()
-
-def from_transitions(transitions, start_state, accept_states):
-    lhs_size = single_value(len(lhs) for lhs, rhs in transitions)
-    rhs_size = single_value(len(rhs) for lhs, rhs in transitions)
-    if lhs_size == rhs_size:
-        num_stores = lhs_size
-        oneway = False
-    elif lhs_size-1 == rhs_size:
-        num_stores = lhs_size
-        oneway = True
-    else:
-        raise ValueError("right-hand sides must either be same size or one smaller than left-hand sides")
-
-    m = Machine(num_stores, state=0, input=1, oneway=oneway)
-
-    m.set_start_state(start_state)
-    m.add_accept_states(accept_states)
-
-    for lhs, rhs in transitions:
-        m.add_transition(lhs, rhs)
-
-    return m

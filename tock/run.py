@@ -8,14 +8,14 @@ def run(m, w, trace=False, steps=1000, show_stack=3):
     """Runs an automaton, automatically selecting a search method."""
 
     # Check to see whether run_pda can handle it.
-    # To do: use is_pushdown
     is_pda = True
     stack = None
     if not m.oneway:
         is_pda = False
     for s in range(m.num_stores):
         if s == m.input:
-            pass
+            if not m.has_input(s):
+                is_pda = False
         elif m.has_cell(s): # anything with finite number of configs would do
             pass
         elif m.has_stack(s):
@@ -102,10 +102,6 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
 
     `m`: the pushdown automaton
     `w`: the input string
-
-    Store 1 is assumed to be the input, and store 2 is assumed to be the stack.
-    Currently we don't allow any other stores, though additional cells would
-    be fine.
     """
 
     """The items are pairs of configurations (parent, child), where
@@ -146,7 +142,6 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
     run = graphs.Graph()
     run.attrs['rankdir'] = 'LR'
 
-    # which position the state, input and stack are in
     if not m.has_stack(stack):
         raise ValueError("store %s must be a stack" % stack)
 

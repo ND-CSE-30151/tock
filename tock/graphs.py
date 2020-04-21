@@ -267,7 +267,8 @@ def from_graph(g):
     return machines.from_transitions(transitions, start_state, accept_states)
 
 def write_dot(x, filename):
-    """Writes a `Machine` or `Graph` to file named `filename` in GraphViz (DOT) format."""
+    """Writes a `Machine` or `Graph` to file named `filename` in GraphViz
+    (DOT) format."""
     if isinstance(x, machines.Machine):
         x = to_graph(x)
     if not isinstance(x, Graph):
@@ -283,11 +284,11 @@ def to_graph(m):
     g.add_node(q, {'start': True})
     for q in m.get_accept_states():
         g.add_node(q, {'accept': True})
-    for t in m.get_transitions():
+    for t in m.get_transitions(state_first=True):
         lhs = list(t.lhs)
         rhs = list(t.rhs)
-        [q] = lhs.pop(m.state)
-        [r] = rhs.pop(m.state)
+        [q] = lhs.pop(0)
+        [r] = rhs.pop(0)
         t = machines.Transition(lhs, rhs)
         g.add_edge(q, r, {'label': t})
     return g

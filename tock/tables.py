@@ -122,11 +122,9 @@ def to_table(m):
     conditions = set()
     transitions = collections.defaultdict(list)
 
-    for t in m.get_transitions():
+    for t in m.get_transitions(state_first=True):
         lhs, rhs = list(t.lhs), list(t.rhs)
-        if len(lhs[0]) != 1: 
-            raise ValueError("can't convert to table")
-        [q] = lhs.pop(m.state)
+        [q] = lhs.pop(0)
         condition = tuple(lhs)
 
         states.add(q)

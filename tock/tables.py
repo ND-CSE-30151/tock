@@ -122,14 +122,18 @@ def to_table(m):
     conditions = set()
     transitions = collections.defaultdict(list)
 
-    for t in m.get_transitions(state_first=True):
-        lhs, rhs = list(t.lhs), list(t.rhs)
-        [q] = lhs.pop(0)
-        condition = tuple(lhs)
-
+    for t in m.get_transitions():
+        state = t[m.state]
+        [[q]] = state.lhs
+        [[r]] = state.rhs
+        
+        t = t[:m.state] + t[m.state+1:]
+        lhs = tuple(t.lhs)
+        rhs = (r,)+tuple(t.rhs)
+        
         states.add(q)
-        conditions.add(condition)
-        transitions[q,condition].append(rhs)
+        conditions.add(lhs)
+        transitions[q,lhs].append(rhs)
     states.update(final_states)
 
     conditions = sorted(conditions)
@@ -165,4 +169,3 @@ def configs_to_string(configs):
         else:
             strings.append('(%s)' % ','.join(map(str, config)))
     return '{%s}' % ','.join(strings)
-

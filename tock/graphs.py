@@ -284,11 +284,11 @@ def to_graph(m):
     g.add_node(q, {'start': True})
     for q in m.get_accept_states():
         g.add_node(q, {'accept': True})
-    for t in m.get_transitions(state_first=True):
-        lhs = list(t.lhs)
-        rhs = list(t.rhs)
-        [q] = lhs.pop(0)
-        [r] = rhs.pop(0)
-        t = machines.Transition(lhs, rhs)
+    for t in m.get_transitions():
+        state = t[m.state]
+        [[q]] = state.lhs
+        [[r]] = state.rhs
+        
+        t = t[:m.state] + t[m.state+1:]
         g.add_edge(q, r, {'label': t})
     return g

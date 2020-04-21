@@ -1,4 +1,5 @@
 import collections
+import itertools
 import dataclasses
 from . import syntax, settings
 
@@ -188,7 +189,10 @@ class Transition:
     def __init__(self, *args):
         if len(args) == 1:
             arg = args[0]
-            if isinstance(arg, str):
+            if isinstance(arg, Transition):
+                lhs = arg.lhs
+                rhs = arg.rhs
+            elif isinstance(arg, str):
                 arg = syntax.string_to_transition(arg)
                 lhs = arg.lhs
                 rhs = arg.rhs
@@ -249,6 +253,36 @@ class Transition:
             return "{} &rarr; {}".format(self.lhs._repr_html_(), self.rhs._repr_html_())
         else:
             return self.lhs._repr_html_()
+
+@dataclasses.dataclass(frozen=True, order=True)
+class AlignedTransition(Transition):
+    """Behaves like a `Transition`, except it can also be accessed like a sequence."""
+
+    transitions: tuple
+    
+    def __init__(self, transitions):
+        object.__setattr__(self, 'transitions', tuple(Transition(t) for t in transitions))
+
+    @staticmethod
+    def _flatten(lol):
+        return list(itertools.chain(*lol))
+
+    @property
+    def lhs(self):
+        return Configuration(self._flatten([t.lhs for t in self.transitions]))
+    @property
+    def rhs(self):
+        return Configuration(self._flatten([t.rhs for t in self.transitions]))
+
+    def __len__(self):
+        return len(self.transitions)
+    def __getitem__(self, i):
+        if isinstance(i, slice):
+            return AlignedTransition(self.transitions[i])
+        else:
+            return self.transitions[i]
+    def __add__(self, other):
+        return AlignedTransition(self.transitions+other.transitions)
 
 # Define some standard automaton types.
 
@@ -364,29 +398,21 @@ class Machine:
         for t in transitions:
             self.add_transition(t)
 
-    def get_transitions(self, state_first=False):
-        """Iterate over all transitions.
+    def get_transitions(self):
+        """Return an iterator over all transitions, as `AlignedTransition`s.
 
         - If the machine has a one-way input, the generated
         transitions do not have an rhs for the input.
-
-        - If `state_first` is `True`, reorder the stores so that the
-          state comes first.
         """
         for t in self.transitions:
-            lhs = []
-            rhs = []
+            ts = []
             for si in range(self.num_stores):
                 if si == self.input and self.oneway:
-                    lhs.append(t.lhs[si])
                     assert len(t.rhs[si]) == 0
-                elif si == self.state and state_first:
-                    lhs.insert(0, t.lhs[si])
-                    rhs.insert(0, t.rhs[si])
+                    ts.append(Transition([t.lhs[si]], []))
                 else:
-                    lhs.append(t.lhs[si])
-                    rhs.append(t.rhs[si])
-            yield Transition(lhs, rhs)
+                    ts.append(Transition([t.lhs[si]], [t.rhs[si]]))
+            yield AlignedTransition(ts)
 
     def __str__(self):
         return "\n".join(str(t) for t in self.get_transitions())

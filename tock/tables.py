@@ -65,7 +65,7 @@ def from_table(table):
                 start_state = q
             if attrs.get('accept', False):
                 accept_states.add(q)
-            lhs1 = [[q]]
+            lhs1 = ([q],)
         except Exception as e:
             e.message = "cell A%s: %s" % (i+1, e.message)
             raise

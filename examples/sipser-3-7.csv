@@ -1,7 +1,7 @@
-    , 0     , x         , _          
->q1 ,"q2,_^","qreject,x^","qreject,_^"
- q2 ,"q3,x^","q2,    x^","qaccept,_^"
- q3 ,"q4,0^","q3,    x^","q5,    ^_"
- q4 ,"q3,x^","q4,    x^","qreject,_^"
- q5 ,"q5,^0","q5,    ^x","q2,    _^"
+    , 0      , x           , _          
+>q1 ,"q2,_,R","qreject,x,R","qreject,_,R"
+ q2 ,"q3,x,R","q2,     x,R","qaccept,_,R"
+ q3 ,"q4,0,R","q3,     x,R","q5,     _,L"
+ q4 ,"q3,x,R","q4,     x,R","qreject,_,R"
+ q5 ,"q5,0,L","q5,     x,L","q2,     _,R"
 @qaccept,,,

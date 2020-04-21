@@ -9,8 +9,10 @@ def run(m, w, trace=False, steps=1000, show_stack=3):
 
     # Check to see whether run_pda can handle it.
     is_pda = True
+
+    # To do: update this check
     stack = None
-    if not m.oneway:
+    if m.store_types[m.input] != machines.STREAM:
         is_pda = False
     for s in range(m.num_stores):
         if s == m.input:
@@ -81,7 +83,7 @@ def run_bfs(m, w, trace=False, steps=1000):
                 run.add_edge(tconfig, nconfig)
 
     # If input tape is one-way, then rank all nodes by input position
-    if m.oneway:
+    if m.store_types[m.input] == machines.STREAM:
         for q in run.nodes:
             ql = list(q)
             run.nodes[q]['rank'] = ql.pop(m.input)

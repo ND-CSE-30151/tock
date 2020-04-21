@@ -68,10 +68,7 @@ class Store(String):
             if self.position in [0, None]:
                 return "ε"
             elif self.position == -1:
-                if settings.display_direction_as == 'caret':
-                    return "^ ε"
-                elif settings.display_direction_as == 'alpha':
-                    return "ε,L"
+                return "^ ε"
             else:
                 raise ValueError()
 
@@ -80,23 +77,17 @@ class Store(String):
             return str(self.values[0])
 
         result = []
-        if self.position == -1 and settings.display_direction_as == 'caret':
+        if self.position == -1:
             result.append("^")
         for i, x in enumerate(self.values):
             if i == self.position:
                 result.append("[{}]".format(x))
             else:
                 result.append(str(x))
-        if self.position == len(self.values) and settings.display_direction_as == 'caret':
+        if self.position == len(self.values):
             result.append("^")
         result = " ".join(result)
 
-        if settings.display_direction_as == 'alpha':
-            if self.position == -1:
-                result = result + ",L"
-            elif self.position == len(self.values):
-                result = result + ",R"
-                
         return result
 
     def _repr_html_(self):
@@ -284,38 +275,50 @@ class AlignedTransition(Transition):
     def __add__(self, other):
         return AlignedTransition(self.transitions+other.transitions)
 
+# Store types.
+    
+STREAM = "STREAM"
+STACK = "STACK"
+TAPE = "TAPE"
+
 # Define some standard automaton types.
 
 def FiniteAutomaton():
     """A deterministic or nondeterministic finite automaton."""
-    return Machine(2, state=0, input=1, oneway=True)
+    return Machine([STACK, STREAM], state=0, input=1)
 def PushdownAutomaton():
     """A deterministic or nondeterministic pushdown automaton."""
-    return Machine(3, state=0, input=1, oneway=True)
+    return Machine([STACK, STREAM, STACK], state=0, input=1)
 def TuringMachine():
     """A deterministic or nondeterministic Turing machine."""
-    return Machine(2, state=0, input=1)
+    return Machine([STACK, TAPE], state=0, input=1)
 
 class Machine:
-    def __init__(self, num_stores, state=None, input=None, oneway=False):
+    def __init__(self, store_types, state=None, input=None):
 
         """An automaton.
 
-        num_stores: How many stores the machine should have.
+        store_types: A list of store types, one for each store.
+        - TAPE:   No constraints
+        - STACK:  Head is always at position 0
+        - STREAM: Like STACK but never pushes; must be fully consumed to accept
+
         state: Which store is the state.
+
         input: Which store is the input.
-        oneway: Whether the input is consumed from left to right, or
-                can be read and written in both directions.
         """
 
         self.transitions = []
-        self.num_stores = num_stores
+        self.store_types = tuple(store_types)
         self.state = state
         self.input = input
-        self.oneway = input is not None and oneway
 
         self.start_config = None
         self.accept_configs = set()
+
+    @property
+    def num_stores(self):
+        return len(self.store_types)
 
     def get_start_state(self):
         """Return the start state."""
@@ -341,7 +344,7 @@ class Machine:
         if self.state is None: raise ValueError("no state defined")
         config[self.state] = [q]
 
-        if self.input is not None and self.oneway:
+        if self.input is not None and self.store_types[self.input] == STREAM:
             # Machine must be at end of input to accept
             config[self.input] = [syntax.BLANK]
 
@@ -372,26 +375,49 @@ class Machine:
         """Add a transition. The argument can either be a `Transition` or a
         left-hand side and a right-hand side.
 
-        - If the machine has a one-way input, the transition should
-          not have an rhs for the input; an empty rhs is automatically
-          inserted.
+        - If a store is a STREAM, there should not have an rhs; an
+          empty rhs is automatically inserted.
+        - If a store is a TAPE, there should be two rhs, a write and a move.
         """
         if len(args) == 1 and isinstance(args[0], Transition):
             t = args[0]
         else:
             t = Transition(*args)
 
-        # If input is one-way, fill in & for the rhs
-        if self.oneway:
-            t = Transition(t.lhs,
-                           t.rhs[:self.input] + (Store(),) + t.rhs[self.input:])
+        lhs = []
+        rhs = []
+        li = ri = 0
+        for si, st in enumerate(self.store_types):
+            if st == STACK:
+                lhs.append(t.lhs[li])
+                rhs.append(t.rhs[ri])
+                li += 1
+                ri += 1
+            elif st == STREAM:
+                lhs.append(t.lhs[li])
+                li += 1
+                rhs.append(Store())
+            elif st == TAPE:
+                lhs.append(t.lhs[li])
+                b, [d] = t.rhs[ri:ri+2]
+                if d == 'L':
+                    p = -1
+                elif d == 'R':
+                    p = len(b)
+                else:
+                    raise ValueError('invalid move {}'.format(repr(d)))
+                rhs.append(Store(b, p))
+                li += 1
+                ri += 2
+            else:
+                assert False
 
-        if len(t.lhs) != self.num_stores:
+        if li != len(t.lhs):
             raise TypeError("wrong number of stores on left-hand side")
-        if len(t.rhs) != self.num_stores:
+        if ri != len(t.rhs):
             raise TypeError("wrong number of stores on right-hand side")
 
-        self.transitions.append(t)
+        self.transitions.append(Transition(lhs, rhs))
 
     def add_transitions(self, transitions):
         """Add a list of transitions (see `Machine.add_transition`)."""
@@ -406,12 +432,23 @@ class Machine:
         """
         for t in self.transitions:
             ts = []
-            for si in range(self.num_stores):
-                if si == self.input and self.oneway:
+            for si, st in enumerate(self.store_types):
+                if st == STACK:
+                    ts.append(Transition([t.lhs[si]], [t.rhs[si]]))
+                elif st == STREAM:
                     assert len(t.rhs[si]) == 0
                     ts.append(Transition([t.lhs[si]], []))
+                elif st == TAPE:
+                    b = t.rhs[si].values
+                    if t.rhs[si].position == -1:
+                        d = 'L'
+                    elif t.rhs[si].position == len(b):
+                        d = 'R'
+                    else:
+                        raise ValueError('no move for length {} and position {}'.format(len(b), t.rhs[si].position))
+                    ts.append(Transition([t.lhs[si]], [b, d]))
                 else:
-                    ts.append(Transition([t.lhs[si]], [t.rhs[si]]))
+                    assert False
             yield AlignedTransition(ts)
 
     def __str__(self):
@@ -480,23 +517,20 @@ class Machine:
 
     def is_finite(self):
         """Tests whether machine is a finite automaton."""
-        return (self.num_stores == 2 and
-                self.oneway and
+        return (self.store_types == (STACK, STREAM) and
                 self.state == 0 and self.has_cell(0) and
                 self.input == 1 and self.has_input(1))
 
     def is_pushdown(self):
         """Tests whether machine is a pushdown automaton."""
-        return (self.num_stores == 3 and
-                self.oneway and
+        return (self.store_types == (STACK, STREAM, STACK) and
                 self.state == 0 and self.has_cell(0) and
                 self.input == 1 and self.has_input(1) and
                 self.has_stack(2))
 
     def is_turing(self):
         """Tests whether machine is a Turing machine."""
-        return (self.num_stores == 2 and
-                not self.oneway and
+        return (self.store_types == (STACK, TAPE) and
                 self.state == 0 and self.has_cell(0) and
                 self.input == 1 and self.has_tape(1))
 
@@ -525,30 +559,51 @@ def from_transitions(transitions, start_state, accept_states):
     
     - Store 0 is the state.
     - Store 1 is the input.
-    - Whether the input is one-way or not is guessed based on the size
+    - Whether a store is a TAPE is guessed based on whether the next
+      field only ever has values of L or R.
+    - Whether the input is a STREAM is guessed based on the size
       of the right-hand sides of the transitions.
 
     Not really meant to be used directly; used by `from_graph` and `from_table`.
+
     """
 
-    def single_value(s):
-        s = set(s)
-        if len(s) != 1:
-            raise ValueError()
-        return s.pop()
+    lhs_sizes = set()
+    rhs_sizes = set()
+    for lhs, rhs in transitions:
+        lhs_sizes.add(len(lhs))
+        rhs_sizes.add(len(rhs))
+            
+    if len(lhs_sizes) != 1:
+        raise ValueError('all left-hand sides must have the same size')
+    [lhs_size] = lhs_sizes
+    if len(rhs_sizes) != 1:
+        raise ValueError('all right-hand sides must have the same size')
+    [rhs_size] = rhs_sizes
 
-    lhs_size = single_value(len(lhs) for lhs, rhs in transitions)
-    rhs_size = single_value(len(rhs) for lhs, rhs in transitions)
+    store_types = []
+
+    rhs_vocab = [set() for si in range(rhs_size)]
+    for lhs, rhs in transitions:
+        for si, x in enumerate(rhs):
+            rhs_vocab[si].update(rhs[si])
+            
+    for si in range(lhs_size):
+        if si+1 < rhs_size and len(rhs_vocab[si+1]) > 0 and rhs_vocab[si+1].issubset({'L', 'R'}):
+            store_types.append(TAPE)
+            rhs_size -= 1
+            del rhs_vocab[si+1]
+        else:
+            store_types.append(STACK)
+            
     if lhs_size == rhs_size:
-        num_stores = lhs_size
-        oneway = False
+        pass
     elif lhs_size-1 == rhs_size:
-        num_stores = lhs_size
-        oneway = True
+        store_types[1] = STREAM
     else:
         raise ValueError("right-hand sides must either be same size or one smaller than left-hand sides")
 
-    m = Machine(num_stores, state=0, input=1, oneway=oneway)
+    m = Machine(store_types, state=0, input=1)
 
     m.set_start_state(start_state)
     m.add_accept_states(accept_states)

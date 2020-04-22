@@ -1,0 +1,70 @@
+<svg height="105pt" viewBox="0.00 0.00 320.00 105.00" width="320pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g class="graph" id="graph0" transform="scale(1 1) rotate(0) translate(4 101)">
+<title>%3</title>
+<polygon fill="white" points="-4,4 -4,-101 316,-101 316,4 -4,4" stroke="none"/>
+<!-- 0 -->
+<g class="node" id="node1"><title>0</title>
+<path d="M71.8333,-21C71.8333,-21 62.1667,-21 62.1667,-21 59.3333,-21 56.5,-18.1667 56.5,-15.3333 56.5,-15.3333 56.5,-9.66667 56.5,-9.66667 56.5,-6.83333 59.3333,-4 62.1667,-4 62.1667,-4 71.8333,-4 71.8333,-4 74.6667,-4 77.5,-6.83333 77.5,-9.66667 77.5,-9.66667 77.5,-15.3333 77.5,-15.3333 77.5,-18.1667 74.6667,-21 71.8333,-21" fill="none" stroke="black"/>
+<text font-family="Courier,monospace" font-size="10.00" text-anchor="middle" x="67" y="-10">q1</text>
+</g>
+<!-- 0&#45;&gt;0 -->
+<g class="edge" id="edge2"><title>0-&gt;0</title>
+<path d="M60.1459,-21.1857C56.3598,-29.6739 58.6445,-39 67,-39 73.7888,-39 76.57,-32.8433 75.3435,-25.9817" fill="none" stroke="black"/>
+<polygon fill="black" points="73.8541,-21.1857 77.4858,-25.2934 74.5956,-23.5732 75.337,-25.9607 75.337,-25.9607 75.337,-25.9607 74.5956,-23.5732 73.1883,-26.628 73.8541,-21.1857 73.8541,-21.1857" stroke="black"/>
+<text font-family="Courier,monospace" font-size="9.00" text-anchor="start" x="64" y="-86.8">0</text>
+<text font-family="Courier,monospace" font-size="9.00" text-anchor="start" x="64" y="-72.8">0</text>
+<text font-family="Courier,monospace" font-size="9.00" text-anchor="start" x="64" y="-58.8">0</text>
+<text font-family="Courier,monospace" font-size="9.00" text-anchor="start" x="64" y="-44.8">1</text>
+</g>
+<!-- 1 -->
+<g class="node" id="node2"><title>1</title>
+<path d="M159.333,-21C159.333,-21 149.667,-21 149.667,-21 146.833,-21 144,-18.1667 144,-15.3333 144,-15.3333 144,-9.66667 144,-9.66667 144,-6.83333 146.833,-4 149.667,-4 149.667,-4 159.333,-4 159.333,-4 162.167,-4 165,-6.83333 165,-9.66667 165,-9.66667 165,-15.3333 165,-15.3333 165,-18.1667 162.167,-21 159.333,-21" fill="none" stroke="black"/>
+<text font-family="Courier,monospace" font-size="10.00" text-anchor="middle" x="154.5" y="-10">q2</text>
+</g>
+<!-- 0&#45;&gt;1 -->
+<g class="edge" id="edge3"><title>0-&gt;1</title>
+<path d="M77.8079,-12.5C92.7544,-12.5 121.332,-12.5 138.777,-12.5" fill="none" stroke="black"/>
+<polygon fill="black" points="143.806,-12.5 138.806,-14.7501 141.306,-12.5 138.806,-12.5001 138.806,-12.5001 138.806,-12.5001 141.306,-12.5 138.806,-10.2501 143.806,-12.5 143.806,-12.5" stroke="black"/>
+<text font-family="Courier,monospace" font-size="9.00" text-anchor="start" x="117" y="-18.3">1</text>
+</g>
+<!-- 2 -->
+<g class="node" id="node3"><title>2</title>
+<path d="M228.333,-21C228.333,-21 218.667,-21 218.667,-21 215.833,-21 213,-18.1667 213,-15.3333 213,-15.3333 213,-9.66667 213,-9.66667 213,-6.83333 215.833,-4 218.667,-4 218.667,-4 228.333,-4 228.333,-4 231.167,-4 234,-6.83333 234,-9.66667 234,-9.66667 234,-15.3333 234,-15.3333 234,-18.1667 231.167,-21 228.333,-21" fill="none" stroke="black"/>
+<text font-family="Courier,monospace" font-size="10.00" text-anchor="middle" x="223.5" y="-10">q3</text>
+</g>
+<!-- 1&#45;&gt;2 -->
+<g class="edge" id="edge5"><title>1-&gt;2</title>
+<path d="M165.099,-12.5C176.244,-12.5 194.752,-12.5 207.732,-12.5" fill="none" stroke="black"/>
+<polygon fill="black" points="212.918,-12.5 207.918,-14.7501 210.418,-12.5 207.918,-12.5001 207.918,-12.5001 207.918,-12.5001 210.418,-12.5 207.918,-10.2501 212.918,-12.5 212.918,-12.5" stroke="black"/>
+<text font-family="Courier,monospace" font-size="9.00" text-anchor="start" x="186.5" y="-32.3">ε</text>
+<text font-family="Courier,monospace" font-size="9.00" text-anchor="start" x="186" y="-18.3">0</text>
+</g>
+<!-- 3 -->
+<g class="node" id="node4"><title>3</title>
+<path d="M301.833,-21C301.833,-21 292.167,-21 292.167,-21 289.333,-21 286.5,-18.1667 286.5,-15.3333 286.5,-15.3333 286.5,-9.66667 286.5,-9.66667 286.5,-6.83333 289.333,-4 292.167,-4 292.167,-4 301.833,-4 301.833,-4 304.667,-4 307.5,-6.83333 307.5,-9.66667 307.5,-9.66667 307.5,-15.3333 307.5,-15.3333 307.5,-18.1667 304.667,-21 301.833,-21" fill="none" stroke="black"/>
+<path d="M303.167,-25C303.167,-25 290.833,-25 290.833,-25 286.667,-25 282.5,-20.8333 282.5,-16.6667 282.5,-16.6667 282.5,-8.33333 282.5,-8.33333 282.5,-4.16667 286.667,-0 290.833,-0 290.833,-0 303.167,-0 303.167,-0 307.333,-0 311.5,-4.16667 311.5,-8.33333 311.5,-8.33333 311.5,-16.6667 311.5,-16.6667 311.5,-20.8333 307.333,-25 303.167,-25" fill="none" stroke="black"/>
+<text font-family="Courier,monospace" font-size="10.00" text-anchor="middle" x="297" y="-10">q4</text>
+</g>
+<!-- 2&#45;&gt;3 -->
+<g class="edge" id="edge4"><title>2-&gt;3</title>
+<path d="M234.143,-12.5C245.113,-12.5 263.295,-12.5 277.115,-12.5" fill="none" stroke="black"/>
+<polygon fill="black" points="282.361,-12.5 277.361,-14.7501 279.861,-12.5 277.361,-12.5001 277.361,-12.5001 277.361,-12.5001 279.861,-12.5 277.361,-10.2501 282.361,-12.5 282.361,-12.5" stroke="black"/>
+<text font-family="Courier,monospace" font-size="9.00" text-anchor="start" x="255" y="-18.3">1</text>
+</g>
+<!-- 3&#45;&gt;3 -->
+<g class="edge" id="edge6"><title>3-&gt;3</title>
+<path d="M290.642,-25.0318C288.572,-34.0334 290.691,-43 297,-43 302.126,-43 304.486,-37.0807 304.08,-30.0327" fill="none" stroke="black"/>
+<polygon fill="black" points="303.358,-25.0318 306.3,-29.6587 303.715,-27.5061 304.073,-29.9804 304.073,-29.9804 304.073,-29.9804 303.715,-27.5061 301.846,-30.3022 303.358,-25.0318 303.358,-25.0318" stroke="black"/>
+<text font-family="Courier,monospace" font-size="9.00" text-anchor="start" x="294" y="-62.8">0</text>
+<text font-family="Courier,monospace" font-size="9.00" text-anchor="start" x="294" y="-48.8">1</text>
+</g>
+<!-- START -->
+<g class="node" id="node5"><title>START</title>
+</g>
+<!-- START&#45;&gt;0 -->
+<g class="edge" id="edge1"><title>START-&gt;0</title>
+<path d="M1.04711,-12.5C2.39189,-12.5 32.2191,-12.5 50.981,-12.5" fill="none" stroke="black"/>
+<polygon fill="black" points="56.4047,-12.5 51.4047,-14.7501 53.9047,-12.5 51.4047,-12.5001 51.4047,-12.5001 51.4047,-12.5001 53.9047,-12.5 51.4046,-10.2501 56.4047,-12.5 56.4047,-12.5" stroke="black"/>
+</g>
+</g>
+</svg>

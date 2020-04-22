@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="388pt" height="91pt" viewBox="0.00 0.00 388.00 90.50">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 86.5)">
+<title>%3</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-86.5 384,-86.5 384,4 -4,4"/>
+<!-- _START -->
+<g id="node1" class="node">
+<title>_START</title>
+</g>
+<!-- 0 -->
+<g id="node2" class="node">
+<title>0</title>
+<path fill="none" stroke="black" d="M71.33,-56C71.33,-56 43.67,-56 43.67,-56 40.83,-56 38,-53.17 38,-50.33 38,-50.33 38,-44.67 38,-44.67 38,-41.83 40.83,-39 43.67,-39 43.67,-39 71.33,-39 71.33,-39 74.17,-39 77,-41.83 77,-44.67 77,-44.67 77,-50.33 77,-50.33 77,-53.17 74.17,-56 71.33,-56"/>
+<text text-anchor="start" x="42" y="-45" font-family="Courier,monospace" font-size="10.00">start</text>
+</g>
+<!-- _START&#45;&gt;0 -->
+<g id="edge1" class="edge">
+<title>_START-&gt;0</title>
+<path fill="none" stroke="black" d="M1.16,-47.5C2.89,-47.5 18.46,-47.5 32.64,-47.5"/>
+<polygon fill="black" stroke="black" points="37.78,-47.5 32.78,-49.75 35.28,-47.5 32.78,-47.5 32.78,-47.5 32.78,-47.5 35.28,-47.5 32.78,-45.25 37.78,-47.5 37.78,-47.5"/>
+</g>
+<!-- 1 -->
+<g id="node3" class="node">
+<title>1</title>
+<path fill="none" stroke="black" d="M370.33,-56C370.33,-56 336.67,-56 336.67,-56 333.83,-56 331,-53.17 331,-50.33 331,-50.33 331,-44.67 331,-44.67 331,-41.83 333.83,-39 336.67,-39 336.67,-39 370.33,-39 370.33,-39 373.17,-39 376,-41.83 376,-44.67 376,-44.67 376,-50.33 376,-50.33 376,-53.17 373.17,-56 370.33,-56"/>
+<path fill="none" stroke="black" d="M371.67,-60C371.67,-60 335.33,-60 335.33,-60 331.17,-60 327,-55.83 327,-51.67 327,-51.67 327,-43.33 327,-43.33 327,-39.17 331.17,-35 335.33,-35 335.33,-35 371.67,-35 371.67,-35 375.83,-35 380,-39.17 380,-43.33 380,-43.33 380,-51.67 380,-51.67 380,-55.83 375.83,-60 371.67,-60"/>
+<text text-anchor="start" x="335" y="-45" font-family="Courier,monospace" font-size="10.00">accept</text>
+</g>
+<!-- 0&#45;&gt;1 -->
+<g id="edge4" class="edge">
+<title>0-&gt;1</title>
+<path fill="none" stroke="black" d="M77.31,-52.83C82.96,-54.24 89.19,-55.62 95,-56.5 189.03,-70.78 214.67,-69.67 309,-57.5 313.2,-56.96 317.59,-56.19 321.89,-55.32"/>
+<polygon fill="black" stroke="black" points="326.89,-54.26 322.46,-57.5 324.44,-54.78 322,-55.3 322,-55.3 322,-55.3 324.44,-54.78 321.53,-53.1 326.89,-54.26 326.89,-54.26"/>
+<text text-anchor="start" x="165.5" y="-72.3" font-family="Courier,monospace" font-size="9.00">ε ∪ a* a</text>
+</g>
+<!-- 2 -->
+<g id="node4" class="node">
+<title>2</title>
+<path fill="none" stroke="black" d="M191.33,-17C191.33,-17 181.67,-17 181.67,-17 178.83,-17 176,-14.17 176,-11.33 176,-11.33 176,-5.67 176,-5.67 176,-2.83 178.83,0 181.67,0 181.67,0 191.33,0 191.33,0 194.17,0 197,-2.83 197,-5.67 197,-5.67 197,-11.33 197,-11.33 197,-14.17 194.17,-17 191.33,-17"/>
+<text text-anchor="start" x="180" y="-6" font-family="Courier,monospace" font-size="10.00">q1</text>
+</g>
+<!-- 0&#45;&gt;2 -->
+<g id="edge5" class="edge">
+<title>0-&gt;2</title>
+<path fill="none" stroke="black" d="M77.24,-41.75C102.77,-33.91 147.94,-20.03 171.03,-12.94"/>
+<polygon fill="black" stroke="black" points="175.87,-11.46 171.75,-15.08 173.48,-12.19 171.09,-12.92 171.09,-12.92 171.09,-12.92 173.48,-12.19 170.43,-10.77 175.87,-11.46 175.87,-11.46"/>
+<text text-anchor="start" x="98.5" y="-42.3" font-family="Courier,monospace" font-size="9.00">ε ∪ a* a</text>
+</g>
+<!-- 2&#45;&gt;1 -->
+<g id="edge3" class="edge">
+<title>2-&gt;1</title>
+<path fill="none" stroke="black" d="M197.33,-10.82C221.36,-16.5 283.92,-31.29 321.86,-40.26"/>
+<polygon fill="black" stroke="black" points="326.81,-41.43 321.43,-42.47 324.38,-40.85 321.95,-40.28 321.95,-40.28 321.95,-40.28 324.38,-40.85 322.47,-38.09 326.81,-41.43 326.81,-41.43"/>
+<text text-anchor="start" x="232" y="-43.3" font-family="Courier,monospace" font-size="9.00">a b (ε ∪ a* a)</text>
+</g>
+<!-- 2&#45;&gt;2 -->
+<g id="edge2" class="edge">
+<title>2-&gt;2</title>
+<path fill="none" stroke="black" d="M176.67,-17.19C171.23,-25.67 174.51,-35 186.5,-35 196.24,-35 200.23,-28.84 198.47,-21.98"/>
+<polygon fill="black" stroke="black" points="196.33,-17.19 200.42,-20.84 197.35,-19.47 198.37,-21.75 198.37,-21.75 198.37,-21.75 197.35,-19.47 196.31,-22.67 196.33,-17.19 196.33,-17.19"/>
+<text text-anchor="start" x="149.5" y="-40.8" font-family="Courier,monospace" font-size="9.00">a b (ε ∪ a* a)</text>
+</g>
+</g>
+</svg>

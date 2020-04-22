@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="144pt" height="37pt" viewBox="0.00 0.00 144.00 36.50">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 32.5)">
+<title>%3</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-32.5 140,-32.5 140,4 -4,4"/>
+<!-- _START -->
+<g id="node1" class="node">
+<title>_START</title>
+</g>
+<!-- 0 -->
+<g id="node2" class="node">
+<title>0</title>
+<path fill="none" stroke="black" d="M53.33,-21C53.33,-21 43.67,-21 43.67,-21 40.83,-21 38,-18.17 38,-15.33 38,-15.33 38,-9.67 38,-9.67 38,-6.83 40.83,-4 43.67,-4 43.67,-4 53.33,-4 53.33,-4 56.17,-4 59,-6.83 59,-9.67 59,-9.67 59,-15.33 59,-15.33 59,-18.17 56.17,-21 53.33,-21"/>
+<text text-anchor="start" x="42" y="-10" font-family="Courier,monospace" font-size="10.00">q1</text>
+</g>
+<!-- _START&#45;&gt;0 -->
+<g id="edge1" class="edge">
+<title>_START-&gt;0</title>
+<path fill="none" stroke="black" d="M1.13,-12.5C2.79,-12.5 19.6,-12.5 32.5,-12.5"/>
+<polygon fill="black" stroke="black" points="37.74,-12.5 32.74,-14.75 35.24,-12.5 32.74,-12.5 32.74,-12.5 32.74,-12.5 35.24,-12.5 32.74,-10.25 37.74,-12.5 37.74,-12.5"/>
+</g>
+<!-- 1 -->
+<g id="node3" class="node">
+<title>1</title>
+<path fill="none" stroke="black" d="M126.33,-21C126.33,-21 116.67,-21 116.67,-21 113.83,-21 111,-18.17 111,-15.33 111,-15.33 111,-9.67 111,-9.67 111,-6.83 113.83,-4 116.67,-4 116.67,-4 126.33,-4 126.33,-4 129.17,-4 132,-6.83 132,-9.67 132,-9.67 132,-15.33 132,-15.33 132,-18.17 129.17,-21 126.33,-21"/>
+<path fill="none" stroke="black" d="M127.67,-25C127.67,-25 115.33,-25 115.33,-25 111.17,-25 107,-20.83 107,-16.67 107,-16.67 107,-8.33 107,-8.33 107,-4.17 111.17,0 115.33,0 115.33,0 127.67,0 127.67,0 131.83,0 136,-4.17 136,-8.33 136,-8.33 136,-16.67 136,-16.67 136,-20.83 131.83,-25 127.67,-25"/>
+<text text-anchor="start" x="115" y="-10" font-family="Courier,monospace" font-size="10.00">q2</text>
+</g>
+<!-- 0&#45;&gt;1 -->
+<g id="edge2" class="edge">
+<title>0-&gt;1</title>
+<path fill="none" stroke="black" d="M59.08,-12.5C69.97,-12.5 88.02,-12.5 101.75,-12.5"/>
+<polygon fill="black" stroke="black" points="106.96,-12.5 101.96,-14.75 104.46,-12.5 101.96,-12.5 101.96,-12.5 101.96,-12.5 104.46,-12.5 101.96,-10.25 106.96,-12.5 106.96,-12.5"/>
+<text text-anchor="start" x="80" y="-18.3" font-family="Courier,monospace" font-size="9.00">a</text>
+</g>
+</g>
+</svg>

@@ -10,13 +10,12 @@ def run(m, w, trace=False, steps=1000, show_stack=3):
     # Check to see whether run_pda can handle it.
     is_pda = True
 
-    # To do: update this check
     stack = None
     if m.store_types[m.input] != machines.STREAM:
         is_pda = False
     for s in range(m.num_stores):
         if s == m.input:
-            if not m.has_input(s):
+            if not m.has_input_stream(s):
                 is_pda = False
         elif m.has_cell(s): # anything with finite number of configs would do
             pass

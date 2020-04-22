@@ -8,8 +8,10 @@ __all__ = ['from_table', 'read_csv', 'read_excel', 'to_table']
 class Table(object):
     """A simple class that just stores a list of lists of strings.
     Compared to `Graph`, this is a lower-level representation."""
-    def __init__(self, rows):
+    def __init__(self, rows, num_header_cols=1, num_header_rows=1):
         self.rows = rows
+        self.num_header_cols = num_header_cols
+        self.num_header_rows = num_header_rows
     def __getitem__(self, i):
         return self.rows[i]
     def __len__(self):
@@ -24,7 +26,7 @@ class Table(object):
             for j, cell in enumerate(row):
                 cell = cell.replace('&', '&epsilon;')
                 cell = cell.replace('>', '&gt;')
-                if i == 0 or j == 0:
+                if i < self.num_header_rows or j < self.num_header_cols:
                     result.append('    <th style="text-align: left">{}</th>'.format(cell))
                 else:
                     result.append('    <td style="text-align: left">{}</td>'.format(cell))
@@ -148,23 +150,27 @@ def to_table(m):
     states.update(final_states)
 
     conditions = sorted(conditions)
-    row = ['']
-    for condition in conditions:
-        row.append(','.join(map(str, condition)))
-    rows.append(row)
+    num_header_rows = len(conditions[0])
+    for j in range(num_header_rows):
+        row = ['']
+        prev = None
+        for condition in conditions:
+            row.append(str(condition[j]) if condition[j] != prev else '')
+            prev = condition[j]
+        rows.append(row)
 
     for q in sorted(states):
         row = []
         qstring = q
-        if q == initial_state:
-            qstring = ">" + qstring
         if q in final_states:
             qstring = "@" + qstring
+        if q == initial_state:
+            qstring = ">" + qstring
         row.append(qstring)
         for condition in conditions:
             row.append(configs_to_string(transitions[q,condition]))
         rows.append(row)
-    return Table(rows)
+    return Table(rows, num_header_rows=num_header_rows)
 
 def configs_to_string(configs):
     if len(configs) == 0:

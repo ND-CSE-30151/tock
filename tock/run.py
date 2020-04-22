@@ -188,7 +188,7 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
             # In the run graph, we don't show the parent,
             # but if there is one, add a ...
             child = list(child)
-            child[stack] = Store(child[stack].values + ("...",), child[stack].position)
+            child[stack] = Store(child[stack].values + ("…",), child[stack].position)
         return Configuration(child)
 
     def add_node(parent, child, attrs=None):

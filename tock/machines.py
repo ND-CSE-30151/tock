@@ -33,6 +33,8 @@ class String:
             return 'ε'
         else:
             return ' '.join(map(str, self.values))
+    def _repr_html_(self):
+        return str(self)
 
 @dataclasses.dataclass(frozen=True, order=True)
 class Store(String):
@@ -94,8 +96,7 @@ class Store(String):
         return result
 
     def _repr_html_(self):
-        # nothing fancy
-        return str(self).replace('...', '&hellip;')
+        return str(self)
 
     def match(self, other):
         """Returns true iff self (as a pattern) matches other (as a

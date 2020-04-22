@@ -35,51 +35,64 @@ class Table(object):
 
 def from_table(table):
     """Convert a `Table` to a `Machine`."""
-    # Ignore blank lines, but keep the line numbers for error reporting
-    etable = []
-    for i, row in enumerate(table):
-        if sum(len(cell.strip()) for cell in row) != 0:
-            etable.append((i, row))
 
     start_state = None
     accept_states = set()
     transitions = []
-    
-    # Header row has lhs values for all stores other than the first
-    lhs2 = []
-    i, row = etable[0]
-    for j, cell in enumerate(row[1:], 1):
-        try:
-            lhs2.append(tuple(syntax.string_to_config(cell)))
-        except Exception as e:
-            e.message = "cell %s%s: %s" % (chr(ord('A')+j), i, e.message)
-            raise
 
-    for i, row in etable[1:]:
-        # First cell has lhs value for the first store
-        try:
-            q, attrs = syntax.string_to_state(row[0])
-            if attrs.get('start', False):
-                if start_state is not None:
-                    raise ValueError("more than one start state")
-                start_state = q
-            if attrs.get('accept', False):
-                accept_states.add(q)
-            lhs1 = ([q],)
-        except Exception as e:
-            e.message = "cell A%s: %s" % (i+1, e.message)
-            raise
+    header = True
+    lhs2 = []
+    for i, row in enumerate(table):
+        # Skip totally blank rows
+        if all(cell.strip() == '' for cell in row):
+            continue
         
-        # Rest of row has right-hand sides
-        if len(row[1:]) != len(lhs2):
-            raise ValueError("row %s: row has wrong number of cells" % i)
-        for j, cell in enumerate(row[1:], 1):
+        # Header rows are rows whose first cell is empty
+        if header and row[0].strip() != '':
+            header = False
+
+        if header:
+            # Header rows have lhs values for all stores other than the first
+            c = None
+            for j, cell in enumerate(row[1:], 1):
+                try:
+                    if cell.strip() == '':
+                        # Empty headings copy from the previous heading
+                        if c is None:
+                            raise ValueError('missing header')
+                    else:
+                        c = tuple(syntax.string_to_config(cell))
+                except Exception as e:
+                    e.message = "cell %s%s: %s" % (chr(ord('A')+j), i, e.message)
+                    raise
+                while j-1 >= len(lhs2):
+                    lhs2.append(())
+                lhs2[j-1] += c
+        else:
+            # First cell has lhs value for the first store
             try:
-                for rhs in syntax.string_to_configs(cell):
-                    transitions.append((lhs1+lhs2[j-1], rhs))
+                q, attrs = syntax.string_to_state(row[0])
+                if attrs.get('start', False):
+                    if start_state is not None:
+                        raise ValueError("more than one start state")
+                    start_state = q
+                if attrs.get('accept', False):
+                    accept_states.add(q)
+                lhs1 = ([q],)
             except Exception as e:
-                e.message = "cell %s%d: %s" % (chr(ord('A')+j), i+1, e.message)
+                e.message = "cell A%s: %s" % (i+1, e.message)
                 raise
+
+            # Rest of row has right-hand sides
+            if len(row[1:]) != len(lhs2):
+                raise ValueError("row %s: row has wrong number of cells" % i)
+            for j, cell in enumerate(row[1:], 1):
+                try:
+                    for rhs in syntax.string_to_configs(cell):
+                        transitions.append((lhs1+lhs2[j-1], rhs))
+                except Exception as e:
+                    e.message = "cell %s%d: %s" % (chr(ord('A')+j), i+1, e.message)
+                    raise
         
     if start_state is None:
         raise ValueError("missing start state")
@@ -88,8 +101,7 @@ def from_table(table):
 
 def read_csv(filename):
     """Reads a CSV file containing a tabular description of a transition function,
-       as found in Sipser. Major difference: instead of multiple header rows,
-       only a single header row whose entries might be tuples.
+       as found in Sipser.
        """
 
     with open(filename) as file:
@@ -99,8 +111,7 @@ def read_csv(filename):
 
 def read_excel(filename, sheet=None):
     """Reads an Excel file containing a tabular description of a transition function,
-       as found in Sipser. Major difference: instead of multiple header rows,
-       only a single header row whose entries might be tuples.
+       as found in Sipser.
        """
 
     from openpyxl import load_workbook # type: ignore

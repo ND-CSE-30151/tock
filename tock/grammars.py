@@ -4,7 +4,7 @@ from . import syntax
 
 __all__ = ['Grammar', 'from_grammar', 'to_grammar']
 
-class Grammar(object):
+class Grammar:
     """A string-rewriting grammar."""
     def __init__(self):
         self.nonterminals = set()
@@ -158,7 +158,7 @@ def from_grammar(g, mode="topdown"):
 def from_grammar_topdown(g):
     m = machines.PushdownAutomaton()
 
-    q1 = "%s.1" % zero_pad(len(g.rules)+1, 0)
+    q1 = "{}.1".format(zero_pad(len(g.rules)+1, 0))
     m.set_start_state("start")
     m.add_transition(("start", [], []), (q1,     "$"))
     m.add_transition((q1,      [], []), ("loop", g.start))
@@ -175,8 +175,8 @@ def from_grammar_topdown(g):
             q = "loop"
             for si, r in reversed(list(enumerate(rhs))):
                 if si > 0:
-                    q1 = "%s.%s" % (zero_pad(len(g.rules)+1, ri+1), 
-                                    zero_pad(len(rhs)+1, si))
+                    q1 = "{}.{}".format(zero_pad(len(g.rules)+1, ri+1), 
+                                        zero_pad(len(rhs)+1, si))
                 else:
                     q1 = "loop"
                 m.add_transition((q, [], lhs if si==len(rhs)-1 else []),
@@ -209,8 +209,8 @@ def from_grammar_bottomup(g):
             q = "loop"
             for si, r in reversed(list(enumerate(rhs))):
                 if si > 0:
-                    q1 = "%s.%s" % (zero_pad(len(g.rules)+1, ri+1), 
-                                    zero_pad(len(rhs)+1, si))
+                    q1 = "{}.{}".format(zero_pad(len(g.rules)+1, ri+1), 
+                                        zero_pad(len(rhs)+1, si))
                 else:
                     q1 = "loop"
                 m.add_transition((q, [], r),

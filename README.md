@@ -11,7 +11,7 @@ Installation
 
 Tock depends on the following:
 
--  Python 2.7 or 3.x (required)
+-  Python 3.7 (required)
 -  [six](https://pypi.python.org/pypi/six) (required)
 -  [GraphViz](http://www.graphviz.org) (to draw graphs)
 -  [Jupyter](http://jupyter.org) (to
@@ -36,7 +36,6 @@ Documentation
 
 The documentation is contained in a series of [Jupyter](https://jupyter.org) notebooks:
 
-- [Introduction](doc/Introduction.ipynb)
 - [Deterministic finite automata](doc/DFAs.ipynb)
 - [Nondeterministic finite automata](doc/NFAs.ipynb)
 - [Regular expressions](doc/Regexps.ipynb)

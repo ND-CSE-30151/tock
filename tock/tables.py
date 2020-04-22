@@ -5,7 +5,7 @@ from . import syntax
 
 __all__ = ['from_table', 'read_csv', 'read_excel', 'to_table']
 
-class Table(object):
+class Table:
     """A simple class that just stores a list of lists of strings.
     Compared to `Graph`, this is a lower-level representation."""
     def __init__(self, rows, num_header_cols=1, num_header_rows=1):
@@ -27,13 +27,16 @@ class Table(object):
                 cell = cell.replace('&', '&epsilon;')
                 cell = cell.replace('>', '&gt;')
                 if i < self.num_header_rows or j < self.num_header_cols:
-                    result.append('    <th style="text-align: left">{}</th>'.format(cell))
+                    result.append(f'    <th style="text-align: left">{cell}</th>')
                 else:
-                    result.append('    <td style="text-align: left">{}</td>'.format(cell))
+                    result.append(f'    <td style="text-align: left">{cell}</td>')
             result.append('  </tr>')
         
         result.append('</table>')
         return '\n'.join(result)
+
+def addr(i, j):
+    return chr(ord('A')+j) + str(i+1)
 
 def from_table(table):
     """Convert a `Table` to a `Machine`."""
@@ -65,7 +68,7 @@ def from_table(table):
                     else:
                         c = tuple(syntax.string_to_config(cell))
                 except Exception as e:
-                    e.message = "cell %s%s: %s" % (chr(ord('A')+j), i, e.message)
+                    e.message = f"cell {addr(i,j)}: {e.message}"
                     raise
                 while j-1 >= len(lhs2):
                     lhs2.append(())
@@ -82,18 +85,18 @@ def from_table(table):
                     accept_states.add(q)
                 lhs1 = ([q],)
             except Exception as e:
-                e.message = "cell A%s: %s" % (i+1, e.message)
+                e.message = f"cell {addr(i,0)}: {e.message}"
                 raise
 
             # Rest of row has right-hand sides
             if len(row[1:]) != len(lhs2):
-                raise ValueError("row %s: row has wrong number of cells" % i)
+                raise ValueError(f"row {i+1}: row has wrong number of cells")
             for j, cell in enumerate(row[1:], 1):
                 try:
                     for rhs in syntax.string_to_configs(cell):
                         transitions.append((lhs1+lhs2[j-1], rhs))
                 except Exception as e:
-                    e.message = "cell %s%d: %s" % (chr(ord('A')+j), i+1, e.message)
+                    e.message = f"cell {addr(i,j)}: {e.message}"
                     raise
         
     if start_state is None:
@@ -184,5 +187,5 @@ def configs_to_string(configs):
             [store] = config
             strings.append(str(store))
         else:
-            strings.append('(%s)' % ','.join(map(str, config)))
-    return '{%s}' % ','.join(strings)
+            strings.append('(' + ','.join(map(str, config)) + ')')
+    return '{' + ','.join(strings) + '}'

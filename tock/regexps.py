@@ -1,7 +1,6 @@
 from . import machines
 from . import syntax
 from . import graphs
-import six
 
 __all__ = ['from_regexp', 'to_regexp', 'string_to_regexp']
 
@@ -12,7 +11,7 @@ STAR = syntax.Operator('*')
 LPAREN = syntax.Operator('(')
 RPAREN = syntax.Operator(')')
 
-class RegularExpression(object):
+class RegularExpression:
     """A (abstract syntax tree of a) regular expression."""
     def __init__(self, op, args, start=None, end=None):
         self.op = op
@@ -239,7 +238,7 @@ def from_regexp(e, display_steps=False):
 
     if display_steps:
         from IPython.display import display, HTML # type: ignore
-    if isinstance(e, six.string_types):
+    if isinstance(e, str):
         e = string_to_regexp(e)
     num_states = count(e)
     m, _ = visit(e, 1)

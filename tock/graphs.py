@@ -4,7 +4,7 @@ from . import syntax
 
 __all__ = ['to_graph', 'write_dot', 'read_tgf']
 
-class Graph(object):
+class Graph:
     """A directed graph. Both nodes and edges can have a `dict` of attributes.
 
     Nodes can be any object that implements `__hash__` and `__eq__`.

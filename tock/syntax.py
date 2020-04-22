@@ -1,8 +1,7 @@
 import re
 from . import settings
 
-class Tokens(object):
-    """To do: merge with `Store`."""
+class Tokens:
     def __init__(self, tokens):
         self.tokens = tokens
         self.pos = 0
@@ -65,7 +64,7 @@ def lexer(s):
             if m:
                 token = Operator(m.group())
             else:
-                raise ValueError("couldn't understand input: {}".format(s[i:]))
+                raise ValueError(f"couldn't understand input: {s[i:]}")
         tokens.append(token)
         i = m.end()
         m = whitespace_re.match(s, i)
@@ -75,14 +74,14 @@ def lexer(s):
 
 def parse_character(s, c):
     if s.pos == len(s):
-        raise ValueError("expected %s, found end of string" % c)
+        raise ValueError(f"expected {c}, found end of string")
     elif s.cur != c:
-        raise ValueError("expected %s, found %s" % (c, s.c))
+        raise ValueError(f"expected {c}, found {s.c}")
     s.pos += 1
 
 def parse_symbol(s):
     if not isinstance(s.cur, Symbol):
-        raise ValueError("expected symbol, found %s" % (s.cur))
+        raise ValueError(f"expected symbol, found {s.cur}")
     else:
         x = s.cur
         s.pos += 1
@@ -112,7 +111,7 @@ def parse_multiple(s, f, values=None):
 
 def parse_end(s):
     if s.pos < len(s):
-        raise ValueError("unexpected %s" % (s.cur))
+        raise ValueError(f"unexpected {s.cur}")
 
 def parse_store(s):
     from .machines import Store

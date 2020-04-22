@@ -24,7 +24,7 @@ setup(name='tock',
         ],
       packages=['tock'],
       python_requires='>=3.7',
-      install_requires=['six', 'openpyxl'],
+      install_requires=['openpyxl'],
       long_description=long_description,
       long_description_content_type='text/markdown',
       )

@@ -1,5 +1,4 @@
 import sys, subprocess
-import six
 
 impl = None
 
@@ -42,8 +41,7 @@ def run_dot(dot):
 
 def run_dot_dot(dot):
     from IPython.display import SVG
-    if isinstance(dot, six.text_type):
-        dot = dot.encode('utf8')
+    dot = dot.encode('utf8')
     process = subprocess.Popen(['dot', '-Tsvg'], 
                                stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE, 
@@ -63,9 +61,9 @@ def run_dot_js(dot):
                       '  var div = $("<div>");'
                       '  element.append(div);'
                       # generate the SVG
-                      '  div.append(Viz("%s"));'
+                      f'  div.append(Viz("{dot}"));'
                       # set the div's size to match the SVG
                       '  var svg = div.find("svg");'
                       '  div.css("width", svg.attr("width"));'
                       '  div.css("height", svg.attr("height"));'
-                      '})' % dot)
+                      '})')

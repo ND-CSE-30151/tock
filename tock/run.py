@@ -144,7 +144,7 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
     run.attrs['rankdir'] = 'LR'
 
     if not m.has_stack(stack):
-        raise ValueError("store %s must be a stack" % stack)
+        raise ValueError(f'store {stack} must be a stack')
 
     # how much of the stack is not elided
     show_stack = max(show_stack, 

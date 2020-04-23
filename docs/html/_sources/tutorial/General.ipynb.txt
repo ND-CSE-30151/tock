@@ -1,0 +1,104 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# General usage"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from tock import *"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We've seen finite automata, pushdown automata, and Turing machines, but many other kinds of automata can be created by instantiating a `Machine` directly."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "m = Machine([BASE, BASE, BASE], state=0, input=1)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The first argument is required. This machine has three stores, and its types are all `BASE`.\n",
+    "\n",
+    "The argument `state=0` means that store 0 is the state. It's this store that is used to define the start and accept conditions, and this store that is used to define the nodes in a state transition diagram.\n",
+    "\n",
+    "The argument `input=1` is required and means that store 1 is the input. When the automaton is run, the input string will be placed on this store."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "m = Machine([BASE, STREAM, BASE], state=0, input=1)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "A store of type `STREAM` (which only really makes sense for the input store) has two properties.\n",
+    "\n",
+    "- Since the right-hand side of a transition always has an empty input, it is omitted. For example, finite automaton transitions have 2 members on the left-hand side and only 1 member on the right-hand side.\n",
+    "\n",
+    "- The input must be entirely consumed in order for the machine to accept the input string. Formally, this means that the accepting configuration has a blank symbol (`_`) for the input."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "m = Machine([BASE, TAPE, TAPE], state=0, input=1)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "If a store is of type `TAPE`, the right-hand-side of a transition has two entries for that store, a write and a move (which can be `L` or `R`)."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.1"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 1
+}

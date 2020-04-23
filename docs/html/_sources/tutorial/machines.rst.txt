@@ -1,0 +1,6 @@
+tock.machines
+=============
+
+.. automodule:: tock.machines
+   :members:
+

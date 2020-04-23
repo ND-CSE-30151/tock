@@ -11,12 +11,8 @@ like multiple stacks or tapes.
    :maxdepth: 2
    :caption: Contents:
 
-   DFAs.ipynb
-   NFAs.ipynb
-   Regexps.ipynb
-   CFGs.ipynb
-   PDAs.ipynb
-   TMs.ipynb
+   tutorial/index.rst
+   reference/index.rst
 
 Indexes
 =======

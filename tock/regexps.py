@@ -101,12 +101,17 @@ def string_to_regexp(s):
     """Converts a string to a regular expression.
 
     Regular expressions allow the following operations:
+
     - Symbols
+
     - Empty string (&)
+
     - Union (|)
+
     - Concatenation: Two concatenated symbols must be separated by a
       space. For example, "a b" is "a" concatenated with "b", but "ab"
       is a single symbol.
+
     - Kleene star (*)
     """
     s = syntax.lexer(s)

@@ -11,33 +11,8 @@ like multiple stacks or tapes.
    :maxdepth: 2
    :caption: Contents:
 
-   DFAs.ipynb
-   NFAs.ipynb
-   Regexps.ipynb
-   CFGs.ipynb
-   PDAs.ipynb
-   TMs.ipynb
-
-.. automodule:: tock.machines
-   :members:
-
-.. automodule:: tock.run
-   :members:
-
-.. automodule:: tock.grammars
-   :members:
-
-.. automodule:: tock.regexps
-   :members:
-
-.. automodule:: tock.graphs
-   :members:
-
-.. automodule:: tock.tables
-   :members:
-
-.. automodule:: tock.syntax
-   :members:
+   tutorial/index.rst
+   reference/index.rst
 
 Indexes
 =======

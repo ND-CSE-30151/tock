@@ -1,0 +1,179 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Internal representation of machines &#8212; tock  documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="tock.syntax" href="syntax.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="syntax.html" title="tock.syntax"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">tock  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="internal-representation-of-machines">
+<h1>Internal representation of machines<a class="headerlink" href="#internal-representation-of-machines" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="stores">
+<h2>Stores<a class="headerlink" href="#stores" title="Permalink to this headline">¶</a></h2>
+<p>Internally, all kinds of automata are represented in the same
+way. They have one or more <em>stores</em>, which are half-infinite tapes,
+but you don’t have to use them as tapes; you can use them instead as
+finite states or as stacks.</p>
+</div>
+<div class="section" id="transitions">
+<h2>Transitions<a class="headerlink" href="#transitions" title="Permalink to this headline">¶</a></h2>
+<p>The operation of the automaton is defined by transitions of the form:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span> <span class="o">-&gt;</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span>
+</pre></div>
+</div>
+<p>where the left-hand side and right-hand side must have the same number
+of elements as there are stores, and each element is a symbol
+annotated with a head position. The meaning of the transition is that
+if the first store matches <code class="docutils literal notranslate"><span class="pre">a</span></code> (relative to the current head
+position), replace it with <code class="docutils literal notranslate"><span class="pre">x</span></code>; if the second store matches <code class="docutils literal notranslate"><span class="pre">b</span></code>,
+replace it with <code class="docutils literal notranslate"><span class="pre">y</span></code>; and so on.</p>
+<p>In more detail, each element is either empty (<code class="docutils literal notranslate"><span class="pre">&amp;</span></code>) or a whitespace-separated
+string of symbols, optionally preceded or followed by a caret (<code class="docutils literal notranslate"><span class="pre">^</span></code>).</p>
+<ul class="simple">
+<li><p>If the caret precedes the string, the head is one before the first symbol;</p></li>
+<li><p>If the caret follows the string, the head is one after the last symbol;</p></li>
+<li><p>If the caret is absent, the head is over the <em>first</em> symbol.</p></li>
+</ul>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">^</span> <span class="pre">&amp;</span></code> is different from <code class="docutils literal notranslate"><span class="pre">&amp;</span> <span class="pre">^</span></code>, and <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> is the same as <code class="docutils literal notranslate"><span class="pre">&amp;</span> <span class="pre">^</span></code>.</p>
+<p>Despite the peculiarities of this notation, it can describe all the
+possible moves that typical automata make:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">-&gt;</span> <span class="pre">b</span></code>: write symbol and don’t move</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">-&gt;</span> <span class="pre">b</span> <span class="pre">^</span></code>: write symbol and move right</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">-&gt;</span> <span class="pre">^</span> <span class="pre">b</span></code>: write symbol and move left</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&amp;</span> <span class="pre">-&gt;</span> <span class="pre">b</span></code>: push symbol on left</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">-&gt;</span> <span class="pre">&amp;</span></code>: pop symbol on left</p></li>
+</ul>
+</div>
+<div class="section" id="states-and-symbols">
+<h2>States and symbols<a class="headerlink" href="#states-and-symbols" title="Permalink to this headline">¶</a></h2>
+<p>States and symbols can be:</p>
+<ul class="simple">
+<li><p>A sequence of one or more letters, numbers, <code class="docutils literal notranslate"><span class="pre">_</span></code>, or <code class="docutils literal notranslate"><span class="pre">.</span></code></p></li>
+<li><p>One of the following: <code class="docutils literal notranslate"><span class="pre">|-</span> <span class="pre">-|</span> <span class="pre">#</span> <span class="pre">$</span></code></p></li>
+</ul>
+</div>
+<div class="section" id="tables">
+<h2>Tables<a class="headerlink" href="#tables" title="Permalink to this headline">¶</a></h2>
+<p>Tables are in CSV format.</p>
+<p>The first column lists all the states, one per row. Precede the name
+of the start state with <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, and precede the name of final states with
+<code class="docutils literal notranslate"><span class="pre">&#64;</span></code>. These symbols are not part of the state name.</p>
+<p>The first row lists all the possible left-hand sides of transitions,
+sans state.</p>
+<p>Each interior cell contains a set of right-hand sides.</p>
+<p>Thus, the left-hand side is formed by concatenating the row header
+(the state) and the column header; the right-hand side is taken from
+the cell.</p>
+</div>
+<div class="section" id="graphs">
+<h2>Graphs<a class="headerlink" href="#graphs" title="Permalink to this headline">¶</a></h2>
+<p>Graphs are in Trivial Graph Format (TGF).</p>
+<p>The nodes are labeled with states, including the <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> flags as
+described above.</p>
+<p>The edges are labeled with transitions, minus the state on both the
+left-hand side and right-hand side.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Internal representation of machines</a><ul>
+<li><a class="reference internal" href="#stores">Stores</a></li>
+<li><a class="reference internal" href="#transitions">Transitions</a></li>
+<li><a class="reference internal" href="#states-and-symbols">States and symbols</a></li>
+<li><a class="reference internal" href="#tables">Tables</a></li>
+<li><a class="reference internal" href="#graphs">Graphs</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="syntax.html"
+                        title="previous chapter">tock.syntax</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/internals.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="syntax.html" title="tock.syntax"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">tock  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, David Chiang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,535 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Turing machines"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from tock import *"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Creating TMs\n",
+    "\n",
+    "A Turing machine (TM) can be created with `TuringMachine()` or by reading from a file. Although Sipser never actually writes the transition function of a TM as a table, it's a perfectly reasonable thing to do. The machine in Example 3.7 would be:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(False, True)"
+      ]
+     },
+     "execution_count": 2,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "m = read_csv(\"examples/sipser-3-7.csv\")\n",
+    "m.is_pushdown(), m.is_deterministic()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<table style=\"font-family: Courier, monospace;\">\n",
+       "  <tr>\n",
+       "    <th style=\"text-align: left\"></th>\n",
+       "    <th style=\"text-align: left\">0</th>\n",
+       "    <th style=\"text-align: left\">x</th>\n",
+       "    <th style=\"text-align: left\">␣</th>\n",
+       "  </tr>\n",
+       "  <tr>\n",
+       "    <th style=\"text-align: left\">&gt;q1</th>\n",
+       "    <td style=\"text-align: left\">q2,␣,R</td>\n",
+       "    <td style=\"text-align: left\">qreject,x,R</td>\n",
+       "    <td style=\"text-align: left\">qreject,␣,R</td>\n",
+       "  </tr>\n",
+       "  <tr>\n",
+       "    <th style=\"text-align: left\">q2</th>\n",
+       "    <td style=\"text-align: left\">q3,x,R</td>\n",
+       "    <td style=\"text-align: left\">q2,x,R</td>\n",
+       "    <td style=\"text-align: left\">qaccept,␣,R</td>\n",
+       "  </tr>\n",
+       "  <tr>\n",
+       "    <th style=\"text-align: left\">q3</th>\n",
+       "    <td style=\"text-align: left\">q4,0,R</td>\n",
+       "    <td style=\"text-align: left\">q3,x,R</td>\n",
+       "    <td style=\"text-align: left\">q5,␣,L</td>\n",
+       "  </tr>\n",
+       "  <tr>\n",
+       "    <th style=\"text-align: left\">q4</th>\n",
+       "    <td style=\"text-align: left\">q3,x,R</td>\n",
+       "    <td style=\"text-align: left\">q4,x,R</td>\n",
+       "    <td style=\"text-align: left\">qreject,␣,R</td>\n",
+       "  </tr>\n",
+       "  <tr>\n",
+       "    <th style=\"text-align: left\">q5</th>\n",
+       "    <td style=\"text-align: left\">q5,0,L</td>\n",
+       "    <td style=\"text-align: left\">q5,x,L</td>\n",
+       "    <td style=\"text-align: left\">q2,␣,R</td>\n",
+       "  </tr>\n",
+       "  <tr>\n",
+       "    <th style=\"text-align: left\">@qaccept</th>\n",
+       "    <td style=\"text-align: left\"></td>\n",
+       "    <td style=\"text-align: left\"></td>\n",
+       "    <td style=\"text-align: left\"></td>\n",
+       "  </tr>\n",
+       "</table>"
+      ],
+      "text/plain": [
+       "<tock.tables.Table at 0x10a612c10>"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "to_table(m)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "As always, the first column lists the possible states, and the start state is marked with a `>` and the accept state is marked with a `@`.\n",
+    "\n",
+    "The first row lists possible tape symbols. Use `_` for the blank symbol.\n",
+    "\n",
+    "In the cells, we write the destination state, the written symbol, and the move direction.\n",
+    "\n",
+    "Here's the state transition diagram, which might or might not be more intuitive:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/svg+xml": [
+       "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"544pt\" height=\"203pt\" viewBox=\"0.00 0.00 544.00 202.50\">\n",
+       "<g id=\"graph0\" class=\"graph\" transform=\"scale(1 1) rotate(0) translate(4 198.5)\">\n",
+       "<title>%3</title>\n",
+       "<polygon fill=\"white\" stroke=\"transparent\" points=\"-4,4 -4,-198.5 540,-198.5 540,4 -4,4\"/>\n",
+       "<!-- _START -->\n",
+       "<g id=\"node1\" class=\"node\">\n",
+       "<title>_START</title>\n",
+       "</g>\n",
+       "<!-- 5 -->\n",
+       "<g id=\"node7\" class=\"node\">\n",
+       "<title>5</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M53.33,-24.5C53.33,-24.5 43.67,-24.5 43.67,-24.5 40.83,-24.5 38,-21.67 38,-18.83 38,-18.83 38,-13.17 38,-13.17 38,-10.33 40.83,-7.5 43.67,-7.5 43.67,-7.5 53.33,-7.5 53.33,-7.5 56.17,-7.5 59,-10.33 59,-13.17 59,-13.17 59,-18.83 59,-18.83 59,-21.67 56.17,-24.5 53.33,-24.5\"/>\n",
+       "<text text-anchor=\"start\" x=\"42\" y=\"-13.5\" font-family=\"Courier,monospace\" font-size=\"10.00\">q1</text>\n",
+       "</g>\n",
+       "<!-- _START&#45;&gt;5 -->\n",
+       "<g id=\"edge1\" class=\"edge\">\n",
+       "<title>_START-&gt;5</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M1.13,-16C2.79,-16 19.6,-16 32.5,-16\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"37.74,-16 32.74,-18.25 35.24,-16 32.74,-16 32.74,-16 32.74,-16 35.24,-16 32.74,-13.75 37.74,-16 37.74,-16\"/>\n",
+       "</g>\n",
+       "<!-- 0 -->\n",
+       "<g id=\"node2\" class=\"node\">\n",
+       "<title>0</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M153.33,-97.5C153.33,-97.5 143.67,-97.5 143.67,-97.5 140.83,-97.5 138,-94.67 138,-91.83 138,-91.83 138,-86.17 138,-86.17 138,-83.33 140.83,-80.5 143.67,-80.5 143.67,-80.5 153.33,-80.5 153.33,-80.5 156.17,-80.5 159,-83.33 159,-86.17 159,-86.17 159,-91.83 159,-91.83 159,-94.67 156.17,-97.5 153.33,-97.5\"/>\n",
+       "<text text-anchor=\"start\" x=\"142\" y=\"-86.5\" font-family=\"Courier,monospace\" font-size=\"10.00\">q2</text>\n",
+       "</g>\n",
+       "<!-- 0&#45;&gt;0 -->\n",
+       "<g id=\"edge5\" class=\"edge\">\n",
+       "<title>0-&gt;0</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M141.05,-97.69C136.93,-106.17 139.42,-115.5 148.5,-115.5 155.88,-115.5 158.9,-109.34 157.57,-102.48\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"155.95,-97.69 159.68,-101.7 156.75,-100.05 157.55,-102.42 157.55,-102.42 157.55,-102.42 156.75,-100.05 155.42,-103.14 155.95,-97.69 155.95,-97.69\"/>\n",
+       "<text text-anchor=\"start\" x=\"130.5\" y=\"-121.3\" font-family=\"Courier,monospace\" font-size=\"9.00\">x → x,R</text>\n",
+       "</g>\n",
+       "<!-- 2 -->\n",
+       "<g id=\"node4\" class=\"node\">\n",
+       "<title>2</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M272.33,-160.5C272.33,-160.5 262.67,-160.5 262.67,-160.5 259.83,-160.5 257,-157.67 257,-154.83 257,-154.83 257,-149.17 257,-149.17 257,-146.33 259.83,-143.5 262.67,-143.5 262.67,-143.5 272.33,-143.5 272.33,-143.5 275.17,-143.5 278,-146.33 278,-149.17 278,-149.17 278,-154.83 278,-154.83 278,-157.67 275.17,-160.5 272.33,-160.5\"/>\n",
+       "<text text-anchor=\"start\" x=\"261\" y=\"-149.5\" font-family=\"Courier,monospace\" font-size=\"10.00\">q3</text>\n",
+       "</g>\n",
+       "<!-- 0&#45;&gt;2 -->\n",
+       "<g id=\"edge4\" class=\"edge\">\n",
+       "<title>0-&gt;2</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M154.53,-97.74C159.37,-105.42 167.36,-116.38 177,-123 200.18,-138.93 232.67,-146.55 251.46,-149.83\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"256.82,-150.72 251.52,-152.12 254.35,-150.31 251.89,-149.9 251.89,-149.9 251.89,-149.9 254.35,-150.31 252.25,-147.68 256.82,-150.72 256.82,-150.72\"/>\n",
+       "<text text-anchor=\"start\" x=\"180.5\" y=\"-147.8\" font-family=\"Courier,monospace\" font-size=\"9.00\">0 → x,R</text>\n",
+       "</g>\n",
+       "<!-- 6 -->\n",
+       "<g id=\"node8\" class=\"node\">\n",
+       "<title>6</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M287.33,-121.5C287.33,-121.5 247.67,-121.5 247.67,-121.5 244.83,-121.5 242,-118.67 242,-115.83 242,-115.83 242,-110.17 242,-110.17 242,-107.33 244.83,-104.5 247.67,-104.5 247.67,-104.5 287.33,-104.5 287.33,-104.5 290.17,-104.5 293,-107.33 293,-110.17 293,-110.17 293,-115.83 293,-115.83 293,-118.67 290.17,-121.5 287.33,-121.5\"/>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M288.67,-125.5C288.67,-125.5 246.33,-125.5 246.33,-125.5 242.17,-125.5 238,-121.33 238,-117.17 238,-117.17 238,-108.83 238,-108.83 238,-104.67 242.17,-100.5 246.33,-100.5 246.33,-100.5 288.67,-100.5 288.67,-100.5 292.83,-100.5 297,-104.67 297,-108.83 297,-108.83 297,-117.17 297,-117.17 297,-121.33 292.83,-125.5 288.67,-125.5\"/>\n",
+       "<text text-anchor=\"start\" x=\"246\" y=\"-110.5\" font-family=\"Courier,monospace\" font-size=\"10.00\">qaccept</text>\n",
+       "</g>\n",
+       "<!-- 0&#45;&gt;6 -->\n",
+       "<g id=\"edge6\" class=\"edge\">\n",
+       "<title>0-&gt;6</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M159.07,-90.96C175.04,-94.24 207.82,-100.96 233,-106.13\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"237.93,-107.14 232.58,-108.34 235.48,-106.64 233.03,-106.13 233.03,-106.13 233.03,-106.13 235.48,-106.64 233.48,-103.93 237.93,-107.14 237.93,-107.14\"/>\n",
+       "<text text-anchor=\"start\" x=\"180.5\" y=\"-108.8\" font-family=\"Courier,monospace\" font-size=\"9.00\">␣ → ␣,R</text>\n",
+       "</g>\n",
+       "<!-- 1 -->\n",
+       "<g id=\"node3\" class=\"node\">\n",
+       "<title>1</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M530.33,-24.5C530.33,-24.5 490.67,-24.5 490.67,-24.5 487.83,-24.5 485,-21.67 485,-18.83 485,-18.83 485,-13.17 485,-13.17 485,-10.33 487.83,-7.5 490.67,-7.5 490.67,-7.5 530.33,-7.5 530.33,-7.5 533.17,-7.5 536,-10.33 536,-13.17 536,-13.17 536,-18.83 536,-18.83 536,-21.67 533.17,-24.5 530.33,-24.5\"/>\n",
+       "<text text-anchor=\"start\" x=\"489\" y=\"-13.5\" font-family=\"Courier,monospace\" font-size=\"10.00\">qreject</text>\n",
+       "</g>\n",
+       "<!-- 2&#45;&gt;2 -->\n",
+       "<g id=\"edge8\" class=\"edge\">\n",
+       "<title>2-&gt;2</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M257.37,-160.69C251.77,-169.17 255.15,-178.5 267.5,-178.5 277.54,-178.5 281.65,-172.34 279.83,-165.48\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"277.63,-160.69 281.76,-164.29 278.68,-162.96 279.72,-165.23 279.72,-165.23 279.72,-165.23 278.68,-162.96 277.67,-166.17 277.63,-160.69 277.63,-160.69\"/>\n",
+       "<text text-anchor=\"start\" x=\"249.5\" y=\"-184.3\" font-family=\"Courier,monospace\" font-size=\"9.00\">x → x,R</text>\n",
+       "</g>\n",
+       "<!-- 3 -->\n",
+       "<g id=\"node5\" class=\"node\">\n",
+       "<title>3</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M395.83,-157.5C395.83,-157.5 386.17,-157.5 386.17,-157.5 383.33,-157.5 380.5,-154.67 380.5,-151.83 380.5,-151.83 380.5,-146.17 380.5,-146.17 380.5,-143.33 383.33,-140.5 386.17,-140.5 386.17,-140.5 395.83,-140.5 395.83,-140.5 398.67,-140.5 401.5,-143.33 401.5,-146.17 401.5,-146.17 401.5,-151.83 401.5,-151.83 401.5,-154.67 398.67,-157.5 395.83,-157.5\"/>\n",
+       "<text text-anchor=\"start\" x=\"384.5\" y=\"-146.5\" font-family=\"Courier,monospace\" font-size=\"10.00\">q4</text>\n",
+       "</g>\n",
+       "<!-- 2&#45;&gt;3 -->\n",
+       "<g id=\"edge7\" class=\"edge\">\n",
+       "<title>2-&gt;3</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M278.26,-155.27C294.8,-160.36 329.35,-168.99 358,-163 364,-161.75 370.25,-159.3 375.62,-156.8\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"380.26,-154.52 376.77,-158.74 378.02,-155.62 375.78,-156.72 375.78,-156.72 375.78,-156.72 378.02,-155.62 374.78,-154.7 380.26,-154.52 380.26,-154.52\"/>\n",
+       "<text text-anchor=\"start\" x=\"318.5\" y=\"-170.8\" font-family=\"Courier,monospace\" font-size=\"9.00\">0 → 0,R</text>\n",
+       "</g>\n",
+       "<!-- 4 -->\n",
+       "<g id=\"node6\" class=\"node\">\n",
+       "<title>4</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M395.83,-74.5C395.83,-74.5 386.17,-74.5 386.17,-74.5 383.33,-74.5 380.5,-71.67 380.5,-68.83 380.5,-68.83 380.5,-63.17 380.5,-63.17 380.5,-60.33 383.33,-57.5 386.17,-57.5 386.17,-57.5 395.83,-57.5 395.83,-57.5 398.67,-57.5 401.5,-60.33 401.5,-63.17 401.5,-63.17 401.5,-68.83 401.5,-68.83 401.5,-71.67 398.67,-74.5 395.83,-74.5\"/>\n",
+       "<text text-anchor=\"start\" x=\"384.5\" y=\"-63.5\" font-family=\"Courier,monospace\" font-size=\"10.00\">q5</text>\n",
+       "</g>\n",
+       "<!-- 2&#45;&gt;4 -->\n",
+       "<g id=\"edge9\" class=\"edge\">\n",
+       "<title>2-&gt;4</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M278.18,-146.62C283.79,-143.41 290.91,-139.16 297,-135 305.37,-129.28 306.91,-127.11 315,-121 336.02,-105.12 360.7,-87.15 375.85,-76.2\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"380.23,-73.03 377.49,-77.78 378.2,-74.5 376.17,-75.96 376.17,-75.96 376.17,-75.96 378.2,-74.5 374.86,-74.14 380.23,-73.03 380.23,-73.03\"/>\n",
+       "<text text-anchor=\"start\" x=\"318.5\" y=\"-126.8\" font-family=\"Courier,monospace\" font-size=\"9.00\">␣ → ␣,L</text>\n",
+       "</g>\n",
+       "<!-- 3&#45;&gt;1 -->\n",
+       "<g id=\"edge12\" class=\"edge\">\n",
+       "<title>3-&gt;1</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M399.71,-140.27C419.97,-117.34 474.76,-55.32 498.4,-28.57\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"501.91,-24.59 500.29,-29.82 500.26,-26.46 498.6,-28.33 498.6,-28.33 498.6,-28.33 500.26,-26.46 496.92,-26.84 501.91,-24.59 501.91,-24.59\"/>\n",
+       "<text text-anchor=\"start\" x=\"427.5\" y=\"-114.8\" font-family=\"Courier,monospace\" font-size=\"9.00\">␣ → ␣,R</text>\n",
+       "</g>\n",
+       "<!-- 3&#45;&gt;2 -->\n",
+       "<g id=\"edge10\" class=\"edge\">\n",
+       "<title>3-&gt;2</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M380.26,-146.69C373.96,-145.31 365.54,-143.7 358,-143 338.97,-141.23 334.02,-141.18 315,-143 304.19,-144.04 292.16,-146.4 283.04,-148.44\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"278.04,-149.6 282.41,-146.28 280.48,-149.04 282.91,-148.47 282.91,-148.47 282.91,-148.47 280.48,-149.04 283.42,-150.67 278.04,-149.6 278.04,-149.6\"/>\n",
+       "<text text-anchor=\"start\" x=\"318.5\" y=\"-148.8\" font-family=\"Courier,monospace\" font-size=\"9.00\">0 → x,R</text>\n",
+       "</g>\n",
+       "<!-- 3&#45;&gt;3 -->\n",
+       "<g id=\"edge11\" class=\"edge\">\n",
+       "<title>3-&gt;3</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M382.95,-157.69C378.51,-166.17 381.19,-175.5 391,-175.5 398.97,-175.5 402.23,-169.34 400.79,-162.48\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"399.05,-157.69 402.87,-161.61 399.9,-160.03 400.76,-162.38 400.76,-162.38 400.76,-162.38 399.9,-160.03 398.64,-163.15 399.05,-157.69 399.05,-157.69\"/>\n",
+       "<text text-anchor=\"start\" x=\"373\" y=\"-181.3\" font-family=\"Courier,monospace\" font-size=\"9.00\">x → x,R</text>\n",
+       "</g>\n",
+       "<!-- 4&#45;&gt;0 -->\n",
+       "<g id=\"edge14\" class=\"edge\">\n",
+       "<title>4-&gt;0</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M380.37,-66.37C356.32,-67.34 291.65,-70.3 238,-76 211.83,-78.78 181.52,-83.58 164.03,-86.5\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"159.03,-87.34 163.58,-84.29 161.49,-86.93 163.96,-86.51 163.96,-86.51 163.96,-86.51 161.49,-86.93 164.33,-88.73 159.03,-87.34 159.03,-87.34\"/>\n",
+       "<text text-anchor=\"start\" x=\"249.5\" y=\"-81.8\" font-family=\"Courier,monospace\" font-size=\"9.00\">␣ → ␣,R</text>\n",
+       "</g>\n",
+       "<!-- 4&#45;&gt;4 -->\n",
+       "<g id=\"edge13\" class=\"edge\">\n",
+       "<title>4-&gt;4</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M382.95,-74.69C378.51,-83.17 381.19,-92.5 391,-92.5 398.97,-92.5 402.23,-86.34 400.79,-79.48\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"399.05,-74.69 402.87,-78.61 399.9,-77.03 400.76,-79.38 400.76,-79.38 400.76,-79.38 399.9,-77.03 398.64,-80.15 399.05,-74.69 399.05,-74.69\"/>\n",
+       "<text text-anchor=\"start\" x=\"373\" y=\"-112.3\" font-family=\"Courier,monospace\" font-size=\"9.00\">0 → 0,L</text>\n",
+       "<text text-anchor=\"start\" x=\"373\" y=\"-98.3\" font-family=\"Courier,monospace\" font-size=\"9.00\">x → x,L</text>\n",
+       "</g>\n",
+       "<!-- 5&#45;&gt;0 -->\n",
+       "<g id=\"edge2\" class=\"edge\">\n",
+       "<title>5-&gt;0</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M59.25,-23.27C76.79,-36.33 113.68,-63.81 133.77,-78.77\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"137.78,-81.76 132.43,-80.58 135.78,-80.27 133.77,-78.78 133.77,-78.78 133.77,-78.78 135.78,-80.27 135.12,-76.97 137.78,-81.76 137.78,-81.76\"/>\n",
+       "<text text-anchor=\"start\" x=\"80.5\" y=\"-73.8\" font-family=\"Courier,monospace\" font-size=\"9.00\">0 → ␣,R</text>\n",
+       "</g>\n",
+       "<!-- 5&#45;&gt;1 -->\n",
+       "<g id=\"edge3\" class=\"edge\">\n",
+       "<title>5-&gt;1</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M59.15,-13.36C76.63,-8.81 114.75,0 147.5,0 147.5,0 147.5,0 392,0 422.05,0 456.03,-5.2 479.69,-9.67\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"484.88,-10.67 479.54,-11.94 482.42,-10.2 479.97,-9.73 479.97,-9.73 479.97,-9.73 482.42,-10.2 480.39,-7.52 484.88,-10.67 484.88,-10.67\"/>\n",
+       "<text text-anchor=\"start\" x=\"249.5\" y=\"-19.8\" font-family=\"Courier,monospace\" font-size=\"9.00\">x → x,R</text>\n",
+       "<text text-anchor=\"start\" x=\"249.5\" y=\"-5.8\" font-family=\"Courier,monospace\" font-size=\"9.00\">␣ → ␣,R</text>\n",
+       "</g>\n",
+       "</g>\n",
+       "</svg>"
+      ],
+      "text/plain": [
+       "<IPython.core.display.SVG object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "to_graph(m)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Sipser allows a shorthand in which there are multiple symbols to the left of the arrow. For example, the transitions from `q5` to itself could be written `0,x -> L` for \"if the current symbol is either `0` or `x`, move left\". We don't allow this; instead, use two transitions. He also allows you to write `0 -> L` for \"move left and don't write anything\". Again, we don't allow this; instead, use `0 -> 0,L`.\n",
+    "\n",
+    "## Running TMs\n",
+    "\n",
+    "This machine recognizes the language $\\{\\texttt{0}^{2^n} \\mid n \\geq 0\\}$. Here are some example runs:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<table style=\"font-family: Courier, monospace;\">\n",
+       "  <tr><td style=\"text-align: left\">q1</td><td style=\"text-align: left\">[0] 0</td></tr>\n",
+       "  <tr><td style=\"text-align: left\">q2</td><td style=\"text-align: left\">␣ [0]</td></tr>\n",
+       "  <tr><td style=\"text-align: left\">q3</td><td style=\"text-align: left\">␣ x [␣]</td></tr>\n",
+       "  <tr><td style=\"text-align: left\">q5</td><td style=\"text-align: left\">␣ [x] ␣</td></tr>\n",
+       "  <tr><td style=\"text-align: left\">q5</td><td style=\"text-align: left\">[␣] x ␣</td></tr>\n",
+       "  <tr><td style=\"text-align: left\">q2</td><td style=\"text-align: left\">␣ [x] ␣</td></tr>\n",
+       "  <tr><td style=\"text-align: left\">q2</td><td style=\"text-align: left\">␣ x [␣]</td></tr>\n",
+       "  <tr><td style=\"text-align: left\">qaccept</td><td style=\"text-align: left\">␣ x ␣ [␣]</td></tr>\n",
+       "</table>\n"
+      ],
+      "text/plain": [
+       "<tock.machines.Path at 0x10a6eb340>"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "run(m, \"0 0\").only_path()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This run ended in the accept state, so the machine accepted the string."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<table style=\"font-family: Courier, monospace;\">\n",
+       "  <tr><td style=\"text-align: left\">q1</td><td style=\"text-align: left\">[0] 0 0</td></tr>\n",
+       "  <tr><td style=\"text-align: left\">q2</td><td style=\"text-align: left\">␣ [0] 0</td></tr>\n",
+       "  <tr><td style=\"text-align: left\">q3</td><td style=\"text-align: left\">␣ x [0]</td></tr>\n",
+       "  <tr><td style=\"text-align: left\">q4</td><td style=\"text-align: left\">␣ x 0 [␣]</td></tr>\n",
+       "  <tr><td style=\"text-align: left\">qreject</td><td style=\"text-align: left\">␣ x 0 ␣ [␣]</td></tr>\n",
+       "</table>\n"
+      ],
+      "text/plain": [
+       "<tock.machines.Path at 0x10a6eb9d0>"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "run(m, \"0 0 0\").only_path()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This run ended in the reject state, so the machine rejected the string."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "It's possible, of course, for a run of a Turing machine to go on forever, so the `run` function will give up after a certain number of steps. You can control that limit using the `steps` option:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/svg+xml": [
+       "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"1036pt\" height=\"25pt\" viewBox=\"0.00 0.00 1036.00 25.00\">\n",
+       "<g id=\"graph0\" class=\"graph\" transform=\"scale(1 1) rotate(0) translate(4 21)\">\n",
+       "<title>%3</title>\n",
+       "<polygon fill=\"white\" stroke=\"transparent\" points=\"-4,4 -4,-21 1032,-21 1032,4 -4,4\"/>\n",
+       "<!-- _START -->\n",
+       "<g id=\"node1\" class=\"node\">\n",
+       "<title>_START</title>\n",
+       "</g>\n",
+       "<!-- 0 -->\n",
+       "<g id=\"node2\" class=\"node\">\n",
+       "<title>0</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M160.33,-17C160.33,-17 42.67,-17 42.67,-17 39.83,-17 37,-14.17 37,-11.33 37,-11.33 37,-5.67 37,-5.67 37,-2.83 39.83,0 42.67,0 42.67,0 160.33,0 160.33,0 163.17,0 166,-2.83 166,-5.67 166,-5.67 166,-11.33 166,-11.33 166,-14.17 163.17,-17 160.33,-17\"/>\n",
+       "<text text-anchor=\"start\" x=\"41\" y=\"-6\" font-family=\"Courier,monospace\" font-size=\"10.00\">q1,[0] 0 0 0 0 0 0 0</text>\n",
+       "</g>\n",
+       "<!-- _START&#45;&gt;0 -->\n",
+       "<g id=\"edge1\" class=\"edge\">\n",
+       "<title>_START-&gt;0</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M1.07,-8.5C2.15,-8.5 15.3,-8.5 31.69,-8.5\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"36.87,-8.5 31.87,-10.75 34.37,-8.5 31.87,-8.5 31.87,-8.5 31.87,-8.5 34.37,-8.5 31.87,-6.25 36.87,-8.5 36.87,-8.5\"/>\n",
+       "</g>\n",
+       "<!-- 2 -->\n",
+       "<g id=\"node4\" class=\"node\">\n",
+       "<title>2</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M325.33,-17C325.33,-17 207.67,-17 207.67,-17 204.83,-17 202,-14.17 202,-11.33 202,-11.33 202,-5.67 202,-5.67 202,-2.83 204.83,0 207.67,0 207.67,0 325.33,0 325.33,0 328.17,0 331,-2.83 331,-5.67 331,-5.67 331,-11.33 331,-11.33 331,-14.17 328.17,-17 325.33,-17\"/>\n",
+       "<text text-anchor=\"start\" x=\"206\" y=\"-6\" font-family=\"Courier,monospace\" font-size=\"10.00\">q2,␣ [0] 0 0 0 0 0 0</text>\n",
+       "</g>\n",
+       "<!-- 0&#45;&gt;2 -->\n",
+       "<g id=\"edge3\" class=\"edge\">\n",
+       "<title>0-&gt;2</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M166.45,-8.5C176.4,-8.5 186.72,-8.5 196.77,-8.5\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"202,-8.5 197,-10.75 199.5,-8.5 197,-8.5 197,-8.5 197,-8.5 199.5,-8.5 197,-6.25 202,-8.5 202,-8.5\"/>\n",
+       "</g>\n",
+       "<!-- 1 -->\n",
+       "<g id=\"node3\" class=\"node\">\n",
+       "<title>1</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M655.33,-17C655.33,-17 537.67,-17 537.67,-17 534.83,-17 532,-14.17 532,-11.33 532,-11.33 532,-5.67 532,-5.67 532,-2.83 534.83,0 537.67,0 537.67,0 655.33,0 655.33,0 658.17,0 661,-2.83 661,-5.67 661,-5.67 661,-11.33 661,-11.33 661,-14.17 658.17,-17 655.33,-17\"/>\n",
+       "<text text-anchor=\"start\" x=\"536\" y=\"-6\" font-family=\"Courier,monospace\" font-size=\"10.00\">q4,␣ x 0 [0] 0 0 0 0</text>\n",
+       "</g>\n",
+       "<!-- 4 -->\n",
+       "<g id=\"node6\" class=\"node\">\n",
+       "<title>4</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M820.33,-17C820.33,-17 702.67,-17 702.67,-17 699.83,-17 697,-14.17 697,-11.33 697,-11.33 697,-5.67 697,-5.67 697,-2.83 699.83,0 702.67,0 702.67,0 820.33,0 820.33,0 823.17,0 826,-2.83 826,-5.67 826,-5.67 826,-11.33 826,-11.33 826,-14.17 823.17,-17 820.33,-17\"/>\n",
+       "<text text-anchor=\"start\" x=\"701\" y=\"-6\" font-family=\"Courier,monospace\" font-size=\"10.00\">q3,␣ x 0 x [0] 0 0 0</text>\n",
+       "</g>\n",
+       "<!-- 1&#45;&gt;4 -->\n",
+       "<g id=\"edge6\" class=\"edge\">\n",
+       "<title>1-&gt;4</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M661.45,-8.5C671.4,-8.5 681.72,-8.5 691.77,-8.5\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"697,-8.5 692,-10.75 694.5,-8.5 692,-8.5 692,-8.5 692,-8.5 694.5,-8.5 692,-6.25 697,-8.5 697,-8.5\"/>\n",
+       "</g>\n",
+       "<!-- 3 -->\n",
+       "<g id=\"node5\" class=\"node\">\n",
+       "<title>3</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M490.33,-17C490.33,-17 372.67,-17 372.67,-17 369.83,-17 367,-14.17 367,-11.33 367,-11.33 367,-5.67 367,-5.67 367,-2.83 369.83,0 372.67,0 372.67,0 490.33,0 490.33,0 493.17,0 496,-2.83 496,-5.67 496,-5.67 496,-11.33 496,-11.33 496,-14.17 493.17,-17 490.33,-17\"/>\n",
+       "<text text-anchor=\"start\" x=\"371\" y=\"-6\" font-family=\"Courier,monospace\" font-size=\"10.00\">q3,␣ x [0] 0 0 0 0 0</text>\n",
+       "</g>\n",
+       "<!-- 2&#45;&gt;3 -->\n",
+       "<g id=\"edge4\" class=\"edge\">\n",
+       "<title>2-&gt;3</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M331.45,-8.5C341.4,-8.5 351.72,-8.5 361.77,-8.5\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"367,-8.5 362,-10.75 364.5,-8.5 362,-8.5 362,-8.5 362,-8.5 364.5,-8.5 362,-6.25 367,-8.5 367,-8.5\"/>\n",
+       "</g>\n",
+       "<!-- 3&#45;&gt;1 -->\n",
+       "<g id=\"edge5\" class=\"edge\">\n",
+       "<title>3-&gt;1</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M496.45,-8.5C506.4,-8.5 516.72,-8.5 526.77,-8.5\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"532,-8.5 527,-10.75 529.5,-8.5 527,-8.5 527,-8.5 527,-8.5 529.5,-8.5 527,-6.25 532,-8.5 532,-8.5\"/>\n",
+       "</g>\n",
+       "<!-- 5 -->\n",
+       "<g id=\"node7\" class=\"node\">\n",
+       "<title>5</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M985.33,-17C985.33,-17 867.67,-17 867.67,-17 864.83,-17 862,-14.17 862,-11.33 862,-11.33 862,-5.67 862,-5.67 862,-2.83 864.83,0 867.67,0 867.67,0 985.33,0 985.33,0 988.17,0 991,-2.83 991,-5.67 991,-5.67 991,-11.33 991,-11.33 991,-14.17 988.17,-17 985.33,-17\"/>\n",
+       "<text text-anchor=\"start\" x=\"866\" y=\"-6\" font-family=\"Courier,monospace\" font-size=\"10.00\">q4,␣ x 0 x 0 [0] 0 0</text>\n",
+       "</g>\n",
+       "<!-- 4&#45;&gt;5 -->\n",
+       "<g id=\"edge7\" class=\"edge\">\n",
+       "<title>4-&gt;5</title>\n",
+       "<path fill=\"none\" stroke=\"black\" d=\"M826.45,-8.5C836.4,-8.5 846.72,-8.5 856.77,-8.5\"/>\n",
+       "<polygon fill=\"black\" stroke=\"black\" points=\"862,-8.5 857,-10.75 859.5,-8.5 857,-8.5 857,-8.5 857,-8.5 859.5,-8.5 857,-6.25 862,-8.5 862,-8.5\"/>\n",
+       "</g>\n",
+       "<!-- _DOTS_5 -->\n",
+       "<g id=\"node8\" class=\"node\">\n",
+       "<title>_DOTS_5</title>\n",
+       "</g>\n",
+       "<!-- 5&#45;&gt;_DOTS_5 -->\n",
+       "<g id=\"edge2\" class=\"edge\">\n",
+       "<title>5-&gt;_DOTS_5</title>\n",
+       "<path fill=\"none\" stroke=\"black\" stroke-dasharray=\"1,5\" d=\"M991.08,-8.5C1009.97,-8.5 1025.97,-8.5 1026.95,-8.5\"/>\n",
+       "</g>\n",
+       "</g>\n",
+       "</svg>"
+      ],
+      "text/plain": [
+       "<IPython.core.display.SVG object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "run(m, \"0 0 0 0 0 0 0 0\", steps=5)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The dotted edge indicates that the run continues but is not shown. In this case, you don't know whether the machine would eventually accept the string."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.1"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 1
+}

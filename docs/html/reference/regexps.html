@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>tock.regexps &#8212; tock  documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tock.grammars" href="grammars.html" />
+    <link rel="prev" title="tock.run" href="run.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="grammars.html" title="tock.grammars"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="run.html" title="tock.run"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">tock  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-tock.regexps">
+<span id="tock-regexps"></span><h1>tock.regexps<a class="headerlink" href="#module-tock.regexps" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="tock.regexps.from_regexp">
+<code class="sig-prename descclassname">tock.regexps.</code><code class="sig-name descname">from_regexp</code><span class="sig-paren">(</span><em class="sig-param">e</em>, <em class="sig-param">display_steps=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.from_regexp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a regular expression to a NFA.</p>
+<p>display_steps: if True and if run inside a Jupyter notebook,
+displays all steps of the conversion.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.regexps.to_regexp">
+<code class="sig-prename descclassname">tock.regexps.</code><code class="sig-name descname">to_regexp</code><span class="sig-paren">(</span><em class="sig-param">m</em>, <em class="sig-param">display_steps=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.to_regexp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a finite automaton to a regular expression.</p>
+<p>display_steps: if True and if run inside a Jupyter notebook,
+displays all steps of the conversion.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="tock.regexps.RegularExpression">
+<em class="property">class </em><code class="sig-prename descclassname">tock.regexps.</code><code class="sig-name descname">RegularExpression</code><span class="sig-paren">(</span><em class="sig-param">op</em>, <em class="sig-param">args</em>, <em class="sig-param">start=None</em>, <em class="sig-param">end=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.RegularExpression" title="Permalink to this definition">¶</a></dt>
+<dd><p>A (abstract syntax tree of a) regular expression.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="run.html"
+                        title="previous chapter">tock.run</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="grammars.html"
+                        title="next chapter">tock.grammars</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/regexps.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="grammars.html" title="tock.grammars"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="run.html" title="tock.run"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">tock  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, David Chiang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
+    </div>
+  </body>
+</html>

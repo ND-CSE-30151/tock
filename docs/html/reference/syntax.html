@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>tock.syntax &#8212; tock  documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Internal representation of machines" href="internals.html" />
+    <link rel="prev" title="tock.tables" href="tables.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="internals.html" title="Internal representation of machines"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tables.html" title="tock.tables"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">tock  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-tock.syntax">
+<span id="tock-syntax"></span><h1>tock.syntax<a class="headerlink" href="#module-tock.syntax" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="tock.syntax.Operator">
+<em class="property">class </em><code class="sig-prename descclassname">tock.syntax.</code><code class="sig-name descname">Operator</code><a class="headerlink" href="#tock.syntax.Operator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="tock.syntax.Symbol">
+<em class="property">class </em><code class="sig-prename descclassname">tock.syntax.</code><code class="sig-name descname">Symbol</code><a class="headerlink" href="#tock.syntax.Symbol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tock.syntax.parse_multiple">
+<code class="sig-prename descclassname">tock.syntax.</code><code class="sig-name descname">parse_multiple</code><span class="sig-paren">(</span><em class="sig-param">s</em>, <em class="sig-param">f</em>, <em class="sig-param">values=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.syntax.parse_multiple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse one or more comma-separated elements, each of which is parsed
+using function f.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.syntax.string_to_config">
+<code class="sig-prename descclassname">tock.syntax.</code><code class="sig-name descname">string_to_config</code><span class="sig-paren">(</span><em class="sig-param">s</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.syntax.string_to_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>s is a comma-separated list of stores.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.syntax.string_to_configs">
+<code class="sig-prename descclassname">tock.syntax.</code><code class="sig-name descname">string_to_configs</code><span class="sig-paren">(</span><em class="sig-param">s</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.syntax.string_to_configs" title="Permalink to this definition">¶</a></dt>
+<dd><p>s is a string in one of the following formats:
+- x,y
+- (x,y)
+- {x,y}
+- {(w,x),(y,z)}
+In any case, returns a set of tuples of stores.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.syntax.string_to_state">
+<code class="sig-prename descclassname">tock.syntax.</code><code class="sig-name descname">string_to_state</code><span class="sig-paren">(</span><em class="sig-param">s</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.syntax.string_to_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>s is a string possibly preceded by &gt; or &#64;.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.syntax.string_to_transition">
+<code class="sig-prename descclassname">tock.syntax.</code><code class="sig-name descname">string_to_transition</code><span class="sig-paren">(</span><em class="sig-param">s</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.syntax.string_to_transition" title="Permalink to this definition">¶</a></dt>
+<dd><p>s is a string of the form a,b or a,b-&gt;c,d</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tables.html"
+                        title="previous chapter">tock.tables</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="internals.html"
+                        title="next chapter">Internal representation of machines</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/reference/syntax.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="internals.html" title="Internal representation of machines"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tables.html" title="tock.tables"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">tock  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, David Chiang.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
+    </div>
+  </body>
+</html>

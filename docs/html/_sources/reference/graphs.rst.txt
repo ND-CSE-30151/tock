@@ -1,6 +1,0 @@
-tock.graphs
-===========
-
-.. automodule:: tock.graphs
-   :members:
-

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="172pt" height="143pt" viewBox="0.00 0.00 172.00 142.50">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 138.5)">
+<title>%3</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-138.5 168,-138.5 168,4 -4,4"/>
+<!-- _START -->
+<g id="node1" class="node">
+<title>_START</title>
+</g>
+<!-- 2 -->
+<g id="node4" class="node">
+<title>2</title>
+<path fill="none" stroke="black" d="M62.33,-88C62.33,-88 52.67,-88 52.67,-88 49.83,-88 47,-85.17 47,-82.33 47,-82.33 47,-76.67 47,-76.67 47,-73.83 49.83,-71 52.67,-71 52.67,-71 62.33,-71 62.33,-71 65.17,-71 68,-73.83 68,-76.67 68,-76.67 68,-82.33 68,-82.33 68,-85.17 65.17,-88 62.33,-88"/>
+<text text-anchor="start" x="51" y="-77" font-family="Courier,monospace" font-size="10.00">q1</text>
+</g>
+<!-- _START&#45;&gt;2 -->
+<g id="edge1" class="edge">
+<title>_START-&gt;2</title>
+<path fill="none" stroke="black" d="M1.16,-79.5C3.27,-79.5 25.82,-79.5 41.47,-79.5"/>
+<polygon fill="black" stroke="black" points="46.88,-79.5 41.88,-81.75 44.38,-79.5 41.88,-79.5 41.88,-79.5 41.88,-79.5 44.38,-79.5 41.88,-77.25 46.88,-79.5 46.88,-79.5"/>
+</g>
+<!-- 0 -->
+<g id="node2" class="node">
+<title>0</title>
+<path fill="none" stroke="black" d="M62.33,-17C62.33,-17 52.67,-17 52.67,-17 49.83,-17 47,-14.17 47,-11.33 47,-11.33 47,-5.67 47,-5.67 47,-2.83 49.83,0 52.67,0 52.67,0 62.33,0 62.33,0 65.17,0 68,-2.83 68,-5.67 68,-5.67 68,-11.33 68,-11.33 68,-14.17 65.17,-17 62.33,-17"/>
+<text text-anchor="start" x="51" y="-6" font-family="Courier,monospace" font-size="10.00">q3</text>
+</g>
+<!-- 0&#45;&gt;0 -->
+<g id="edge4" class="edge">
+<title>0-&gt;0</title>
+<path fill="none" stroke="black" d="M51.84,-17.19C48.71,-25.67 50.6,-35 57.5,-35 63,-35 65.32,-29.08 64.45,-22.38"/>
+<polygon fill="black" stroke="black" points="63.16,-17.19 66.55,-21.5 63.76,-19.61 64.36,-22.04 64.36,-22.04 64.36,-22.04 63.76,-19.61 62.18,-22.58 63.16,-17.19 63.16,-17.19"/>
+</g>
+<!-- 1 -->
+<g id="node3" class="node">
+<title>1</title>
+<path fill="none" stroke="black" d="M149.33,-88C149.33,-88 139.67,-88 139.67,-88 136.83,-88 134,-85.17 134,-82.33 134,-82.33 134,-76.67 134,-76.67 134,-73.83 136.83,-71 139.67,-71 139.67,-71 149.33,-71 149.33,-71 152.17,-71 155,-73.83 155,-76.67 155,-76.67 155,-82.33 155,-82.33 155,-85.17 152.17,-88 149.33,-88"/>
+<path fill="none" stroke="black" d="M150.67,-92C150.67,-92 138.33,-92 138.33,-92 134.17,-92 130,-87.83 130,-83.67 130,-83.67 130,-75.33 130,-75.33 130,-71.17 134.17,-67 138.33,-67 138.33,-67 150.67,-67 150.67,-67 154.83,-67 159,-71.17 159,-75.33 159,-75.33 159,-83.67 159,-83.67 159,-87.83 154.83,-92 150.67,-92"/>
+<text text-anchor="start" x="138" y="-77" font-family="Courier,monospace" font-size="10.00">q2</text>
+</g>
+<!-- 2&#45;&gt;0 -->
+<g id="edge2" class="edge">
+<title>2-&gt;0</title>
+<path fill="none" stroke="black" d="M57.5,-70.72C57.5,-54.52 57.5,-38.33 57.5,-22.13"/>
+<polygon fill="black" stroke="black" points="57.5,-17.1 59.75,-22.1 57.5,-19.6 57.5,-22.1 57.5,-22.1 57.5,-22.1 57.5,-19.6 55.25,-22.1 57.5,-17.1 57.5,-17.1"/>
+</g>
+<!-- 2&#45;&gt;1 -->
+<g id="edge3" class="edge">
+<title>2-&gt;1</title>
+<path fill="none" stroke="black" d="M68.25,-79.5C82,-79.5 107.36,-79.5 124.81,-79.5"/>
+<polygon fill="black" stroke="black" points="129.96,-79.5 124.96,-81.75 127.46,-79.5 124.96,-79.5 124.96,-79.5 124.96,-79.5 127.46,-79.5 124.96,-77.25 129.96,-79.5 129.96,-79.5"/>
+</g>
+<!-- 3 -->
+<g id="node5" class="node">
+<title>3</title>
+</g>
+<!-- 4 -->
+<g id="node6" class="node">
+<title>4</title>
+</g>
+<!-- 3&#45;&gt;4 -->
+<g id="edge5" class="edge">
+<title>3-&gt;4</title>
+<path fill="none" stroke="white" d="M77.36,-118.5C89.89,-118.5 106.42,-118.5 119.83,-118.5"/>
+<polygon fill="white" stroke="white" points="124.98,-118.5 119.98,-120.75 122.48,-118.5 119.98,-118.5 119.98,-118.5 119.98,-118.5 122.48,-118.5 119.98,-116.25 124.98,-118.5 124.98,-118.5"/>
+<text text-anchor="start" x="98" y="-124.3" font-family="Courier,monospace" font-size="9.00">0</text>
+</g>
+</g>
+</svg>

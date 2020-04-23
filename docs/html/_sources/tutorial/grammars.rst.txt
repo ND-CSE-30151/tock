@@ -1,5 +1,0 @@
-tock.grammars
-=============
-
-.. automodule:: tock.grammars
-   :members:

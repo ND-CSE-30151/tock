@@ -31,6 +31,7 @@ class Grammar:
         for line in lines:
             tokens = syntax.lexer(line)
             lhs = syntax.parse_symbol(tokens)
+            g.nonterminals.add(lhs)
             if first:
                 g.set_start(lhs)
                 first = False

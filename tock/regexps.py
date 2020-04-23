@@ -2,7 +2,7 @@ from . import machines
 from . import syntax
 from . import graphs
 
-__all__ = ['from_regexp', 'to_regexp', 'string_to_regexp']
+__all__ = ['from_regexp', 'to_regexp', 'RegularExpression']
 
 ### Regular expression objects
 
@@ -56,6 +56,10 @@ class RegularExpression:
                 return arg._repr_html_()
             else:
                 return str(arg)
+
+    @classmethod
+    def from_str(cls, s):
+        return string_to_regexp(s)
 
     def _repr_html_(self):
         return self.__str__(format='html')

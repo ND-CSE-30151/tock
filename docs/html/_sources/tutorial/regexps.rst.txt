@@ -1,6 +1,0 @@
-tock.regexps
-============
-
-.. automodule:: tock.regexps
-   :members:
-

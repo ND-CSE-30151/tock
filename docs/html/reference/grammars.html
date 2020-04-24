@@ -4,10 +4,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>tock.grammars &#8212; tock  documentation</title>
-    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <title>Regular expressions and grammars &#8212; tock  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
@@ -16,39 +15,96 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
-    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="tock.graphs" href="graphs.html" />
-    <link rel="prev" title="tock.regexps" href="regexps.html" /> 
+    <link rel="next" title="Reading and writing" href="readwrite.html" />
+    <link rel="prev" title="Machines" href="machines.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="graphs.html" title="tock.graphs"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="regexps.html" title="tock.regexps"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">tock  documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference</a> &#187;</li> 
-      </ul>
-    </div>  
+  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
-  <div class="section" id="module-tock.grammars">
-<span id="tock-grammars"></span><h1>tock.grammars<a class="headerlink" href="#module-tock.grammars" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="regular-expressions-and-grammars">
+<h1>Regular expressions and grammars<a class="headerlink" href="#regular-expressions-and-grammars" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-tock.regexps">
+<span id="module-tock-regexps"></span><h2>Module tock.regexps<a class="headerlink" href="#module-tock.regexps" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="tock.regexps.from_regexp">
+<code class="sig-prename descclassname">tock.regexps.</code><code class="sig-name descname">from_regexp</code><span class="sig-paren">(</span><em class="sig-param">e</em>, <em class="sig-param">display_steps=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.from_regexp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a regular expression to a NFA.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>e</strong> (<a class="reference internal" href="#tock.regexps.RegularExpression" title="tock.regexps.RegularExpression"><em>RegularExpression</em></a><em> or </em><em>str</em>) – the regular expression to convert.</p></li>
+<li><p><strong>display_steps</strong> (<em>bool</em>) – if True and if run inside a Jupyter notebook,
+displays all steps of the conversion.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.regexps.to_regexp">
+<code class="sig-prename descclassname">tock.regexps.</code><code class="sig-name descname">to_regexp</code><span class="sig-paren">(</span><em class="sig-param">m</em>, <em class="sig-param">display_steps=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.to_regexp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a finite automaton to a regular expression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>m</strong> (<a class="reference internal" href="machines.html#tock.machines.Machine" title="tock.machines.Machine"><em>Machine</em></a>) – the automaton to convert, which must be a finite automaton.</p></li>
+<li><p><strong>display_steps</strong> (<em>bool</em>) – if True and if run inside a Jupyter notebook,
+displays all steps of the conversion.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="tock.regexps.RegularExpression">
+<em class="property">class </em><code class="sig-prename descclassname">tock.regexps.</code><code class="sig-name descname">RegularExpression</code><span class="sig-paren">(</span><em class="sig-param">op</em>, <em class="sig-param">args</em>, <em class="sig-param">start=None</em>, <em class="sig-param">end=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.RegularExpression" title="Permalink to this definition">¶</a></dt>
+<dd><p>A (abstract syntax tree of a) regular expression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>op</strong> (<em>str</em>) – Possible values are: ‘union’, ‘concatenation’, ‘star’, ‘symbol’.</p></li>
+<li><p><strong>args</strong> – tuple of <cite>RegularExpression</cite> or <cite>Symbol</cite> objects.</p></li>
+</ul>
+</dd>
+</dl>
+<p>The empty string is represented as RegularExpression(‘concatenation’, ()).</p>
+<p>The empty set is represented as RegularExpression(‘union’, ()).</p>
+<dl class="method">
+<dt id="tock.regexps.RegularExpression.from_str">
+<em class="property">classmethod </em><code class="sig-name descname">from_str</code><span class="sig-paren">(</span><em class="sig-param">s</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.RegularExpression.from_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a <cite>RegularExpression</cite> from a <cite>str</cite>.</p>
+<p>Regular expressions allow the following operations (precedence
+from lowest to highest):</p>
+<ul class="simple">
+<li><p>Symbols</p></li>
+<li><p>Empty string (<code class="docutils literal notranslate"><span class="pre">&amp;</span></code>)</p></li>
+<li><p>Union (<code class="docutils literal notranslate"><span class="pre">|</span></code>)</p></li>
+<li><p>Concatenation: Two concatenated symbols must be separated by
+a space. For example, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">b</span></code> is <code class="docutils literal notranslate"><span class="pre">a</span></code> concatenated with
+<code class="docutils literal notranslate"><span class="pre">b</span></code>, but <code class="docutils literal notranslate"><span class="pre">ab</span></code> is a single symbol.</p></li>
+<li><p>Kleene star (<code class="docutils literal notranslate"><span class="pre">*</span></code>)</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-tock.grammars">
+<span id="module-tock-grammars"></span><h2>Module tock.grammars<a class="headerlink" href="#module-tock.grammars" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="tock.grammars.Grammar">
 <em class="property">class </em><code class="sig-prename descclassname">tock.grammars.</code><code class="sig-name descname">Grammar</code><a class="headerlink" href="#tock.grammars.Grammar" title="Permalink to this definition">¶</a></dt>
@@ -69,13 +125,44 @@ where <cite>lhs</cite> and <cite>rhs</cite> are both Strings.</p>
 <dl class="method">
 <dt id="tock.grammars.Grammar.from_file">
 <em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.from_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read a grammar from a file. The file should contain one rule per line,
-for example:</p>
-<blockquote>
-<div><p>S -&gt; a S b
-S -&gt; &amp;</p>
-</div></blockquote>
-<p>The left-hand side of the first rule is the start symbol.</p>
+<dd><p>Read a grammar from a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>str</em>) – name of file to read from</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a CFG</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tock.grammars.Grammar" title="tock.grammars.Grammar">Grammar</a></p>
+</dd>
+</dl>
+<p>The file should contain one rule per line, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">S</span> <span class="o">-&gt;</span> <span class="n">a</span> <span class="n">S</span> <span class="n">b</span>
+<span class="n">S</span> <span class="o">-&gt;</span> <span class="o">&amp;</span>
+</pre></div>
+</div>
+<p>Currently the grammar must be a context-free grammar. The
+nonterminal symbols are exactly those that appear on a
+left-hand side.  The left-hand side of the first rule is the
+start symbol.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tock.grammars.Grammar.from_lines">
+<em class="property">classmethod </em><code class="sig-name descname">from_lines</code><span class="sig-paren">(</span><em class="sig-param">lines</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.from_lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a grammar from a list of strings (see <cite>from_file</cite>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>lines</strong> – a list of strings</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a CFG</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tock.grammars.Grammar" title="tock.grammars.Grammar">Grammar</a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -102,40 +189,88 @@ it is added to the nonterminal alphabet.</p>
 <dl class="function">
 <dt id="tock.grammars.from_grammar">
 <code class="sig-prename descclassname">tock.grammars.</code><code class="sig-name descname">from_grammar</code><span class="sig-paren">(</span><em class="sig-param">g</em>, <em class="sig-param">mode='topdown'</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.from_grammar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert Grammar <cite>g</cite> to a Machine.</p>
-<p><cite>mode</cite> selects which algorithm to use. Possible values are:
-- <cite>“topdown”</cite>: Top-down, as in Sipser (3e) Lemma 2.21.
-- <cite>“bottomup”</cite>: Bottom-up.</p>
+<dd><p>Convert a CFG to a PDA.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>g</strong> (<a class="reference internal" href="#tock.grammars.Grammar" title="tock.grammars.Grammar"><em>Grammar</em></a>) – the grammar to convert, which must be a CFG.</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – <p>selects which algorithm to use. Possible values are:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;topdown&quot;</span></code>: Top-down, as in Sipser (3e) Lemma 2.21.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;bottomup&quot;</span></code>: Bottom-up.</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a PDA equivalent to <cite>g</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="machines.html#tock.machines.Machine" title="tock.machines.Machine">Machine</a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="tock.grammars.to_grammar">
 <code class="sig-prename descclassname">tock.grammars.</code><code class="sig-name descname">to_grammar</code><span class="sig-paren">(</span><em class="sig-param">m</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.to_grammar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert a Machine <cite>m</cite>, which must be a PDA, to a Grammar, using the
-construction of Sipser (3e) Lemma 2.27.</p>
+<dd><p>Convert a PDA to a CFG, using the construction of Sipser (3e) Lemma 2.27.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>m</strong> (<a class="reference internal" href="machines.html#tock.machines.Machine" title="tock.machines.Machine"><em>Machine</em></a>) – automaton to convert, which must be a PDA.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A CFG equivalent to <cite>m</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tock.grammars.Grammar" title="tock.grammars.Grammar">Grammar</a></p>
+</dd>
+</dl>
 </dd></dl>
 
+</div>
 </div>
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="regexps.html"
-                        title="previous chapter">tock.regexps</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="graphs.html"
-                        title="next chapter">tock.graphs</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="../_sources/reference/grammars.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
+<h1 class="logo"><a href="../index.html">tock</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="machines.html">Machines</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Regular expressions and grammars</a></li>
+<li class="toctree-l2"><a class="reference internal" href="readwrite.html">Reading and writing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internals.html">Internal representation of machines</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Reference</a><ul>
+      <li>Previous: <a href="machines.html" title="previous chapter">Machines</a></li>
+      <li>Next: <a href="readwrite.html" title="next chapter">Reading and writing</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
@@ -146,32 +281,32 @@ construction of Sipser (3e) Lemma 2.27.</p>
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="graphs.html" title="tock.graphs"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="regexps.html" title="tock.regexps"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">tock  documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="index.html" >Reference</a> &#187;</li> 
-      </ul>
+    <div class="footer">
+      &copy;2020, David Chiang.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/reference/grammars.rst.txt"
+          rel="nofollow">Page source</a>
     </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, David Chiang.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
-    </div>
+
+    
+
+    
   </body>
 </html>

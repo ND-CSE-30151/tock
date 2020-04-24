@@ -1,0 +1,333 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Reading and writing &#8212; tock  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Internal representation of machines" href="internals.html" />
+    <link rel="prev" title="Regular expressions and grammars" href="grammars.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="reading-and-writing">
+<h1>Reading and writing<a class="headerlink" href="#reading-and-writing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-tock.tables">
+<span id="module-tock-tables"></span><h2>Module tock.tables<a class="headerlink" href="#module-tock.tables" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="tock.tables.Table">
+<em class="property">class </em><code class="sig-prename descclassname">tock.tables.</code><code class="sig-name descname">Table</code><span class="sig-paren">(</span><em class="sig-param">rows</em>, <em class="sig-param">num_header_cols=1</em>, <em class="sig-param">num_header_rows=1</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.tables.Table" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple class that just stores a list of lists of strings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rows</strong> – list of lists of strings</p></li>
+<li><p><strong>num_header_rows</strong> (<em>int</em>) – number of header rows</p></li>
+<li><p><strong>num_header_cols</strong> (<em>int</em>) – number of header columns</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="tock.tables.Table.num_header_cols">
+<code class="sig-name descname">num_header_cols</code><em class="property"> = None</em><a class="headerlink" href="#tock.tables.Table.num_header_cols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of header rows</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tock.tables.Table.num_header_rows">
+<code class="sig-name descname">num_header_rows</code><em class="property"> = None</em><a class="headerlink" href="#tock.tables.Table.num_header_rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of header columns</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tock.tables.Table.rows">
+<code class="sig-name descname">rows</code><em class="property"> = None</em><a class="headerlink" href="#tock.tables.Table.rows" title="Permalink to this definition">¶</a></dt>
+<dd><p>The table contents</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.tables.from_table">
+<code class="sig-prename descclassname">tock.tables.</code><code class="sig-name descname">from_table</code><span class="sig-paren">(</span><em class="sig-param">table</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.tables.from_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a <cite>Table</cite> to a <cite>Machine</cite>.</p>
+<p class="rubric">Example</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>0</p></th>
+<th class="head"></th>
+<th class="head"><p>1</p></th>
+<th class="head"></th>
+<th class="head"><p>&amp;</p></th>
+<th class="head"></th>
+</tr>
+<tr class="row-even"><th class="head"></th>
+<th class="head"><p>0</p></th>
+<th class="head"><p>&amp;</p></th>
+<th class="head"><p>1</p></th>
+<th class="head"><p>&amp;</p></th>
+<th class="head"><p>$</p></th>
+<th class="head"><p>&amp;</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-odd"><td><p>&gt;&#64;q1</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>q2,$</p></td>
+</tr>
+<tr class="row-even"><td><p>q2</p></td>
+<td></td>
+<td><p>q2,0</p></td>
+<td></td>
+<td><p>q2,1</p></td>
+<td></td>
+<td><p>q3,&amp;</p></td>
+</tr>
+<tr class="row-odd"><td><p>q3</p></td>
+<td><p>q3,&amp;</p></td>
+<td></td>
+<td><p>q3,&amp;</p></td>
+<td></td>
+<td><p>q4,&amp;</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>&#64;q4</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The first two rows, because they have empty first cells, are
+assumed to be header rows.</p>
+<p>In a header row, cells “fill” to the right. In the above example,
+the first row effectively has cells 0, 0, 1, 1, &amp;, &amp;.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.tables.read_csv">
+<code class="sig-prename descclassname">tock.tables.</code><code class="sig-name descname">read_csv</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.tables.read_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a CSV file containing a tabular description of a transition
+function (see <cite>from_table</cite>).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.tables.read_excel">
+<code class="sig-prename descclassname">tock.tables.</code><code class="sig-name descname">read_excel</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">sheet=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.tables.read_excel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads an Excel file containing a tabular description of a
+transition function (see <cite>from_table</cite>).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.tables.to_table">
+<code class="sig-prename descclassname">tock.tables.</code><code class="sig-name descname">to_table</code><span class="sig-paren">(</span><em class="sig-param">m</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.tables.to_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a <cite>Machine</cite> to a <cite>Table</cite>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tock.graphs">
+<span id="module-tock-graphs"></span><h2>Module tock.graphs<a class="headerlink" href="#module-tock.graphs" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="tock.graphs.Graph">
+<em class="property">class </em><code class="sig-prename descclassname">tock.graphs.</code><code class="sig-name descname">Graph</code><span class="sig-paren">(</span><em class="sig-param">attrs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.graphs.Graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>A directed graph. Both nodes and edges can have a <cite>dict</cite> of attributes.</p>
+<p>Nodes can be any object that implements <cite>__hash__</cite> and <cite>__eq__</cite>.</p>
+<p>If <cite>g</cite> is a <cite>Graph</cite> and <cite>v</cite> is a node, <cite>v</cite>’s attributes can be
+accessed as <cite>g.nodes[v]</cite>. If <cite>u</cite> and <cite>v</cite> are nodes, edge (<cite>u</cite>,
+<cite>v</cite>)’s attributes can be accessed as <cite>g.edges[u][v]</cite>.</p>
+<dl class="method">
+<dt id="tock.graphs.Graph.add_edge">
+<code class="sig-name descname">add_edge</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em>, <em class="sig-param">attrs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.graphs.Graph.add_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add edge from <cite>u</cite> to <cite>v</cite> to graph with attributes <cite>attrs</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tock.graphs.Graph.add_node">
+<code class="sig-name descname">add_node</code><span class="sig-paren">(</span><em class="sig-param">v</em>, <em class="sig-param">attrs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.graphs.Graph.add_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add node <cite>v</cite> to graph with attributes <cite>attrs</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tock.graphs.Graph.has_edge">
+<code class="sig-name descname">has_edge</code><span class="sig-paren">(</span><em class="sig-param">u</em>, <em class="sig-param">v</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.graphs.Graph.has_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove edge from <cite>u</cite> to <cite>v</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tock.graphs.Graph.has_path">
+<code class="sig-name descname">has_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.graphs.Graph.has_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <cite>True</cite> iff there is a path from the start node to an accept node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tock.graphs.Graph.only_path">
+<code class="sig-name descname">only_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.graphs.Graph.only_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the only path from the start node. If there is more than one,
+raises ValueError.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tock.graphs.Graph.remove_node">
+<code class="sig-name descname">remove_node</code><span class="sig-paren">(</span><em class="sig-param">v</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.graphs.Graph.remove_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove node <cite>v</cite>, as well as any edges incident to <cite>v</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tock.graphs.Graph.shortest_path">
+<code class="sig-name descname">shortest_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.graphs.Graph.shortest_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the shortest path from the start node to an accept node. If
+there is more than one, chooses one arbitrarily.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.graphs.from_graph">
+<code class="sig-prename descclassname">tock.graphs.</code><code class="sig-name descname">from_graph</code><span class="sig-paren">(</span><em class="sig-param">g</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.graphs.from_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a <cite>Graph</cite> to a <cite>Machine</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.graphs.write_dot">
+<code class="sig-prename descclassname">tock.graphs.</code><code class="sig-name descname">write_dot</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">filename</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.graphs.write_dot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a <cite>Machine</cite> or <cite>Graph</cite> to file named <cite>filename</cite> in GraphViz
+(DOT) format.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.graphs.read_tgf">
+<code class="sig-prename descclassname">tock.graphs.</code><code class="sig-name descname">read_tgf</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.graphs.read_tgf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a file in Trivial Graph Format. Edge labels are read into the
+<cite>label</cite> attribute.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.graphs.to_graph">
+<code class="sig-prename descclassname">tock.graphs.</code><code class="sig-name descname">to_graph</code><span class="sig-paren">(</span><em class="sig-param">m</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.graphs.to_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a <cite>Machine</cite> to a <cite>Graph</cite>.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">tock</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="machines.html">Machines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grammars.html">Regular expressions and grammars</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Reading and writing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internals.html">Internal representation of machines</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Reference</a><ul>
+      <li>Previous: <a href="grammars.html" title="previous chapter">Regular expressions and grammars</a></li>
+      <li>Next: <a href="internals.html" title="next chapter">Internal representation of machines</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, David Chiang.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/reference/readwrite.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

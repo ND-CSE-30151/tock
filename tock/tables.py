@@ -3,15 +3,20 @@ import csv
 from . import machines
 from . import syntax
 
-__all__ = ['from_table', 'read_csv', 'read_excel', 'to_table']
+__all__ = ['Table', 'from_table', 'read_csv', 'read_excel', 'to_table']
 
 class Table:
     """A simple class that just stores a list of lists of strings.
-    Compared to `Graph`, this is a lower-level representation."""
+
+    Arguments:
+        rows: list of lists of strings
+        num_header_rows (int): number of header rows
+        num_header_cols (int): number of header columns
+    """
     def __init__(self, rows, num_header_cols=1, num_header_rows=1):
-        self.rows = rows
-        self.num_header_cols = num_header_cols
-        self.num_header_rows = num_header_rows
+        self.rows = rows                       #: The table contents
+        self.num_header_cols = num_header_cols #: Number of header rows
+        self.num_header_rows = num_header_rows #: Number of header columns
     def __getitem__(self, i):
         return self.rows[i]
     def __len__(self):
@@ -39,7 +44,30 @@ def addr(i, j):
     return chr(ord('A')+j) + str(i+1)
 
 def from_table(table):
-    """Convert a `Table` to a `Machine`."""
+    """Convert a `Table` to a `Machine`.
+
+    Example:
+
+        +------+------+------+------+------+------+------+
+        |      | 0    |      | 1    |      | &    |      |
+        +------+------+------+------+------+------+------+
+        |      | 0    | &    | 1    | &    | $    | &    |
+        +======+======+======+======+======+======+======+
+        | >@q1 |      |      |      |      |      | q2,$ |
+        +------+------+------+------+------+------+------+
+        |   q2 |      | q2,0 |      | q2,1 |      | q3,& |
+        +------+------+------+------+------+------+------+
+        |   q3 | q3,& |      | q3,& |      | q4,& |      |
+        +------+------+------+------+------+------+------+
+        |  @q4 |      |      |      |      |      |      |
+        +------+------+------+------+------+------+------+
+
+    The first two rows, because they have empty first cells, are
+    assumed to be header rows.
+
+    In a header row, cells "fill" to the right. In the above example,
+    the first row effectively has cells 0, 0, 1, 1, &, &.
+    """
 
     start_state = None
     accept_states = set()
@@ -105,9 +133,9 @@ def from_table(table):
     return machines.from_transitions(transitions, start_state, accept_states)
 
 def read_csv(filename):
-    """Reads a CSV file containing a tabular description of a transition function,
-       as found in Sipser.
-       """
+    """Reads a CSV file containing a tabular description of a transition
+       function (see `from_table`).
+    """
 
     with open(filename) as file:
         table = list(csv.reader(file))
@@ -115,9 +143,9 @@ def read_csv(filename):
     return m
 
 def read_excel(filename, sheet=None):
-    """Reads an Excel file containing a tabular description of a transition function,
-       as found in Sipser.
-       """
+    """Reads an Excel file containing a tabular description of a
+       transition function (see `from_table`).
+    """
 
     from openpyxl import load_workbook # type: ignore
     wb = load_workbook(filename)

@@ -2,7 +2,7 @@ import collections
 from . import machines
 from . import syntax
 
-__all__ = ['to_graph', 'write_dot', 'read_tgf']
+__all__ = ['Graph', 'from_graph', 'write_dot', 'read_tgf', 'to_graph']
 
 class Graph:
     """A directed graph. Both nodes and edges can have a `dict` of attributes.

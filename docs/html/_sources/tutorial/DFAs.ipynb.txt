@@ -20,7 +20,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "## Loading from files\n",
+    "## Loading DFAs from files\n",
     "\n",
     "Sipser and other textbooks represent DFAs, and all kinds of automata, using either tables or graphs. You can create automata either way and load them into Tock.\n",
     "\n",
@@ -59,7 +59,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "## Creating automata programmatically\n",
+    "## Creating DFAs in code\n",
     "\n",
     "You can also use Tock functions to create an automaton in code."
    ]
@@ -115,7 +115,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "## Inspecting automata"
+    "## Inspecting DFAs"
    ]
   },
   {
@@ -346,7 +346,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "## Running automata"
+    "## Running DFAs"
    ]
   },
   {

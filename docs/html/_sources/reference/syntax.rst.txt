@@ -1,6 +1,0 @@
-tock.syntax
-===========
-
-.. automodule:: tock.syntax
-   :members:
-

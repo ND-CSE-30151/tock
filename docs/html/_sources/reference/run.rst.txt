@@ -1,6 +1,0 @@
-tock.run
-========
-
-.. automodule:: tock.run
-   :members:
-

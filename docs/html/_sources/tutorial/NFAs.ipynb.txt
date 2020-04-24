@@ -21,6 +21,8 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
+    "## Creating NFAs\n",
+    "\n",
     "NFAs are loaded and created similarly to DFAs:"
    ]
   },

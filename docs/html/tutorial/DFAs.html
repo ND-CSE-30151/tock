@@ -5,9 +5,8 @@
   <head>
     <meta charset="utf-8" />
     <title>Deterministic finite automata &#8212; tock  documentation</title>
-    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
@@ -16,35 +15,24 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
-    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Nondeterministic finite automata" href="NFAs.html" />
-    <link rel="prev" title="Tutorial" href="index.html" /> 
+    <link rel="prev" title="Tutorial" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="NFAs.html" title="Nondeterministic finite automata"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="index.html" title="Tutorial"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">tock  documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Tutorial</a> &#187;</li> 
-      </ul>
-    </div>  
+  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   
@@ -113,7 +101,7 @@ div.nboutput.container div.prompt pre {
 /* all prompts */
 div.nbinput.container div.prompt,
 div.nboutput.container div.prompt {
-    min-width: 4.5ex;
+    min-width: 5.5ex;
     padding-top: 0.3rem;
     padding-right: 0.3rem;
     text-align: right;
@@ -278,8 +266,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="section" id="Loading-from-files">
-<h2>Loading from files<a class="headerlink" href="#Loading-from-files" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="Loading-DFAs-from-files">
+<h2>Loading DFAs from files<a class="headerlink" href="#Loading-DFAs-from-files" title="Permalink to this headline">¶</a></h2>
 <p>Sipser and other textbooks represent DFAs, and all kinds of automata, using either tables or graphs. You can create automata either way and load them into Tock.</p>
 <p>To create tables, you can use any spreadsheet software (Excel, OpenOffice, iWork, Google Drive) and export in CSV or Excel (<code class="docutils literal notranslate"><span class="pre">.xlsx</span></code>) format. Then read it into Tock using the <code class="docutils literal notranslate"><span class="pre">read_csv</span></code> or <code class="docutils literal notranslate"><span class="pre">read_excel</span></code> function.</p>
 <div class="nbinput nblast docutils container">
@@ -302,8 +290,8 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 </div>
-<div class="section" id="Creating-automata-programmatically">
-<h2>Creating automata programmatically<a class="headerlink" href="#Creating-automata-programmatically" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="Creating-DFAs-in-code">
+<h2>Creating DFAs in code<a class="headerlink" href="#Creating-DFAs-in-code" title="Permalink to this headline">¶</a></h2>
 <p>You can also use Tock functions to create an automaton in code.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -341,8 +329,8 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 </div>
-<div class="section" id="Inspecting-automata">
-<h2>Inspecting automata<a class="headerlink" href="#Inspecting-automata" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="Inspecting-DFAs">
+<h2>Inspecting DFAs<a class="headerlink" href="#Inspecting-DFAs" title="Permalink to this headline">¶</a></h2>
 <p>Once a machine is loaded, we can test whether it is indeed a DFA:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -460,8 +448,8 @@ q3,1 → q2
 </pre></div></div>
 </div>
 </div>
-<div class="section" id="Running-automata">
-<h2>Running automata<a class="headerlink" href="#Running-automata" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="Running-DFAs">
+<h2>Running DFAs<a class="headerlink" href="#Running-DFAs" title="Permalink to this headline">¶</a></h2>
 <p>Now let’s run the automaton on a string (remember to separate symbols by spaces):</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
@@ -527,34 +515,47 @@ q3,1 → q2
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="../index.html">Table of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Deterministic finite automata</a><ul>
-<li><a class="reference internal" href="#Loading-from-files">Loading from files</a></li>
-<li><a class="reference internal" href="#Creating-automata-programmatically">Creating automata programmatically</a></li>
-<li><a class="reference internal" href="#Inspecting-automata">Inspecting automata</a></li>
-<li><a class="reference internal" href="#Running-automata">Running automata</a></li>
+<h1 class="logo"><a href="../index.html">tock</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorial</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Deterministic finite automata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NFAs.html">Nondeterministic finite automata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Regexps.html">Regular expressions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFGs.html">Context-free grammars</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PDAs.html">Pushdown automata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TMs.html">Turing machines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="General.html">More general machines</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="index.html"
-                        title="previous chapter">Tutorial</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="NFAs.html"
-                        title="next chapter">Nondeterministic finite automata</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="../_sources/tutorial/DFAs.ipynb.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Tutorial</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Tutorial</a></li>
+      <li>Next: <a href="NFAs.html" title="next chapter">Nondeterministic finite automata</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
@@ -565,32 +566,32 @@ q3,1 → q2
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="NFAs.html" title="Nondeterministic finite automata"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="index.html" title="Tutorial"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">tock  documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="index.html" >Tutorial</a> &#187;</li> 
-      </ul>
+    <div class="footer">
+      &copy;2020, David Chiang.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/tutorial/DFAs.ipynb.txt"
+          rel="nofollow">Page source</a>
     </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, David Chiang.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
-    </div>
+
+    
+
+    
   </body>
 </html>

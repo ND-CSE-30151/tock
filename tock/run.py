@@ -1,3 +1,6 @@
+"""This module contains functions for simulating machines on
+strings. Normally, `run` is the only function one needs to use."""
+
 import collections
 from . import machines
 from . import graphs
@@ -5,7 +8,23 @@ from . import graphs
 __all__ = ['run', 'run_bfs', 'run_pda']
 
 def run(m, w, trace=False, steps=1000, show_stack=3):
-    """Runs an automaton, automatically selecting a search method."""
+    """Runs machine `m` on string `w`, automatically selecting a search method.
+
+    Arguments:
+    
+        m (Machine):      The machine to run.
+        w (String):       The string to run on.
+        trace (bool):     Print the steps of the simulation to stdout.
+        steps (int):      Maximum number of steps to run the simulation.
+        show_stack (int): For PDAs, the maximum depth of the stack to show.
+    
+    Returns:
+    
+        A Graph whose nodes are the configurations reachable from the
+        start configuration (which has the attribute `start=True`). It has
+        an accept configuration (attribute `accept=True`) iff `m` accepts
+        `w`.
+    """
 
     # Check to see whether run_pda can handle it.
     is_pda = True
@@ -35,7 +54,19 @@ def run(m, w, trace=False, steps=1000, show_stack=3):
         return run_bfs(m, w, trace=trace, steps=steps)
 
 def run_bfs(m, w, trace=False, steps=1000):
-    """Runs an automaton using breadth-first search."""
+    """Runs machine `m` on string `w` using breadth-first search.
+
+    Arguments:
+
+        m (Machine):  The machine to run.
+        w (String):   The string to run on.
+        trace (bool): Print the steps of the simulation to stdout.
+        steps (int):  Maximum number of steps to run the simulation.
+
+    Returns:
+
+        Same as `run`.
+    """
     from .machines import Store, Configuration, Transition
 
     agenda = collections.deque()
@@ -101,8 +132,19 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
     algorithm of: Bernard Lang, "Deterministic techniques for efficient 
     non-deterministic parsers." doi:10.1007/3-540-06841-4_65 .
 
-    `m`: the pushdown automaton
-    `w`: the input string
+    Arguments:
+
+        m (Machine):      The machine to run, which must be PDA-like.
+        w (String):       The string to run on.
+        stack (int):      Which store is the stack.
+        trace (bool):     Print the steps of the simulation to stdout.
+        show_stack (int): The maximum depth of the stack to show.
+
+    Returns:
+
+        Same as `run`. Because stacks are truncated, the number of nodes
+        in the returned graph may be less than the actual number of
+        configurations (which may be infinite).
     """
 
     """The items are pairs of configurations (parent, child), where

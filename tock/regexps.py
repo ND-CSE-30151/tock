@@ -12,7 +12,17 @@ LPAREN = syntax.Operator('(')
 RPAREN = syntax.Operator(')')
 
 class RegularExpression:
-    """A (abstract syntax tree of a) regular expression."""
+    """A (abstract syntax tree of a) regular expression.
+
+    Arguments:
+
+        op (str): Possible values are: 'union', 'concatenation', 'star', 'symbol'.
+        args: tuple of `RegularExpression` or `Symbol` objects.
+
+    The empty string is represented as RegularExpression('concatenation', ()).
+
+    The empty set is represented as RegularExpression('union', ()).
+    """
     def __init__(self, op, args, start=None, end=None):
         self.op = op
         self.args = tuple(args)
@@ -59,6 +69,23 @@ class RegularExpression:
 
     @classmethod
     def from_str(cls, s):
+        """Constructs a `RegularExpression` from a `str`.
+
+        Regular expressions allow the following operations (precedence
+        from lowest to highest):
+
+        - Symbols
+
+        - Empty string (``&``)
+
+        - Union (``|``)
+
+        - Concatenation: Two concatenated symbols must be separated by
+          a space. For example, ``a b`` is ``a`` concatenated with
+          ``b``, but ``ab`` is a single symbol.
+
+        - Kleene star (``*``)
+        """
         return string_to_regexp(s)
 
     def _repr_html_(self):
@@ -102,22 +129,6 @@ def symbol(arg):
 ### Parser for regular expressions
 
 def string_to_regexp(s):
-    """Converts a string to a regular expression.
-
-    Regular expressions allow the following operations:
-
-    - Symbols
-
-    - Empty string (&)
-
-    - Union (|)
-
-    - Concatenation: Two concatenated symbols must be separated by a
-      space. For example, "a b" is "a" concatenated with "b", but "ab"
-      is a single symbol.
-
-    - Kleene star (*)
-    """
     s = syntax.lexer(s)
     r = parse_union(s)
     if s.pos < len(s):
@@ -167,8 +178,10 @@ def parse_base(s):
 def from_regexp(e, display_steps=False):
     """Convert a regular expression to a NFA.
 
-    display_steps: if True and if run inside a Jupyter notebook,
-    displays all steps of the conversion.
+    Arguments:
+        e (RegularExpression or str): the regular expression to convert.
+        display_steps (bool): if True and if run inside a Jupyter notebook,
+          displays all steps of the conversion.
     """
     def count(e):
         """Predetermine number of states we will need."""
@@ -261,8 +274,11 @@ def fresh(s, alphabet):
 def to_regexp(m, display_steps=False):
     """Convert a finite automaton to a regular expression.
 
-    display_steps: if True and if run inside a Jupyter notebook,
-    displays all steps of the conversion."""
+    Arguments:
+        m (Machine): the automaton to convert, which must be a finite automaton.
+        display_steps (bool): if True and if run inside a Jupyter notebook,
+          displays all steps of the conversion.
+    """
     def union_edge(q, r, e):
         if g.has_edge(q, r):
             g[q][r][0]['label'] = union([g[q][r][0]['label'], e])

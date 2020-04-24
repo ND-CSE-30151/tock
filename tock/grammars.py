@@ -12,19 +12,35 @@ class Grammar:
 
     @classmethod
     def from_file(cls, filename):
-        """Read a grammar from a file. The file should contain one rule per line,
-        for example:
+        """Read a grammar from a file.
+
+        Arguments:
+            filename (str): name of file to read from
+        Returns:
+            Grammar: a CFG
+
+        The file should contain one rule per line, for example::
 
             S -> a S b
             S -> &
 
-        The left-hand side of the first rule is the start symbol.
+        Currently the grammar must be a context-free grammar. The
+        nonterminal symbols are exactly those that appear on a
+        left-hand side.  The left-hand side of the first rule is the
+        start symbol.
         """
         with open(filename) as f:
             return cls.from_lines(f)
         
     @classmethod
     def from_lines(cls, lines):
+        """Read a grammar from a list of strings (see `from_file`).
+
+        Arguments:
+            lines: a list of strings
+        Returns:
+            Grammar: a CFG
+        """
         g = cls()
         parsed_rules = []
         first = True
@@ -143,11 +159,18 @@ def fresh(s, alphabet):
     return s
 
 def from_grammar(g, mode="topdown"):
-    """Convert Grammar `g` to a Machine.
+    """Convert a CFG to a PDA.
 
-    `mode` selects which algorithm to use. Possible values are:
-    - `"topdown"`: Top-down, as in Sipser (3e) Lemma 2.21.
-    - `"bottomup"`: Bottom-up."""
+    Arguments:
+        g (Grammar): the grammar to convert, which must be a CFG.
+        mode (str): selects which algorithm to use. Possible values are:
+
+          - ``"topdown"``: Top-down, as in Sipser (3e) Lemma 2.21.
+          - ``"bottomup"``: Bottom-up.
+
+    Returns:
+        Machine: a PDA equivalent to `g`.
+    """
     
     if mode == "topdown":
         return from_grammar_topdown(g)
@@ -234,8 +257,14 @@ class Tuple(tuple):
         return '(' + ','.join(x._repr_html_() if hasattr(x, '_repr_html_') else str(x) for x in self) + ')'
 
 def to_grammar(m):
-    """Convert a Machine `m`, which must be a PDA, to a Grammar, using the
-    construction of Sipser (3e) Lemma 2.27."""
+    """Convert a PDA to a CFG, using the construction of Sipser (3e) Lemma 2.27.
+
+    Arguments:
+      m (Machine): automaton to convert, which must be a PDA.
+
+    Returns:
+      Grammar: A CFG equivalent to `m`.
+    """
     if not m.is_pushdown():
         raise TypeError("only pushdown automata can be converted to (context-free) grammars")
 

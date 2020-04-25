@@ -250,12 +250,6 @@ def from_grammar_bottomup(g):
                                 
     return m
 
-class Tuple(tuple):
-    def __str__(self):
-        return '('+','.join(map(str, self))+')'
-    def _repr_html_(self):
-        return '(' + ','.join(x._repr_html_() if hasattr(x, '_repr_html_') else str(x) for x in self) + ')'
-
 def to_grammar(m):
     """Convert a PDA to a CFG, using the construction of Sipser (3e) Lemma 2.27.
 
@@ -265,6 +259,9 @@ def to_grammar(m):
     Returns:
       Grammar: A CFG equivalent to `m`.
     """
+
+    Tuple = syntax.Tuple
+    
     if not m.is_pushdown():
         raise TypeError("only pushdown automata can be converted to (context-free) grammars")
 

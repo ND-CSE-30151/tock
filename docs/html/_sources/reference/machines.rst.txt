@@ -5,7 +5,7 @@ Module tock.machines
 --------------------
 
 .. automodule:: tock.machines
-   :members: Path, determinize, equivalent
+   :members: Path, String
 
    .. autoclass:: Machine
 
@@ -76,9 +76,14 @@ Module tock.machines
 
    .. autoclass:: AlignedTransition
                       
+Module tock.operations
+----------------------
+
+.. automodule:: tock.operations
+   :members:
+
 Module tock.run
 ---------------
 
 .. automodule:: tock.run
    :members:
-

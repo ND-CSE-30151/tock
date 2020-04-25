@@ -217,3 +217,9 @@ def string_to_transition(s):
     parse_end(s)
     return Transition(lhs, rhs)
 
+class Tuple(tuple):
+    def __str__(self):
+        return '('+','.join(map(str, self))+')'
+    def _repr_html_(self):
+        return '(' + ','.join(x._repr_html_() if hasattr(x, '_repr_html_') else str(x) for x in self) + ')'
+

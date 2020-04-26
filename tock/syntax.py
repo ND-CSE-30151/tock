@@ -1,4 +1,5 @@
 import re
+import dataclasses
 from . import settings
 
 class Tokens:
@@ -48,6 +49,7 @@ class Operator(str):
         return str.__new__(cls, s)
 ARROW = Operator('->')
 EPSILON = Operator('&')
+EMPTYSET = Operator('∅')
 
 def lexer(s):
     i = 0
@@ -187,12 +189,16 @@ def string_to_configs(s):
        - (x,y)
        - {x,y}
        - {(w,x),(y,z)}
+       - empty, ∅, or {}
        In any case, returns a set of tuples of stores.
     """
 
     s = lexer(s)
     value = None
     if s.pos == len(s):
+        value = set()
+    elif s.cur == EMPTYSET:
+        parse_character(s, EMPTYSET)
         value = set()
     elif s.cur == '{':
         value = parse_set(s)
@@ -217,9 +223,50 @@ def string_to_transition(s):
     parse_end(s)
     return Transition(lhs, rhs)
 
+### Data structures that print more like in math books
+
+@dataclasses.dataclass(frozen=True, order=True)
+class String:
+    """A sequence of `Symbols` (not to be confused with `str`)."""
+
+    values: tuple #: A sequence of Symbols
+    
+    def __init__(self, values=None):
+        if values is None:
+            values = ()
+        elif isinstance(values, str):
+            values = tuple(string_to_string(values))
+        else:
+            values = tuple(Symbol(x) for x in values)
+        object.__setattr__(self, 'values', values)
+
+    def __len__(self):
+        return len(self.values)
+    def __getitem__(self, i):
+        return self.values[i]
+
+    def __str__(self):
+        if len(self.values) == 0:
+            return 'ε'
+        else:
+            return ' '.join(map(str, self.values))
+    def _repr_html_(self):
+        return str(self)
+
 class Tuple(tuple):
     def __str__(self):
         return '('+','.join(map(str, self))+')'
     def _repr_html_(self):
         return '(' + ','.join(x._repr_html_() if hasattr(x, '_repr_html_') else str(x) for x in self) + ')'
 
+class Set(frozenset):
+    def __str__(self):
+        if len(self) == 0:
+            return '∅'
+        else:
+            return '{' + ",".join(map(str, sorted(self))) + '}'
+    def _repr_html_(self):
+        if len(self) == 0:
+            return '∅'
+        else:
+            return '{' + ",".join(x._repr_html_() for x in sorted(self)) + '}'

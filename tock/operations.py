@@ -20,12 +20,6 @@ def determinize(m):
             alphabet.add(read[0])
         transitions[lstate][tuple(read)].add(rstate)
 
-    class Set(frozenset):
-        def __str__(self):
-            return "{{{}}}".format(",".join(map(str, sorted(self))))
-        def _repr_html_(self):
-            return "{{{}}}".format(",".join(x._repr_html_() for x in sorted(self)))
-
     def eclosure(states):
         """Find epsilon-closure of set of states."""
         states = set(states)
@@ -40,7 +34,7 @@ def determinize(m):
 
     dm = machines.FiniteAutomaton()
 
-    start_state = Set(eclosure([m.get_start_state()]))
+    start_state = syntax.Set(eclosure([m.get_start_state()]))
     dm.set_start_state(start_state)
 
     frontier = {start_state}
@@ -55,7 +49,7 @@ def determinize(m):
             for read in alphabet:
                 dtransitions[read] |= transitions[lstate][(read,)]
         for read in alphabet:
-            rstates = Set(eclosure(dtransitions[read]))
+            rstates = syntax.Set(eclosure(dtransitions[read]))
             dm.add_transition([[lstates], read], [[rstates]])
             frontier.add(rstates)
 

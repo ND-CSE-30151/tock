@@ -1,7 +1,7 @@
 import unittest
 import tock
 from tock.grammars import *
-from tock.machines import String
+from tock.syntax import String
 
 class TestGrammar(unittest.TestCase):
     def test_init(self):

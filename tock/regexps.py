@@ -78,6 +78,8 @@ class RegularExpression:
 
         - Empty string (``&``)
 
+        - Empty set (``∅``)
+
         - Union (``|``)
 
         - Concatenation: Two concatenated symbols must be separated by
@@ -169,6 +171,9 @@ def parse_base(s):
     elif s.pos < len(s) and s.cur == syntax.EPSILON:
         syntax.parse_character(s, syntax.EPSILON)
         return concatenation([])
+    elif s.pos < len(s) and s.cur == syntax.EMPTYSET:
+        syntax.parse_character(s, syntax.EMPTYSET)
+        return union([])
     elif s.pos < len(s):
         a = syntax.parse_symbol(s)
         return symbol(a)

@@ -11,35 +11,7 @@ __all__ = ['Machine',
            'BASE', 'STREAM', 'TAPE']
 
 @dataclasses.dataclass(frozen=True, order=True)
-class String:
-    """A `String` is just a sequence of `Symbols`."""
-
-    values: tuple #: A sequence of Symbols
-    
-    def __init__(self, values=None):
-        if values is None:
-            values = ()
-        elif isinstance(values, str):
-            values = tuple(syntax.string_to_string(values))
-        else:
-            values = tuple(syntax.Symbol(x) for x in values)
-        object.__setattr__(self, 'values', values)
-
-    def __len__(self):
-        return len(self.values)
-    def __getitem__(self, i):
-        return self.values[i]
-
-    def __str__(self):
-        if len(self.values) == 0:
-            return 'ε'
-        else:
-            return ' '.join(map(str, self.values))
-    def _repr_html_(self):
-        return str(self)
-
-@dataclasses.dataclass(frozen=True, order=True)
-class Store(String):
+class Store(syntax.String):
     """A string together with a head position. It is used either as a
     store of a Machine or as a pattern to be matched against a store of a
     Machine.
@@ -73,7 +45,7 @@ class Store(String):
         else:
             raise TypeError("invalid arguments to Store")
             
-        String.__init__(self, values)
+        syntax.String.__init__(self, values)
         object.__setattr__(self, 'position',
                            position if position is not None else default_position)
 

@@ -77,7 +77,7 @@ class Grammar:
         """Add rule with left-hand side `lhs` and right-hand side `rhs`,
         where `lhs` and `rhs` are both Strings.
         """
-        self.rules.append((machines.String(lhs), machines.String(rhs)))
+        self.rules.append((syntax.String(lhs), syntax.String(rhs)))
 
     def __str__(self):
         result = []

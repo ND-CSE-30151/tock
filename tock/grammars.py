@@ -8,6 +8,7 @@ class Grammar:
     """A string-rewriting grammar."""
     def __init__(self):
         self.nonterminals = set()
+        self.start_nonterminal = None
         self.rules = []
 
     @classmethod
@@ -26,7 +27,7 @@ class Grammar:
 
         Currently the grammar must be a context-free grammar. The
         nonterminal symbols are exactly those that appear on a
-        left-hand side.  The left-hand side of the first rule is the
+        left-hand side. The left-hand side of the first rule is the
         start symbol.
         """
         with open(filename) as f:
@@ -49,7 +50,7 @@ class Grammar:
             lhs = syntax.parse_symbol(tokens)
             g.nonterminals.add(lhs)
             if first:
-                g.set_start(lhs)
+                g.set_start_nonterminal(lhs)
                 first = False
             syntax.parse_character(tokens, syntax.ARROW)
             rhs = []
@@ -62,12 +63,12 @@ class Grammar:
             g.add_rule(lhs, rhs)
         return g
 
-    def set_start(self, x):
+    def set_start_nonterminal(self, x):
         """Set the start symbol to `x`. If `x` is not already a nonterminal,
         it is added to the nonterminal alphabet."""
         x = syntax.Symbol(x)
         self.add_nonterminal(x)
-        self.start = x
+        self.start_nonterminal = x
 
     def add_nonterminal(self, x):
         """Add `x` to the nonterminal alphabet."""
@@ -81,20 +82,72 @@ class Grammar:
 
     def __str__(self):
         result = []
-        result.append('start: {}'.format(self.start))
+        result.append('nonterminals: {{{}}}'.format(','.join(map(str, sorted(self.nonterminals)))))
+        result.append('start: {}'.format(self.start_nonterminal))
         for lhs, rhs in self.rules:
             result.append('{} → {}'.format(lhs, rhs))
         return '\n'.join(result)
 
     def _repr_html_(self):
         result = []
-        if hasattr(self.start, '_repr_html_'):
-            result.append('start: {}'.format(self.start._repr_html_()))
+        if hasattr(self.start_nonterminal, '_repr_html_'):
+            result.append('start: {}'.format(self.start_nonterminal._repr_html_()))
         else:
-            result.append('start: {}'.format(self.start))
+            result.append('start: {}'.format(self.start_nonterminal))
         for lhs, rhs in self.rules:
             result.append('{} &rarr; {}'.format(lhs._repr_html_(), rhs._repr_html_()))
         return '<br>\n'.join(result)
+
+    def is_unrestricted(self):
+        return True
+
+    def has_strict_start(self):
+        """Returns True iff the start nonterminal does not appear in the rhs
+        of any rule. I don't know what the correct terminology for
+        this is.
+        """
+        for _, rhs in self.rules:
+            if self.start_nonterminal in rhs:
+                return False
+        return True
+
+    def is_noncontracting(self):
+        """Returns True iff the grammar is *essentially* noncontracting, that
+        is, each rule is of the form α → β where one of the following is true:
+        
+        - |β| ≥ |α|
+        - α = S, β = ε, and S does not occur on the rhs of any rule
+
+        """
+        for lhs, rhs in self.rules:
+            if (len(lhs) == 1 and lhs[0] == self.start_nonterminal and
+                len(rhs) == 0 and self.has_strict_start()):
+                continue
+            if len(rhs) < len(lhs):
+                return False
+        return True
+
+    def is_contextsensitive(self):
+        """Returns True iff the grammar is context-sensitive, that is, each
+        rule is of the form α A β → α B β where one of the following is true:
+
+        - A is a nonterminal and |B| > 0
+        - A = S, α = β = B = ε, and S does not occur on the rhs of any rule
+        """
+        if not self.is_noncontracting():
+            return False
+        for lhs, rhs in self.rules:
+            if (len(lhs) == 1 and lhs[0] == self.start_nonterminal and
+                len(rhs) == 0 and self.has_strict_start()):
+                continue
+            for li, lx in enumerate(lhs):
+                suffix = len(lhs)-li-1
+                if (lx in self.nonterminals and lhs[:li] == rhs[:li] and
+                    (suffix == 0 or lhs[-suffix:] == rhs[-suffix:])):
+                    break
+            else:
+                return False
+        return True
 
     def is_contextfree(self):
         """Returns True iff the grammar is context-free."""
@@ -102,6 +155,28 @@ class Grammar:
             if len(lhs) != 1:
                 return False
             if lhs[0] not in self.nonterminals:
+                return False
+        return True
+
+    def is_leftlinear(self):
+        """Returns True iff the grammar is left-linear, that is, it is context-free and
+        every rule is of the form A → B w or A → w where w contains only terminals.
+        """
+        if not self.is_contextfree():
+            return False
+        for _, rhs in self.rules:
+            if any(x in self.nonterminals for x in rhs[1:]):
+                return False
+        return True
+            
+    def is_rightlinear(self):
+        """Returns True iff the grammar is left-linear, that is, it is context-free and
+        every rule is of the form A → w B or A → w where w contains only terminals.
+        """
+        if not self.is_contextfree():
+            return False
+        for _, rhs in self.rules:
+            if any(x in self.nonterminals for x in rhs[:-1]):
                 return False
         return True
 
@@ -117,7 +192,7 @@ class Grammar:
                 if y in self.nonterminals:
                     by_rhs[y].append((lhs, rhs))
             
-        agenda = collections.deque([self.start])
+        agenda = collections.deque([self.start_nonterminal])
         reachable = set()
         while len(agenda) > 0:
             x = agenda.popleft()
@@ -142,7 +217,7 @@ class Grammar:
                     agenda.append(lhs)
 
         g = Grammar()
-        g.set_start(self.start)
+        g.set_start_nonterminal(self.start_nonterminal)
 
         for [lhs], rhs in self.rules:
             if (lhs in reachable & productive and
@@ -171,23 +246,26 @@ def from_grammar(g, mode="topdown"):
     Returns:
         Machine: a PDA equivalent to `g`.
     """
-    
-    if mode == "topdown":
-        return from_grammar_topdown(g)
-    elif mode == "bottomup":
-        return from_grammar_bottomup(g)
-    else:
-        raise ValueError("unknown mode '{}'".format(mode))
 
-def from_grammar_topdown(g):
+    if g.is_contextfree():
+        if mode == "topdown":
+            return from_cfg_topdown(g)
+        elif mode == "bottomup":
+            return from_cfg_bottomup(g)
+        else:
+            raise ValueError("unknown mode '{}'".format(mode))
+    else:
+        raise NotImplementedError()
+
+def from_cfg_topdown(g):
     m = machines.PushdownAutomaton()
 
     q1 = "{}.1".format(zero_pad(len(g.rules)+1, 0))
-    m.set_start_state("start")
+    m.set_start_nonterminal_state("start")
     m.add_transition(("start", [], []), (q1,     "$"))
-    m.add_transition((q1,      [], []), ("loop", g.start))
+    m.add_transition((q1,      [], []), ("loop", g.start_nonterminal))
 
-    nonterminals = set([g.start])
+    nonterminals = set([g.start_nonterminal])
     symbols = set()
     for ri, [[lhs], rhs] in enumerate(g.rules):
         nonterminals.add(lhs)
@@ -215,13 +293,13 @@ def from_grammar_topdown(g):
                                 
     return m
 
-def from_grammar_bottomup(g):
+def from_cfg_bottomup(g):
     m = machines.PushdownAutomaton()
 
-    m.set_start_state("start")
+    m.set_start_nonterminal_state("start")
     m.add_transition(("start", [], []), ("loop", "$"))
 
-    nonterminals = set([g.start])
+    nonterminals = set([g.start_nonterminal])
     symbols = set()
     for ri, [[lhs], rhs] in enumerate(g.rules):
         nonterminals.add(lhs)
@@ -241,8 +319,8 @@ def from_grammar_bottomup(g):
                                  (q1, lhs if si==0 else []))
                 q = q1
 
-    m.add_transition(("loop",    [], g.start), ("0.1",    []))
-    m.add_transition(("0.1",     [], "$"),     ("accept", []))
+    m.add_transition(("loop",    [], g.start_nonterminal), ("0.1",    []))
+    m.add_transition(("0.1",     [], "$"),                 ("accept", []))
     m.add_accept_state("accept")
 
     for a in symbols - nonterminals:
@@ -250,7 +328,7 @@ def from_grammar_bottomup(g):
                                 
     return m
 
-def to_grammar(m):
+def pda_to_cfg(m):
     """Convert a PDA to a CFG, using the construction of Sipser (3e) Lemma 2.27.
 
     Arguments:
@@ -297,7 +375,7 @@ def to_grammar(m):
         pop[x].append((empty, [], [x], accept if x == bottom else empty, []))
 
     g = Grammar()
-    g.set_start(Tuple((start, accept)))
+    g.set_start_nonterminal(Tuple((start, accept)))
 
     # For each p, q, r, s \in Q, u \in \Gamma, and a, b \in \Sigma_\epsilon,
     # if \delta(p, a, \epsilon) contains (r, u) and \delta(s, b, u) contains
@@ -321,3 +399,10 @@ def to_grammar(m):
         g.add_rule([Tuple((p,p))], [])
 
     return g
+
+def to_grammar(m):
+    if m.is_pushdown():
+        return pda_to_cfg(m)
+    elif m.is_turing():
+        return tm_to_grammar(m)
+    

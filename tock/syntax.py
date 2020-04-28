@@ -25,8 +25,8 @@ class Tokens:
 
 whitespace_re = re.compile(r"\s*(//.*)?")
 
-# Symbols can be |- -| # $ or any string of alphanumerics or _ .
-symbol_re = re.compile(r"\|-|-\||[⊢⊣#$¢␣]|[A-Za-z0-9_.]+")
+# Symbols can be |- -| # $ or any string of alphanumerics or ' _ .
+symbol_re = re.compile(r"\|-|-\||[⊢⊣#$¢␣]|[A-Za-z0-9_.']+")
 symbol_mappings = {'|-': '⊢', '-|': '⊣', '_': '␣'}
 class Symbol(str):
     def __new__(cls, s):

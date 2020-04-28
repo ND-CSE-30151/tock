@@ -88,7 +88,7 @@ class RegularExpression:
 
         - Kleene star (``*``)
         """
-        return string_to_regexp(s)
+        return str_to_regexp(s)
 
     def _repr_html_(self):
         return self.__str__(format='html')
@@ -130,7 +130,7 @@ def symbol(arg):
 
 ### Parser for regular expressions
 
-def string_to_regexp(s):
+def str_to_regexp(s):
     s = syntax.lexer(s)
     r = parse_union(s)
     if s.pos < len(s):
@@ -266,7 +266,7 @@ def from_regexp(e, display_steps=False):
     if display_steps:
         from IPython.display import display, HTML # type: ignore
     if isinstance(e, str):
-        e = string_to_regexp(e)
+        e = str_to_regexp(e)
     num_states = count(e)
     m, _ = visit(e, 1)
     return m

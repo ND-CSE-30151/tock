@@ -146,7 +146,7 @@ def parse_set(s):
     parse_character(s, '}')
     return value
 
-def string_to_state(s):
+def str_to_state(s):
     """s is a string possibly preceded by > or @."""
     s = lexer(s)
     attrs = {}
@@ -163,19 +163,19 @@ def string_to_state(s):
     parse_end(s)
     return x, attrs
 
-def string_to_string(s): # unfortunate name
+def str_to_string(s):
     s = lexer(s)
     x = parse_string(s)
     parse_end(s)
     return x
 
-def string_to_store(s):
+def str_to_store(s):
     s = lexer(s)
     x = parse_store(s)
     parse_end(s)
     return x
 
-def string_to_config(s):
+def str_to_config(s):
     """s is a comma-separated list of stores."""
     from .machines import Configuration
     s = lexer(s)
@@ -183,14 +183,13 @@ def string_to_config(s):
     parse_end(s)
     return Configuration(x)
 
-def string_to_configs(s):
-    """s is a string in one of the following formats:
-       - x,y
-       - (x,y)
-       - {x,y}
-       - {(w,x),(y,z)}
-       - empty, ∅, or {}
-       In any case, returns a set of tuples of stores.
+def str_to_configs(s):
+    """Convert str `s` in one of the following formats to a set of tuples of Stores:
+       - {(w,x),(y,z)} -> {(w,x),(y,z)}
+       - x,y -> {(x, y)}
+       - (x,y) -> {(x, y)}
+       - {x,y} -> {(x,), (y,)}
+       - empty, ∅, or {} -> set()
     """
 
     s = lexer(s)
@@ -210,7 +209,23 @@ def string_to_configs(s):
 
     return value
 
-def string_to_transition(s):
+def configs_to_str(configs):
+    """Converts a set of Configurations to a str. The inverse of str_to_configs."""
+    if len(configs) == 0:
+        return ""
+    if len(configs) == 1:
+        [config] = configs
+        return ','.join(map(str, config))
+    strings = []
+    for config in sorted(configs):
+        if len(config) == 1:
+            [store] = config
+            strings.append(str(store))
+        else:
+            strings.append('(' + ','.join(map(str, config)) + ')')
+    return '{' + ','.join(strings) + '}'
+
+def str_to_transition(s):
     """s is a string of the form a,b or a,b->c,d"""
     from .machines import Transition
     s = lexer(s)
@@ -235,7 +250,7 @@ class String:
         if values is None:
             values = ()
         elif isinstance(values, str):
-            values = tuple(string_to_string(values))
+            values = tuple(str_to_string(values))
         else:
             values = tuple(Symbol(x) for x in values)
         object.__setattr__(self, 'values', values)

@@ -33,7 +33,7 @@ class Store(syntax.String):
                 values = args[0].values
                 position = args[0].position
             elif isinstance(args[0], str):
-                other = syntax.string_to_store(args[0])
+                other = syntax.str_to_store(args[0])
                 values = other.values
                 position = other.position
             else:
@@ -109,7 +109,7 @@ class Configuration:
         if isinstance(arg, Configuration):
             stores = arg.stores
         elif isinstance(arg, str):
-            stores = syntax.string_to_config(arg).stores
+            stores = syntax.str_to_config(arg).stores
         elif isinstance(arg, (list, tuple)):
             stores = tuple(x if isinstance(x, Store) else Store(x) for x in arg)
         else:
@@ -180,7 +180,7 @@ class Transition:
                 lhs = arg.lhs
                 rhs = arg.rhs
             elif isinstance(arg, str):
-                arg = syntax.string_to_transition(arg)
+                arg = syntax.str_to_transition(arg)
                 lhs = arg.lhs
                 rhs = arg.rhs
             else:

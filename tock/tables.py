@@ -94,7 +94,7 @@ def from_table(table):
                         if c is None:
                             raise ValueError('missing header')
                     else:
-                        c = tuple(syntax.string_to_config(cell))
+                        c = tuple(syntax.str_to_config(cell))
                 except Exception as e:
                     e.message = f"cell {addr(i,j)}: {e.message}"
                     raise
@@ -104,7 +104,7 @@ def from_table(table):
         else:
             # First cell has lhs value for the first store
             try:
-                q, attrs = syntax.string_to_state(row[0])
+                q, attrs = syntax.str_to_state(row[0])
                 if attrs.get('start', False):
                     if start_state is not None:
                         raise ValueError("more than one start state")
@@ -121,7 +121,7 @@ def from_table(table):
                 raise ValueError(f"row {i+1}: row has wrong number of cells")
             for j, cell in enumerate(row[1:], 1):
                 try:
-                    for rhs in syntax.string_to_configs(cell):
+                    for rhs in syntax.str_to_configs(cell):
                         transitions.append((lhs1+lhs2[j-1], rhs))
                 except Exception as e:
                     e.message = f"cell {addr(i,j)}: {e.message}"
@@ -199,21 +199,6 @@ def to_table(m):
             qstring = ">" + qstring
         row.append(qstring)
         for condition in conditions:
-            row.append(configs_to_string(transitions[q,condition]))
+            row.append(syntax.configs_to_str(transitions[q,condition]))
         rows.append(row)
     return Table(rows, num_header_rows=num_header_rows)
-
-def configs_to_string(configs):
-    if len(configs) == 0:
-        return ""
-    if len(configs) == 1:
-        [config] = configs
-        return ','.join(map(str, config))
-    strings = []
-    for config in sorted(configs):
-        if len(config) == 1:
-            [store] = config
-            strings.append(str(store))
-        else:
-            strings.append('(' + ','.join(map(str, config)) + ')')
-    return '{' + ','.join(strings) + '}'

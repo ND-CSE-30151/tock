@@ -90,10 +90,8 @@ class Grammar:
 
     def _repr_html_(self):
         result = []
-        if hasattr(self.start_nonterminal, '_repr_html_'):
-            result.append('start: {}'.format(self.start_nonterminal._repr_html_()))
-        else:
-            result.append('start: {}'.format(self.start_nonterminal))
+        result.append("nonterminals: {{{}}}".format(','.join(x._repr_html_() for x in sorted(self.nonterminals))))
+        result.append('start: {}'.format(self.start_nonterminal._repr_html_()))
         for lhs, rhs in self.rules:
             result.append('{} &rarr; {}'.format(lhs._repr_html_(), rhs._repr_html_()))
         return '<br>\n'.join(result)
@@ -224,7 +222,90 @@ class Grammar:
                 all(y not in self.nonterminals or y in reachable & productive for y in rhs)):
                 g.add_rule([lhs], rhs)
         return g
-            
+
+    def compute_nullable(self):
+        """Compute, for every nonterminal and rhs suffix α,
+        whether α ⇒* ε.
+        """
+        if not self.is_contextfree():
+            raise ValueError("grammar must be context-free")
+        nullable = {syntax.String()}
+        prev_size = None
+        while len(nullable) != prev_size:
+            prev_size = len(nullable)
+            for lhs, rhs in self.rules:
+                for i in reversed(range(len(rhs))):
+                    if rhs[i+1:] in nullable and rhs[i:i+1] in nullable:
+                        nullable.add(rhs[i:])
+                if rhs in nullable:
+                    nullable.add(lhs)
+        return nullable
+
+    def compute_first(self, nullable=None):
+        """Compute, for every terminal, nonterminal, and rhs suffix α, the set of
+        terminals b where α ⇒* b γ for some γ.
+        """
+        if not self.is_contextfree():
+            raise ValueError("grammar must be context-free")
+        if nullable is None:
+            nullable = self.compute_nullable()
+        first = {syntax.String(): set()}
+        for lhs, rhs in self.rules:
+            first.setdefault(lhs, set())
+            for i in range(len(rhs)):
+                if rhs[i] not in self.nonterminals:
+                    first.setdefault(rhs[i:i+1], {rhs[i]})
+                first.setdefault(rhs[i:], set())
+
+        changed = True
+        def update(s, x):
+            nonlocal changed
+            n = len(s)
+            s.update(x)
+            if n != len(s):
+                changed = True
+                    
+        while changed:
+            changed = False
+            for lhs, rhs in self.rules:
+                for i in reversed(range(len(rhs))):
+                    update(first[rhs[i:]], first[rhs[i:i+1]])
+                    if rhs[i:i+1] in nullable:
+                        update(first[rhs[i:]], first[rhs[i+1:]])
+                update(first[lhs], first[rhs])
+
+        return first
+
+    def compute_follow(self, nullable=None, first=None):
+        """Compute, for every nonterminal A, the set of terminals b where 
+        S →* γ A b δ for some γ, δ."""
+        if not self.is_contextfree():
+            raise ValueError("grammar must be context-free")
+        if nullable is None:
+            nullable = self.compute_nullable()
+        if first is None:
+            first = self.compute_first(nullable)
+
+        follow = {x: set() for x in self.nonterminals}
+        
+        changed = True
+        def update(s, x):
+            nonlocal changed
+            n = len(s)
+            s.update(x)
+            if n != len(s):
+                changed = True
+                    
+        while changed:
+            changed = False
+            for [lhs], rhs in self.rules:
+                for i in range(len(rhs)):
+                    if rhs[i] in self.nonterminals:
+                        update(follow[rhs[i]], first[rhs[i+1:]])
+                        if rhs[i+1:] in nullable:
+                            update(follow[rhs[i]], follow[lhs])
+        return follow
+                
 def zero_pad(n, i):
     return str(i).zfill(len(str(n)))
 
@@ -260,71 +341,40 @@ def from_grammar(g, mode="topdown"):
 def from_cfg_topdown(g):
     m = machines.PushdownAutomaton()
 
-    q1 = "{}.1".format(zero_pad(len(g.rules)+1, 0))
-    m.set_start_nonterminal_state("start")
-    m.add_transition(("start", [], []), (q1,     "$"))
-    m.add_transition((q1,      [], []), ("loop", g.start_nonterminal))
+    m.set_start_state('start')
+    m.add_transition(('start', [], []), ('loop', [g.start_nonterminal, '$']))
 
-    nonterminals = set([g.start_nonterminal])
-    symbols = set()
-    for ri, [[lhs], rhs] in enumerate(g.rules):
-        nonterminals.add(lhs)
-        symbols.add(lhs)
-        symbols.update(rhs)
-        if len(rhs) == 0:
-            m.add_transition(("loop", [], lhs), ("loop", []))
-        else:
-            q = "loop"
-            for si, r in reversed(list(enumerate(rhs))):
-                if si > 0:
-                    q1 = "{}.{}".format(zero_pad(len(g.rules)+1, ri+1), 
-                                        zero_pad(len(rhs)+1, si))
-                else:
-                    q1 = "loop"
-                m.add_transition((q, [], lhs if si==len(rhs)-1 else []),
-                                 (q1, r))
-                q = q1
+    terminals = set()
+    for [[lhs], rhs] in g.rules:
+        for x in rhs:
+            if x not in g.nonterminals:
+                terminals.add(x)
+        m.add_transition(('loop', [], lhs), ('loop', rhs))
 
     m.add_transition(("loop", [], "$"), ("accept", []))
-    m.add_accept_state("accept")
-
-    for a in symbols - nonterminals:
+    for a in terminals:
         m.add_transition(("loop", a, a), ("loop", []))
+    m.add_accept_state("accept")
                                 
     return m
 
 def from_cfg_bottomup(g):
     m = machines.PushdownAutomaton()
 
-    m.set_start_nonterminal_state("start")
-    m.add_transition(("start", [], []), ("loop", "$"))
+    m.set_start_state('start')
+    m.add_transition(('start', [], []), ('loop', ['$']))
 
-    nonterminals = set([g.start_nonterminal])
-    symbols = set()
-    for ri, [[lhs], rhs] in enumerate(g.rules):
-        nonterminals.add(lhs)
-        symbols.add(lhs)
-        symbols.update(rhs)
-        if len(rhs) == 0:
-            m.add_transition(("loop", [], []), ("loop", lhs))
-        else:
-            q = "loop"
-            for si, r in reversed(list(enumerate(rhs))):
-                if si > 0:
-                    q1 = "{}.{}".format(zero_pad(len(g.rules)+1, ri+1), 
-                                        zero_pad(len(rhs)+1, si))
-                else:
-                    q1 = "loop"
-                m.add_transition((q, [], r),
-                                 (q1, lhs if si==0 else []))
-                q = q1
+    terminals = set()
+    for [[lhs], rhs] in g.rules:
+        for x in rhs:
+            if x not in g.nonterminals:
+                terminals.add(x)
+        m.add_transition(("loop", [], reversed(rhs)), ("loop", lhs))
 
-    m.add_transition(("loop",    [], g.start_nonterminal), ("0.1",    []))
-    m.add_transition(("0.1",     [], "$"),                 ("accept", []))
-    m.add_accept_state("accept")
-
-    for a in symbols - nonterminals:
+    m.add_transition(("loop", [], [g.start_nonterminal, '$']), ("accept", []))
+    for a in terminals:
         m.add_transition(("loop", a, []), ("loop", a))
+    m.add_accept_state("accept")
                                 
     return m
 

@@ -258,7 +258,10 @@ class String:
     def __len__(self):
         return len(self.values)
     def __getitem__(self, i):
-        return self.values[i]
+        if isinstance(i, slice):
+            return String(self.values[i])
+        else:
+            return self.values[i]
 
     def __str__(self):
         if len(self.values) == 0:

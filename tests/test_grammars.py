@@ -66,3 +66,35 @@ class TestGrammar(unittest.TestCase):
         self.assertTrue(g.is_noncontracting())
         self.assertTrue(g.is_unrestricted())
         
+    def test_ll(self):
+        self.maxDiff = None
+        g = Grammar.from_lines(["S' -> S ⊣",
+                                "S -> a S c",
+                                "S -> T",
+                                "T -> b T",
+                                "T -> &"])
+        nullable = g.compute_nullable()
+        self.assertEqual(nullable, set(map(String,
+                                           ['S', 'T', '&'])))
+        first = g.compute_first(nullable)
+        first_correct = dict([(String(k), set(v)) for (k, v) in [
+            ("S'", ['a', 'b', '⊣']),
+            ('S', ['a', 'b']),
+            ('T', ['b']),
+            ('a', ['a']),
+            ('b', ['b']),
+            ('c', ['c']),
+            ('⊣', ['⊣']),
+            ('&', []),
+            ('S ⊣', ['a', 'b', '⊣']),
+            ('S c', ['a', 'b', 'c']),
+            ('a S c', ['a']),
+            ('b T', ['b']),
+        ]])
+        self.assertEqual(first, first_correct)
+            
+        follow = g.compute_follow(nullable, first)
+        follow_correct = {"S'": set(),
+                          'S': {'c', '⊣'},
+                          'T': {'c', '⊣'}}
+        self.assertEqual(follow, follow_correct)

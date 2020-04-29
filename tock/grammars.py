@@ -287,6 +287,7 @@ class Grammar:
             first = self.compute_first(nullable)
 
         follow = {x: set() for x in self.nonterminals}
+        follow[self.start_nonterminal].add('⊣')
         
         changed = True
         def update(s, x):
@@ -321,8 +322,9 @@ def from_grammar(g, mode="topdown"):
         g (Grammar): the grammar to convert, which must be a CFG.
         mode (str): selects which algorithm to use. Possible values are:
 
-          - ``"topdown"``: Top-down, as in Sipser (3e) Lemma 2.21.
-          - ``"bottomup"``: Bottom-up.
+          - ``"topdown"``: nondeterministic top-down, as in Sipser (3e) Lemma 2.21.
+          - ``"bottomup"``: nondeterministic bottom-up.
+          - ``"ll1"``: LL(1) deterministic top-down.
 
     Returns:
         Machine: a PDA equivalent to `g`.
@@ -331,6 +333,8 @@ def from_grammar(g, mode="topdown"):
     if g.is_contextfree():
         if mode == "topdown":
             return from_cfg_topdown(g)
+        if mode == "ll1":
+            return from_cfg_ll1(g)
         elif mode == "bottomup":
             return from_cfg_bottomup(g)
         else:
@@ -354,6 +358,37 @@ def from_cfg_topdown(g):
     m.add_transition(("loop", [], "$"), ("accept", []))
     for a in terminals:
         m.add_transition(("loop", a, a), ("loop", []))
+    m.add_accept_state("accept")
+                                
+    return m
+
+END = syntax.Symbol('-|')
+
+def from_cfg_ll1(g):
+    nullable = g.compute_nullable()
+    first = g.compute_first(nullable)
+    follow = g.compute_follow(nullable, first)
+    
+    m = machines.PushdownAutomaton()
+
+    m.set_start_state('start')
+    m.add_transition(('start', [], []), ('loop', [g.start_nonterminal, '$']))
+
+    terminals = set()
+    for [_, rhs] in g.rules:
+        for x in rhs:
+            if x not in g.nonterminals:
+                terminals.add(x)
+                
+    for [[lhs], rhs] in g.rules:
+        for c in terminals | {END}:
+            if c in first[rhs] or (rhs in nullable and c in follow[lhs]):
+                m.add_transition((c, [], lhs), (c, rhs))
+    for a in terminals:
+        m.add_transition(('loop', a, []), (a, []))
+        m.add_transition((a, [], a), ('loop', []))
+    m.add_transition(('loop', '_', []), (END, [])) # treat blank as endmarker
+    m.add_transition((END, [], '$'), ('accept', []))
     m.add_accept_state("accept")
                                 
     return m

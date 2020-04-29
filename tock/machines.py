@@ -572,6 +572,7 @@ class Machine:
                             match = False
                         i += 1
                 if match:
+                    print('conflict:', t1, t2)
                     return False
         return True
 

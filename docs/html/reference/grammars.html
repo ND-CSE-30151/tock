@@ -92,6 +92,7 @@ from lowest to highest):</p>
 <ul class="simple">
 <li><p>Symbols</p></li>
 <li><p>Empty string (<code class="docutils literal notranslate"><span class="pre">&amp;</span></code>)</p></li>
+<li><p>Empty set (<code class="docutils literal notranslate"><span class="pre">∅</span></code>)</p></li>
 <li><p>Union (<code class="docutils literal notranslate"><span class="pre">|</span></code>)</p></li>
 <li><p>Concatenation: Two concatenated symbols must be separated by
 a space. For example, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">b</span></code> is <code class="docutils literal notranslate"><span class="pre">a</span></code> concatenated with
@@ -123,6 +124,27 @@ where <cite>lhs</cite> and <cite>rhs</cite> are both Strings.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="tock.grammars.Grammar.compute_first">
+<code class="sig-name descname">compute_first</code><span class="sig-paren">(</span><em class="sig-param">nullable=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.compute_first" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute, for every terminal, nonterminal, and rhs suffix α, the set of
+terminals b where α ⇒* b γ for some γ.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tock.grammars.Grammar.compute_follow">
+<code class="sig-name descname">compute_follow</code><span class="sig-paren">(</span><em class="sig-param">nullable=None</em>, <em class="sig-param">first=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.compute_follow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute, for every nonterminal A, the set of terminals b where
+S →* γ A b δ for some γ, δ.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tock.grammars.Grammar.compute_nullable">
+<code class="sig-name descname">compute_nullable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.compute_nullable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute, for every nonterminal and rhs suffix α,
+whether α ⇒* ε.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="tock.grammars.Grammar.from_file">
 <em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.from_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read a grammar from a file.</p>
@@ -144,7 +166,7 @@ where <cite>lhs</cite> and <cite>rhs</cite> are both Strings.</p>
 </div>
 <p>Currently the grammar must be a context-free grammar. The
 nonterminal symbols are exactly those that appear on a
-left-hand side.  The left-hand side of the first rule is the
+left-hand side. The left-hand side of the first rule is the
 start symbol.</p>
 </dd></dl>
 
@@ -166,9 +188,53 @@ start symbol.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="tock.grammars.Grammar.has_strict_start">
+<code class="sig-name descname">has_strict_start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.has_strict_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True iff the start nonterminal does not appear in the rhs
+of any rule. I don’t know what the correct terminology for
+this is.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="tock.grammars.Grammar.is_contextfree">
 <code class="sig-name descname">is_contextfree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.is_contextfree" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True iff the grammar is context-free.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tock.grammars.Grammar.is_contextsensitive">
+<code class="sig-name descname">is_contextsensitive</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.is_contextsensitive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True iff the grammar is context-sensitive, that is, each
+rule is of the form α A β → α B β where one of the following is true:</p>
+<ul class="simple">
+<li><p>A is a nonterminal and len(B) &gt; 0</p></li>
+<li><p>A = S, α = β = B = ε, and S does not occur on the rhs of any rule</p></li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="tock.grammars.Grammar.is_leftlinear">
+<code class="sig-name descname">is_leftlinear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.is_leftlinear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True iff the grammar is left-linear, that is, it is context-free and
+every rule is of the form A → B w or A → w where w contains only terminals.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tock.grammars.Grammar.is_noncontracting">
+<code class="sig-name descname">is_noncontracting</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.is_noncontracting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True iff the grammar is <em>essentially</em> noncontracting, that
+is, each rule is of the form α → β where one of the following is true:</p>
+<ul class="simple">
+<li><p>len(β) ≥ len(α)</p></li>
+<li><p>α = S, β = ε, and S does not occur on the rhs of any rule</p></li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="tock.grammars.Grammar.is_rightlinear">
+<code class="sig-name descname">is_rightlinear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.is_rightlinear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True iff the grammar is left-linear, that is, it is context-free and
+every rule is of the form A → w B or A → w where w contains only terminals.</p>
 </dd></dl>
 
 <dl class="method">
@@ -178,8 +244,8 @@ start symbol.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="tock.grammars.Grammar.set_start">
-<code class="sig-name descname">set_start</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.set_start" title="Permalink to this definition">¶</a></dt>
+<dt id="tock.grammars.Grammar.set_start_nonterminal">
+<code class="sig-name descname">set_start_nonterminal</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.set_start_nonterminal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the start symbol to <cite>x</cite>. If <cite>x</cite> is not already a nonterminal,
 it is added to the nonterminal alphabet.</p>
 </dd></dl>
@@ -196,8 +262,9 @@ it is added to the nonterminal alphabet.</p>
 <li><p><strong>g</strong> (<a class="reference internal" href="#tock.grammars.Grammar" title="tock.grammars.Grammar"><em>Grammar</em></a>) – the grammar to convert, which must be a CFG.</p></li>
 <li><p><strong>mode</strong> (<em>str</em>) – <p>selects which algorithm to use. Possible values are:</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;topdown&quot;</span></code>: Top-down, as in Sipser (3e) Lemma 2.21.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;bottomup&quot;</span></code>: Bottom-up.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;topdown&quot;</span></code>: nondeterministic top-down, as in Sipser (3e) Lemma 2.21.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;bottomup&quot;</span></code>: nondeterministic bottom-up.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;ll1&quot;</span></code>: LL(1) deterministic top-down.</p></li>
 </ul>
 </p></li>
 </ul>
@@ -207,23 +274,6 @@ it is added to the nonterminal alphabet.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="machines.html#tock.machines.Machine" title="tock.machines.Machine">Machine</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="tock.grammars.to_grammar">
-<code class="sig-prename descclassname">tock.grammars.</code><code class="sig-name descname">to_grammar</code><span class="sig-paren">(</span><em class="sig-param">m</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.to_grammar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert a PDA to a CFG, using the construction of Sipser (3e) Lemma 2.27.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>m</strong> (<a class="reference internal" href="machines.html#tock.machines.Machine" title="tock.machines.Machine"><em>Machine</em></a>) – automaton to convert, which must be a PDA.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A CFG equivalent to <cite>m</cite>.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#tock.grammars.Grammar" title="tock.grammars.Grammar">Grammar</a></p>
 </dd>
 </dl>
 </dd></dl>

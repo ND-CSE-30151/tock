@@ -105,7 +105,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "There are two main differences in this table from a DFA. First, a cell can have more than one state. For example, if the machine is in state `q1` and the next input symbol is a `1`, then the machine can change to either `q1` or `q2`. Use curly braces for sets of states. (It's an error to omit them.) If a cell has no states, either write `{}` or leave the cell blank.\n",
+    "There are two main differences in this table from a DFA. First, a cell can have more than one state. For example, if the machine is in state `q1` and the next input symbol is a `1`, then the machine can change to either `q1` or `q2`. Use curly braces for sets of states. (It's an error to omit them.) If a cell has no states, either write `{}` or `∅` or leave the cell blank.\n",
     "\n",
     "The second difference is that there is a column for the empty string, which can be written either as `ε` or `&`. (The ampersand is supposed to look like \"et\", so I figured it would be a good approximation to ε, which is a Greek \"e\".) If the machine is in state `q2`, then it can change to state `q3` _without_ reading in any input symbols.\n",
     "\n",

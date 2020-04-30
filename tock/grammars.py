@@ -1,6 +1,8 @@
 import collections
+import dataclasses
 from . import machines
 from . import syntax
+from . import operations
 
 __all__ = ['Grammar', 'from_grammar', 'to_grammar']
 
@@ -66,13 +68,12 @@ class Grammar:
     def set_start_nonterminal(self, x):
         """Set the start symbol to `x`. If `x` is not already a nonterminal,
         it is added to the nonterminal alphabet."""
-        x = syntax.Symbol(x)
         self.add_nonterminal(x)
         self.start_nonterminal = x
 
     def add_nonterminal(self, x):
         """Add `x` to the nonterminal alphabet."""
-        self.nonterminals.add(syntax.Symbol(x))
+        self.nonterminals.add(x)
         
     def add_rule(self, lhs, rhs):
         """Add rule with left-hand side `lhs` and right-hand side `rhs`,
@@ -113,7 +114,7 @@ class Grammar:
         """Returns True iff the grammar is *essentially* noncontracting, that
         is, each rule is of the form α → β where one of the following is true:
         
-        - |β| ≥ |α|
+        - len(β) ≥ len(α)
         - α = S, β = ε, and S does not occur on the rhs of any rule
 
         """
@@ -129,7 +130,7 @@ class Grammar:
         """Returns True iff the grammar is context-sensitive, that is, each
         rule is of the form α A β → α B β where one of the following is true:
 
-        - A is a nonterminal and |B| > 0
+        - A is a nonterminal and len(B) > 0
         - A = S, α = β = B = ε, and S does not occur on the rhs of any rule
         """
         if not self.is_noncontracting():
@@ -151,8 +152,10 @@ class Grammar:
         """Returns True iff the grammar is context-free."""
         for lhs, rhs in self.rules:
             if len(lhs) != 1:
+                print(repr(lhs), len(lhs))
                 return False
             if lhs[0] not in self.nonterminals:
+                print(repr(lhs), repr(rhs), repr(self.nonterminals))
                 return False
         return True
 
@@ -325,6 +328,7 @@ def from_grammar(g, mode="topdown"):
           - ``"topdown"``: nondeterministic top-down, as in Sipser (3e) Lemma 2.21.
           - ``"bottomup"``: nondeterministic bottom-up.
           - ``"ll1"``: LL(1) deterministic top-down.
+          - ``"lr0"``: LR(0) deterministic bottom-up.
 
     Returns:
         Machine: a PDA equivalent to `g`.
@@ -337,6 +341,8 @@ def from_grammar(g, mode="topdown"):
             return from_cfg_ll1(g)
         elif mode == "bottomup":
             return from_cfg_bottomup(g)
+        if mode == "lr0":
+            return from_cfg_lr0(g)
         else:
             raise ValueError("unknown mode '{}'".format(mode))
     else:
@@ -409,6 +415,117 @@ def from_cfg_bottomup(g):
     m.add_transition(("loop", [], [g.start_nonterminal, '$']), ("accept", []))
     for a in terminals:
         m.add_transition(("loop", a, []), ("loop", a))
+    m.add_accept_state("accept")
+                                
+    return m
+
+@dataclasses.dataclass(frozen=True, order=True)
+class DottedRule:
+    top: bool
+    lhs: syntax.Symbol
+    rhs: tuple
+    dot: int
+
+    def __init__(self, lhs, rhs, dot):
+        if lhs is None:
+            object.__setattr__(self, 'top', True)
+            object.__setattr__(self, 'lhs', None)
+        else:
+            object.__setattr__(self, 'top', False)
+            object.__setattr__(self, 'lhs', lhs)
+        object.__setattr__(self, 'rhs', tuple(rhs))
+        object.__setattr__(self, 'dot', dot)
+
+    def __str__(self):
+        ret = []
+        if not self.top:
+            ret += [self.lhs, '→']
+        ret += self.rhs[:self.dot]
+        ret.append('•')
+        ret += self.rhs[self.dot:]
+        return ' '.join(ret)
+    def _repr_html_(self):
+        return str(self)
+
+def lr_automaton(g):
+    """Construct the nondeterministic LR automaton for CFG g."""
+    m = machines.FiniteAutomaton()
+    m.set_start_state(DottedRule(None, [g.start_nonterminal], 0))
+
+    s = g.start_nonterminal
+    r = DottedRule(None, [s], 0)
+    m.add_transition([[DottedRule(None, [s], 0)], [s]],
+                     [[DottedRule(None, [s], 1)]])
+    m.add_accept_state(DottedRule(None, [s], 1))
+                     
+    for [[lhs], rhs] in g.rules:
+        if lhs == g.start_nonterminal:
+            m.add_transition([[DottedRule(None, s, 0)], []],
+                             [[DottedRule(lhs, rhs, 0)]])
+        for i in range(len(rhs)):
+            m.add_transition([[DottedRule(lhs, rhs, i)], [rhs[i]]],
+                             [[DottedRule(lhs, rhs, i+1)]])
+            if rhs[i] in g.nonterminals:
+                for [[lhs1], rhs1] in g.rules:
+                    if lhs1 == rhs[i]:
+                        m.add_transition([[DottedRule(lhs, rhs, i)], []],
+                                         [[DottedRule(lhs1, rhs1, 0)]])
+        m.add_accept_state(DottedRule(lhs, rhs, len(rhs)))
+                        
+    return m
+
+def from_cfg_lr0(g):
+    """Convert a LR(0) grammar `g` to a DPDA. Does not assume that `g`
+    generates an endmarked language."""
+    
+    lr = operations.determinize(lr_automaton(g))
+
+    # Check for conflicts
+    for q in lr.states:
+        shift = False
+        reduce = 0
+        for dr in q:
+            if dr.dot == len(dr.rhs):
+                reduce += 1
+            elif dr.rhs[dr.dot] not in g.nonterminals:
+                shift = True
+            if dr.top and dr.dot == 1:
+                final = q
+        if reduce > 1:
+            raise ValueError(f"reduce/reduce conflict in state {q}")
+        if shift and reduce > 0:
+            raise ValueError(f"shift/reduce conflict in state {q}")
+
+    # Build some indexes for faster access
+    lr_bystate = {}
+    for t in lr.get_transitions():
+        [[q], [a]], [[r]] = t.lhs, t.rhs
+        if len(r) == 0: continue # dead state
+        lr_bystate[q, a] = r
+    g_bylhs = collections.defaultdict(set)
+    for [[lhs], rhs] in g.rules:
+        g_bylhs[lhs].add(rhs)
+
+    m = machines.PushdownAutomaton()
+
+    m.set_start_state(lr.get_start_state())
+
+    for (q, a), r in lr_bystate.items():
+        if a in g.nonterminals:
+            # Reduce
+            for rhs in g_bylhs[a]:
+                path = [q]
+                s = q
+                for x in rhs:
+                    s = lr_bystate[s, x]
+                    path.append(s)
+                assert lr_bystate[path[0], a] == r
+                m.add_transition(([path[-1]], [], reversed(path[:-1])), ([r], [path[0]]))
+        else:
+            # Shift
+            m.add_transition(([q], [a], []), ([r], [q]))
+
+    m.add_transition(([final], [], [lr.get_start_state()]), ("accept", []))
     m.add_accept_state("accept")
                                 
     return m
@@ -488,6 +605,3 @@ def pda_to_cfg(m):
 def to_grammar(m):
     if m.is_pushdown():
         return pda_to_cfg(m)
-    elif m.is_turing():
-        return tm_to_grammar(m)
-    

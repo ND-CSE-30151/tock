@@ -337,18 +337,6 @@ containing the lhs and rhs just for store number <cite>i</cite>.</p>
 <dd><p>A sequence of <cite>Configurations</cite>.</p>
 </dd></dl>
 
-<dl class="class">
-<dt id="tock.machines.String">
-<em class="property">class </em><code class="sig-prename descclassname">tock.machines.</code><code class="sig-name descname">String</code><span class="sig-paren">(</span><em class="sig-param">values=None</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.String" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <cite>String</cite> is just a sequence of <cite>Symbols</cite>.</p>
-<dl class="attribute">
-<dt id="tock.machines.String.values">
-<code class="sig-name descname">values</code><em class="property"> = None</em><a class="headerlink" href="#tock.machines.String.values" title="Permalink to this definition">¶</a></dt>
-<dd><p>A sequence of Symbols</p>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 <div class="section" id="module-tock.operations">
 <span id="module-tock-operations"></span><h2>Module tock.operations<a class="headerlink" href="#module-tock.operations" title="Permalink to this headline">¶</a></h2>
@@ -393,7 +381,7 @@ strings. Normally, <cite>run</cite> is the only function one needs to use.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>m</strong> (<a class="reference internal" href="#tock.machines.Machine" title="tock.machines.Machine"><em>Machine</em></a>) – The machine to run.</p></li>
-<li><p><strong>w</strong> (<a class="reference internal" href="#tock.machines.String" title="tock.machines.String"><em>String</em></a>) – The string to run on.</p></li>
+<li><p><strong>w</strong> (<em>String</em>) – The string to run on.</p></li>
 <li><p><strong>trace</strong> (<em>bool</em>) – Print the steps of the simulation to stdout.</p></li>
 <li><p><strong>steps</strong> (<em>int</em>) – Maximum number of steps to run the simulation.</p></li>
 <li><p><strong>show_stack</strong> (<em>int</em>) – For PDAs, the maximum depth of the stack to show.</p></li>
@@ -416,7 +404,7 @@ an accept configuration (attribute <cite>accept=True</cite>) iff <cite>m</cite> 
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>m</strong> (<a class="reference internal" href="#tock.machines.Machine" title="tock.machines.Machine"><em>Machine</em></a>) – The machine to run.</p></li>
-<li><p><strong>w</strong> (<a class="reference internal" href="#tock.machines.String" title="tock.machines.String"><em>String</em></a>) – The string to run on.</p></li>
+<li><p><strong>w</strong> (<em>String</em>) – The string to run on.</p></li>
 <li><p><strong>trace</strong> (<em>bool</em>) – Print the steps of the simulation to stdout.</p></li>
 <li><p><strong>steps</strong> (<em>int</em>) – Maximum number of steps to run the simulation.</p></li>
 </ul>
@@ -437,7 +425,7 @@ non-deterministic parsers.” doi:10.1007/3-540-06841-4_65 .</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>m</strong> (<a class="reference internal" href="#tock.machines.Machine" title="tock.machines.Machine"><em>Machine</em></a>) – The machine to run, which must be PDA-like.</p></li>
-<li><p><strong>w</strong> (<a class="reference internal" href="#tock.machines.String" title="tock.machines.String"><em>String</em></a>) – The string to run on.</p></li>
+<li><p><strong>w</strong> (<em>String</em>) – The string to run on.</p></li>
 <li><p><strong>stack</strong> (<em>int</em>) – Which store is the stack.</p></li>
 <li><p><strong>trace</strong> (<em>bool</em>) – Print the steps of the simulation to stdout.</p></li>
 <li><p><strong>show_stack</strong> (<em>int</em>) – The maximum depth of the stack to show.</p></li>

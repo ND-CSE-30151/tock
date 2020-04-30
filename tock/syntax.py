@@ -252,7 +252,7 @@ class String:
         elif isinstance(values, str):
             values = tuple(str_to_string(values))
         else:
-            values = tuple(Symbol(x) for x in values)
+            values = tuple(values)
         object.__setattr__(self, 'values', values)
 
     def __len__(self):

@@ -5,7 +5,7 @@ Module tock.machines
 --------------------
 
 .. automodule:: tock.machines
-   :members: Path, String
+   :members: Path
 
    .. autoclass:: Machine
 

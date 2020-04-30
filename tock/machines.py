@@ -556,7 +556,7 @@ class Machine:
                 self.state == 0 and self.has_cell(0) and
                 self.input == 1 and self.has_tape(1))
 
-    def is_deterministic(self):
+    def is_deterministic(self, verbose=False):
         """Tests whether machine is deterministic."""
         # naive quadratic algorithm
         patterns = [t.lhs for t in self.transitions] + list(self.accept_configs)
@@ -572,7 +572,10 @@ class Machine:
                             match = False
                         i += 1
                 if match:
-                    print('conflict:', t1, t2)
+                    if verbose:
+                        print('conflicting transitions:')
+                        print(' ', t1)
+                        print(' ', t2)
                     return False
         return True
 

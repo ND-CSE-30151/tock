@@ -91,6 +91,14 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/grammars.html#tock.grammars.Grammar.compute_first">compute_first() (tock.grammars.Grammar method)</a>
+</li>
+      <li><a href="reference/grammars.html#tock.grammars.Grammar.compute_follow">compute_follow() (tock.grammars.Grammar method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/grammars.html#tock.grammars.Grammar.compute_nullable">compute_nullable() (tock.grammars.Grammar method)</a>
+</li>
       <li><a href="reference/machines.html#tock.machines.Configuration">Configuration (class in tock.machines)</a>, <a href="reference/machines.html#tock.machines.Configuration">[1]</a>
 </li>
   </ul></td>
@@ -161,6 +169,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/readwrite.html#tock.graphs.Graph.has_path">has_path() (tock.graphs.Graph method)</a>
 </li>
+      <li><a href="reference/grammars.html#tock.grammars.Grammar.has_strict_start">has_strict_start() (tock.grammars.Grammar method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -171,13 +181,21 @@
 </li>
       <li><a href="reference/grammars.html#tock.grammars.Grammar.is_contextfree">is_contextfree() (tock.grammars.Grammar method)</a>
 </li>
+      <li><a href="reference/grammars.html#tock.grammars.Grammar.is_contextsensitive">is_contextsensitive() (tock.grammars.Grammar method)</a>
+</li>
       <li><a href="reference/machines.html#tock.machines.Machine.is_deterministic">is_deterministic() (tock.machines.Machine method)</a>
+</li>
+      <li><a href="reference/machines.html#tock.machines.Machine.is_finite">is_finite() (tock.machines.Machine method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/machines.html#tock.machines.Machine.is_finite">is_finite() (tock.machines.Machine method)</a>
+      <li><a href="reference/grammars.html#tock.grammars.Grammar.is_leftlinear">is_leftlinear() (tock.grammars.Grammar method)</a>
+</li>
+      <li><a href="reference/grammars.html#tock.grammars.Grammar.is_noncontracting">is_noncontracting() (tock.grammars.Grammar method)</a>
 </li>
       <li><a href="reference/machines.html#tock.machines.Machine.is_pushdown">is_pushdown() (tock.machines.Machine method)</a>
+</li>
+      <li><a href="reference/grammars.html#tock.grammars.Grammar.is_rightlinear">is_rightlinear() (tock.grammars.Grammar method)</a>
 </li>
       <li><a href="reference/machines.html#tock.machines.Machine.is_turing">is_turing() (tock.machines.Machine method)</a>
 </li>
@@ -275,7 +293,7 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/grammars.html#tock.grammars.Grammar.set_start">set_start() (tock.grammars.Grammar method)</a>
+      <li><a href="reference/grammars.html#tock.grammars.Grammar.set_start_nonterminal">set_start_nonterminal() (tock.grammars.Grammar method)</a>
 </li>
       <li><a href="reference/machines.html#tock.machines.Machine.set_start_state">set_start_state() (tock.machines.Machine method)</a>
 </li>
@@ -293,8 +311,6 @@
 </li>
       <li><a href="reference/machines.html#tock.machines.Configuration.stores">stores (tock.machines.Configuration attribute)</a>
 </li>
-      <li><a href="reference/machines.html#tock.machines.String">String (class in tock.machines)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -302,8 +318,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/readwrite.html#tock.tables.Table">Table (class in tock.tables)</a>
-</li>
-      <li><a href="reference/grammars.html#tock.grammars.to_grammar">to_grammar() (in module tock.grammars)</a>
 </li>
       <li><a href="reference/readwrite.html#tock.graphs.to_graph">to_graph() (in module tock.graphs)</a>
 </li>
@@ -338,11 +352,7 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/machines.html#tock.machines.Store.values">values (tock.machines.Store attribute)</a>
-
-      <ul>
-        <li><a href="reference/machines.html#tock.machines.String.values">(tock.machines.String attribute)</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 

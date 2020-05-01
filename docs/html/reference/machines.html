@@ -196,7 +196,7 @@ conditions.</p>
 
 <dl class="method">
 <dt id="tock.machines.Machine.is_deterministic">
-<code class="sig-name descname">is_deterministic</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Machine.is_deterministic" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">is_deterministic</code><span class="sig-paren">(</span><em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Machine.is_deterministic" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tests whether machine is deterministic.</p>
 </dd></dl>
 
@@ -366,6 +366,13 @@ product construction.</p></li>
 is a PDA.</p></li>
 <li><p>The intersection of two PDAs would be a two-stack PDA.</p></li>
 </ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="tock.operations.prefix">
+<code class="sig-prename descclassname">tock.operations.</code><code class="sig-name descname">prefix</code><span class="sig-paren">(</span><em class="sig-param">m</em><span class="sig-paren">)</span><a class="headerlink" href="#tock.operations.prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a NFA <cite>m</cite>, construct a new NFA that accepts all prefixes of
+strings accepted by <cite>m</cite>.</p>
 </dd></dl>
 
 </div>

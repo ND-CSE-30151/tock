@@ -25,6 +25,12 @@ class Tokens:
 
 whitespace_re = re.compile(r"\s*(//.*)?")
 
+def repr_html(x):
+    if hasattr(x, '_repr_html_'):
+        return x._repr_html_()
+    else:
+        return str(x)
+
 # Symbols can be |- -| # $ or any string of alphanumerics or ' _ .
 symbol_re = re.compile(r"\|-|-\||[⊢⊣#$¢␣]|[A-Za-z0-9_.']+")
 symbol_mappings = {'|-': '⊢', '-|': '⊣', '_': '␣'}
@@ -269,13 +275,16 @@ class String:
         else:
             return ' '.join(map(str, self.values))
     def _repr_html_(self):
-        return str(self)
+        if len(self.values) == 0:
+            return 'ε'
+        else:
+            return ' '.join(map(repr_html, self.values))
 
 class Tuple(tuple):
     def __str__(self):
         return '('+','.join(map(str, self))+')'
     def _repr_html_(self):
-        return '(' + ','.join(x._repr_html_() if hasattr(x, '_repr_html_') else str(x) for x in self) + ')'
+        return '(' + ','.join(map(repr_html, self)) + ')'
 
 class Set(frozenset):
     def __str__(self):
@@ -287,4 +296,4 @@ class Set(frozenset):
         if len(self) == 0:
             return '∅'
         else:
-            return '{' + ",".join(x._repr_html_() for x in sorted(self)) + '}'
+            return '{' + ",".join(map(repr_html, sorted(self))) + '}'

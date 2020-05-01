@@ -13,6 +13,14 @@ class Grammar:
         self.start_nonterminal = None
         self.rules = []
 
+    @property
+    def terminals(self):
+        all = set()
+        for lhs, rhs in self.rules:
+            all.update(lhs)
+            all.update(rhs)
+        return all - self.nonterminals
+
     @classmethod
     def from_file(cls, filename):
         """Read a grammar from a file.
@@ -152,10 +160,8 @@ class Grammar:
         """Returns True iff the grammar is context-free."""
         for lhs, rhs in self.rules:
             if len(lhs) != 1:
-                print(repr(lhs), len(lhs))
                 return False
             if lhs[0] not in self.nonterminals:
-                print(repr(lhs), repr(rhs), repr(self.nonterminals))
                 return False
         return True
 
@@ -223,6 +229,7 @@ class Grammar:
         for [lhs], rhs in self.rules:
             if (lhs in reachable & productive and
                 all(y not in self.nonterminals or y in reachable & productive for y in rhs)):
+                g.add_nonterminal(lhs)
                 g.add_rule([lhs], rhs)
         return g
 
@@ -329,6 +336,7 @@ def from_grammar(g, mode="topdown"):
           - ``"bottomup"``: nondeterministic bottom-up.
           - ``"ll1"``: LL(1) deterministic top-down.
           - ``"lr0"``: LR(0) deterministic bottom-up.
+          - ``"lr1"``: LR(1) deterministic bottom-up.
 
     Returns:
         Machine: a PDA equivalent to `g`.
@@ -341,51 +349,44 @@ def from_grammar(g, mode="topdown"):
             return from_cfg_ll1(g)
         elif mode == "bottomup":
             return from_cfg_bottomup(g)
-        if mode == "lr0":
+        elif mode == "lr0":
             return from_cfg_lr0(g)
+        elif mode == "lr1":
+            return from_cfg_lr1(g)
         else:
             raise ValueError("unknown mode '{}'".format(mode))
     else:
         raise NotImplementedError()
 
 def from_cfg_topdown(g):
+    terminals = g.terminals
+    
     m = machines.PushdownAutomaton()
-
     m.set_start_state('start')
     m.add_transition(('start', [], []), ('loop', [g.start_nonterminal, '$']))
-
-    terminals = set()
     for [[lhs], rhs] in g.rules:
-        for x in rhs:
-            if x not in g.nonterminals:
-                terminals.add(x)
         m.add_transition(('loop', [], lhs), ('loop', rhs))
-
-    m.add_transition(("loop", [], "$"), ("accept", []))
     for a in terminals:
         m.add_transition(("loop", a, a), ("loop", []))
+    m.add_transition(("loop", [], "$"), ("accept", []))
     m.add_accept_state("accept")
-                                
+    
     return m
 
 END = syntax.Symbol('-|')
 
 def from_cfg_ll1(g):
+    """Convert a CFG to a PDA. If the CFG is LL(1), the resulting PDA will
+    be deterministic.
+    """
     nullable = g.compute_nullable()
     first = g.compute_first(nullable)
     follow = g.compute_follow(nullable, first)
+    terminals = g.terminals
     
     m = machines.PushdownAutomaton()
-
     m.set_start_state('start')
     m.add_transition(('start', [], []), ('loop', [g.start_nonterminal, '$']))
-
-    terminals = set()
-    for [_, rhs] in g.rules:
-        for x in rhs:
-            if x not in g.nonterminals:
-                terminals.add(x)
-                
     for [[lhs], rhs] in g.rules:
         for c in terminals | {END}:
             if c in first[rhs] or (rhs in nullable and c in follow[lhs]):
@@ -393,28 +394,23 @@ def from_cfg_ll1(g):
     for a in terminals:
         m.add_transition(('loop', a, []), (a, []))
         m.add_transition((a, [], a), ('loop', []))
-    m.add_transition(('loop', '_', []), (END, [])) # treat blank as endmarker
+    m.add_transition(('loop', syntax.BLANK, []), (END, [])) # treat blank as endmarker
     m.add_transition((END, [], '$'), ('accept', []))
     m.add_accept_state("accept")
                                 
     return m
 
 def from_cfg_bottomup(g):
+    terminals = g.terminals
+    
     m = machines.PushdownAutomaton()
-
     m.set_start_state('start')
     m.add_transition(('start', [], []), ('loop', ['$']))
-
-    terminals = set()
     for [[lhs], rhs] in g.rules:
-        for x in rhs:
-            if x not in g.nonterminals:
-                terminals.add(x)
         m.add_transition(("loop", [], reversed(rhs)), ("loop", lhs))
-
-    m.add_transition(("loop", [], [g.start_nonterminal, '$']), ("accept", []))
     for a in terminals:
         m.add_transition(("loop", a, []), ("loop", a))
+    m.add_transition(("loop", [], [g.start_nonterminal, '$']), ("accept", []))
     m.add_accept_state("accept")
                                 
     return m
@@ -423,10 +419,14 @@ def from_cfg_bottomup(g):
 class DottedRule:
     top: bool
     lhs: syntax.Symbol
-    rhs: tuple
-    dot: int
+    rhs: tuple         # includes lookahead symbols
+    dot: int           # position of dot
+    end: int           # length of true rhs
+    
+    # change to DottedRule(lhs, rhs+lookahead, dotpos, lookpos)?
+    # or: write lookahead like A b -> α b
 
-    def __init__(self, lhs, rhs, dot):
+    def __init__(self, lhs, rhs, dot, end=None):
         if lhs is None:
             object.__setattr__(self, 'top', True)
             object.__setattr__(self, 'lhs', None)
@@ -435,101 +435,190 @@ class DottedRule:
             object.__setattr__(self, 'lhs', lhs)
         object.__setattr__(self, 'rhs', tuple(rhs))
         object.__setattr__(self, 'dot', dot)
+        if end is None:
+            object.__setattr__(self, 'end', len(rhs))
+        else:
+            object.__setattr__(self, 'end', end)
+
+    def move(self, dot):
+        return DottedRule(self.lhs, self.rhs, dot, self.end)
 
     def __str__(self):
-        ret = []
+        toks = list(self.rhs)
+        if self.end < len(self.rhs):
+            toks[self.end] = '(' + toks[self.end]
+            toks[-1] = toks[-1] + ')'
+        toks[self.dot:self.dot] = ['.']
         if not self.top:
-            ret += [self.lhs, '→']
-        ret += self.rhs[:self.dot]
-        ret.append('•')
-        ret += self.rhs[self.dot:]
-        return ' '.join(ret)
+            toks[0:0] = [self.lhs, '→']
+        return ' '.join(map(str, toks))
     def _repr_html_(self):
         return str(self)
 
-def lr_automaton(g):
-    """Construct the nondeterministic LR automaton for CFG g."""
-    m = machines.FiniteAutomaton()
-    m.set_start_state(DottedRule(None, [g.start_nonterminal], 0))
+def intersect_stack(p, m):
+    """Given a PDA `p` and DFA `m`, construct a new PDA whose stack
+    language is the intersection of the stack language of `p`
+    (bottom-to-top) and the language of `m`.
 
-    s = g.start_nonterminal
-    r = DottedRule(None, [s], 0)
-    m.add_transition([[DottedRule(None, [s], 0)], [s]],
-                     [[DottedRule(None, [s], 1)]])
-    m.add_accept_state(DottedRule(None, [s], 1))
-                     
+    This construction is the same as Hopcroft and Ullman (1e), page 254.
+   
+    `p` can push and pop multiple symbols, and the resulting PDA does
+    push and pop multiple symbols.
+    """
+    if not p.is_pushdown():
+        raise ValueError('m must be a pushdown automaton')
+    if not m.is_finite():
+        raise ValueError('m must be a finite automaton')
+    if not m.is_deterministic():
+        raise NotImplementedError('m must be deterministic')
+    
+    m_bystate = {}
+    for t in m.get_transitions():
+        [[q], [a]], [[r]] = t.lhs, t.rhs
+        m_bystate[q, a] = r
+    mf = m.get_accept_states()
+    
+    pm = machines.PushdownAutomaton()
+
+    # pm has the same states as p, plus a new start state.
+    # pm's stack contains paths of m, alternating between states of m
+    # and input symbols of m (= stack symbols of p).
+    # For LR parsing, it's not necessary to store the latter (e.g.,
+    # Sipser (3e) Lemma 2.58), but in general
+    # m might have more than one transition between a pair of states.
+    
+    pq1 = p.get_start_state()
+    pq0 = fresh(pq1, p.states)
+    pm.set_start_state(pq0)
+    pm.add_transition([[pq0], [], []], [[pq1], [m.get_start_state()]])
+
+    for pt in p.get_transitions():
+        [[pq], pa, px], [[pr], py] = pt.lhs, pt.rhs
+        for mq in m.states:
+            pmx = [mq]
+            for x in reversed(px):
+                pmx += [x, m_bystate[pmx[-1], x]]
+            pmy = [mq]
+            for y in reversed(py):
+                pmy += [y, m_bystate[pmy[-1], y]]
+
+            if pmx[-1] in mf and pmy[-1] in mf:
+                pm.add_transition([[pq], pa, reversed(pmx)], [[pr], reversed(pmy)])
+                    
+    pm.add_accept_states(p.get_accept_states())
+    return pm
+
+def renumber_states(m, verbose=False):
+    if not m.is_finite():
+        raise ValueError()
+    index = {}
+    for i, q in enumerate(sorted(m.states)):
+        index[q] = i
+        if verbose:
+            print(f"{i}\t{q}")
+    mr = machines.FiniteAutomaton()
+    mr.set_start_state(index[m.get_start_state()])
+    mr.add_accept_states([index[q] for q in m.get_accept_states()])
+    for t in m.get_transitions():
+        [[q], [a]], [[r]] = t.lhs, t.rhs
+        mr.add_transition([[index[q]], [a]], [[index[r]]])
+    return mr
+
+def lr_automaton(g, k=0):
+    """Construct the nondeterministic LR(k) automaton for CFG g."""
+
+    if k == 1:
+        nullable = g.compute_nullable()
+        first = g.compute_first(nullable)
+        follow = g.compute_follow(nullable, first)
+    elif k > 1:
+        raise NotImplementedError()
+    
+    g_bylhs = collections.defaultdict(list)
     for [[lhs], rhs] in g.rules:
-        if lhs == g.start_nonterminal:
-            m.add_transition([[DottedRule(None, s, 0)], []],
-                             [[DottedRule(lhs, rhs, 0)]])
-        for i in range(len(rhs)):
-            m.add_transition([[DottedRule(lhs, rhs, i)], [rhs[i]]],
-                             [[DottedRule(lhs, rhs, i+1)]])
-            if rhs[i] in g.nonterminals:
-                for [[lhs1], rhs1] in g.rules:
-                    if lhs1 == rhs[i]:
-                        m.add_transition([[DottedRule(lhs, rhs, i)], []],
-                                         [[DottedRule(lhs1, rhs1, 0)]])
-        m.add_accept_state(DottedRule(lhs, rhs, len(rhs)))
-                        
+        g_bylhs[lhs].append(rhs)
+        
+    # Add top pseudo-rule
+    g_bylhs[None] = [syntax.String([g.start_nonterminal])]
+    if k == 1: follow[None] = [END]
+
+    m = machines.FiniteAutomaton()
+    m.set_start_state('start')
+    
+    # Nonstandardly read a $ because from_cfg_bottomup pushes a $ at
+    # the bottom of its stack.
+    m.add_transition(['start', '$'],
+                     [[DottedRule(None, [g.start_nonterminal] + [END]*k, 0, 1)]])
+    
+    for lhs in g_bylhs:
+        for rhs in g_bylhs[lhs]:
+            if k == 0:
+                looks = [[]]
+            elif k == 1:
+                looks = [[x] for x in follow[lhs]]
+            for look in looks:
+                dr = DottedRule(lhs, list(rhs)+look, 0, len(rhs))
+                for i, x in enumerate(dr.rhs):
+                    # Shift
+                    m.add_transition([[dr.move(i)], [x]], [[dr.move(i+1)]])
+                    # Predict
+                    if x not in g.nonterminals:
+                        continue
+                    if k == 0:
+                        looks1 = [[]]
+                    elif k == 1:
+                        looks1 = [[x] for x in first[rhs[i:]]]
+                        if rhs[i:] in nullable:
+                            looks1 += looks
+                    for rhs1 in g_bylhs[x]:
+                        for look1 in looks1:
+                            m.add_transition([[dr.move(i)], []],
+                                             [[DottedRule(x, list(rhs1)+look1, 0, len(rhs1))]])
+                m.add_accept_state(dr.move(len(dr.rhs)))
+                
     return m
 
 def from_cfg_lr0(g):
-    """Convert a LR(0) grammar `g` to a DPDA. Does not assume that `g`
-    generates an endmarked language."""
+    """Convert a CFG to a PDA. If the CFG is LR(0), the resulting PDA
+    will be deterministic.
+    """
+
+    p = from_cfg_bottomup(g)
+    lr = lr_automaton(g, 0)
+    lr = operations.determinize(lr)
+    lr = operations.prefix(lr)
+    lr = renumber_states(lr)
     
-    lr = operations.determinize(lr_automaton(g))
+    return intersect_stack(p, lr)
 
-    # Check for conflicts
-    for q in lr.states:
-        shift = False
-        reduce = 0
-        for dr in q:
-            if dr.dot == len(dr.rhs):
-                reduce += 1
-            elif dr.rhs[dr.dot] not in g.nonterminals:
-                shift = True
-            if dr.top and dr.dot == 1:
-                final = q
-        if reduce > 1:
-            raise ValueError(f"reduce/reduce conflict in state {q}")
-        if shift and reduce > 0:
-            raise ValueError(f"shift/reduce conflict in state {q}")
-
-    # Build some indexes for faster access
-    lr_bystate = {}
-    for t in lr.get_transitions():
-        [[q], [a]], [[r]] = t.lhs, t.rhs
-        if len(r) == 0: continue # dead state
-        lr_bystate[q, a] = r
-    g_bylhs = collections.defaultdict(set)
-    for [[lhs], rhs] in g.rules:
-        g_bylhs[lhs].add(rhs)
-
+def from_cfg_lr1(g):
+    """Convert a CFG to a PDA. If the CFG is LR(1), the resulting PDA
+    will be deterministic.
+    """
+    terminals = g.terminals
+    
     m = machines.PushdownAutomaton()
-
-    m.set_start_state(lr.get_start_state())
-
-    for (q, a), r in lr_bystate.items():
-        if a in g.nonterminals:
-            # Reduce
-            for rhs in g_bylhs[a]:
-                path = [q]
-                s = q
-                for x in rhs:
-                    s = lr_bystate[s, x]
-                    path.append(s)
-                assert lr_bystate[path[0], a] == r
-                m.add_transition(([path[-1]], [], reversed(path[:-1])), ([r], [path[0]]))
-        else:
-            # Shift
-            m.add_transition(([q], [a], []), ([r], [q]))
-
-    m.add_transition(([final], [], [lr.get_start_state()]), ("accept", []))
-    m.add_accept_state("accept")
+    m.set_start_state('start')
+    m.add_transition(('start', [], []), ('loop', '$'))
+    # reduce
+    for [[lhs], rhs] in g.rules:
+        for a in terminals | {END}:
+            m.add_transition(('loop', [], [a] + list(reversed(rhs))), ('loop', [a, lhs]))
+    # shift
+    for a in terminals:
+        m.add_transition(('loop', a, []), ('loop', a))
+    m.add_transition(('loop', syntax.BLANK, []), ('loop', END))
+    # accept
+    m.add_transition(('loop', [], [END, g.start_nonterminal, '$']), ('accept', []))
+    m.add_accept_state('accept')
                                 
-    return m
-
+    lr = lr_automaton(g, 1)
+    lr = operations.determinize(lr)
+    lr = operations.prefix(lr)
+    lr = renumber_states(lr)
+    
+    return intersect_stack(m, lr)
+    
 def pda_to_cfg(m):
     """Convert a PDA to a CFG, using the construction of Sipser (3e) Lemma 2.27.
 

@@ -199,3 +199,25 @@ def intersect(m1, m2):
                 ))
 
     return m
+
+def prefix(m):
+    """Given a NFA `m`, construct a new NFA that accepts all prefixes of
+    strings accepted by `m`.
+    """
+    if not m.is_finite():
+        raise ValueError('m must be a finite automaton')
+    f = set(m.get_accept_states())
+    size = None
+    while len(f) != size:
+        size = len(f)
+        for t in m.get_transitions():
+            [[q], [a]], [[r]] = t.lhs, t.rhs
+            if r in f:
+                f.add(q)
+    mp = machines.FiniteAutomaton()
+    mp.set_start_state(m.get_start_state())
+    for t in m.get_transitions():
+        mp.add_transition(t)
+    mp.add_accept_states(f)
+    return mp
+

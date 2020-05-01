@@ -368,6 +368,8 @@ True
 <img alt="../_images/tutorial_CFGs_9_0.svg" src="../_images/tutorial_CFGs_9_0.svg" /></div>
 </div>
 <p>This diagram is a little hard to read, but one thing to note is the cycle between <code class="docutils literal notranslate"><span class="pre">loop</span></code> and <code class="docutils literal notranslate"><span class="pre">3.1</span></code>. This is caused by the left-recursive rule <code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">-&gt;</span> <span class="pre">T</span> <span class="pre">a</span></code>, which the automaton applies an unbounded number of times.</p>
+<div class="section" id="Shift-reduce-parsing">
+<h3>Shift-reduce parsing<a class="headerlink" href="#Shift-reduce-parsing" title="Permalink to this headline">¶</a></h3>
 <p>There’s also a bottom-up version:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -400,6 +402,9 @@ True
 <div class="output_area docutils container">
 <img alt="../_images/tutorial_CFGs_12_0.svg" src="../_images/tutorial_CFGs_12_0.svg" /></div>
 </div>
+</div>
+<div class="section" id="LL(1)-parsing">
+<h3>LL(1) parsing<a class="headerlink" href="#LL(1)-parsing" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
@@ -419,7 +424,7 @@ True
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorial_CFGs_13_0.svg" src="../_images/tutorial_CFGs_13_0.svg" /></div>
+<img alt="../_images/tutorial_CFGs_14_0.svg" src="../_images/tutorial_CFGs_14_0.svg" /></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
@@ -476,25 +481,108 @@ True
 </table></div>
 </div>
 </div>
-<div class="section" id="From-PDAs-to-CFGs">
-<h2>From PDAs to CFGs<a class="headerlink" href="#From-PDAs-to-CFGs" title="Permalink to this headline">¶</a></h2>
-<p>The conversion in the reverse direction, from PDA to CFG, is actually related to the algorithm that Tock uses internally to simulate PDAs. We use the <code class="docutils literal notranslate"><span class="pre">remove_useless</span></code> method to reduce the size of the converted CFG.</p>
+<div class="section" id="LR-parsing">
+<h3>LR parsing<a class="headerlink" href="#LR-parsing" title="Permalink to this headline">¶</a></h3>
+<p>Construction of an LR parser involves building the <em>LR automaton</em>:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;examples/sipser-2-14.csv&#39;</span><span class="p">)</span>
-<span class="n">to_grammar</span><span class="p">(</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">remove_useless</span><span class="p">()</span>
+<span></span><span class="n">g</span> <span class="o">=</span> <span class="n">Grammar</span><span class="o">.</span><span class="n">from_lines</span><span class="p">([</span>
+    <span class="s1">&#39;S -&gt; T -|&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;T -&gt; T l T r&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;T -&gt; &amp;&#39;</span>
+<span class="p">])</span>
+
+<span class="n">m</span> <span class="o">=</span> <span class="n">from_grammar</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;lr0&#39;</span><span class="p">)</span>
+<span class="n">m</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_CFGs_19_0.svg" src="../_images/tutorial_CFGs_19_0.svg" /></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">m</span><span class="o">.</span><span class="n">is_deterministic</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+True
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">run</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;l l r l r r -|&#39;</span><span class="p">,</span> <span class="n">show_stack</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span><span class="o">.</span><span class="n">only_path</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
-nonterminals: {(start,accept)}<br>
+<table style="font-family: Courier, monospace;">
+  <tr><td style="text-align: left">start'</td><td style="text-align: left">[l] l r l r r ⊣</td><td style="text-align: left">ε</td></tr>
+  <tr><td style="text-align: left">start</td><td style="text-align: left">[l] l r l r r ⊣</td><td style="text-align: left">2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">[l] l r l r r ⊣</td><td style="text-align: left">[3] $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">[l] l r l r r ⊣</td><td style="text-align: left">[7] T 3 $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">[l] r l r r ⊣</td><td style="text-align: left">[1] l 7 T 3 $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">[l] r l r r ⊣</td><td style="text-align: left">[4] T 1 l 7 T 3 $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">[r] l r r ⊣</td><td style="text-align: left">[1] l 4 T 1 l 7 T 3 $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">[r] l r r ⊣</td><td style="text-align: left">[4] T 1 l 4 T 1 l 7 T 3 $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">[l] r r ⊣</td><td style="text-align: left">[5] r 4 T 1 l 4 T 1 l 7 T 3 $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">[l] r r ⊣</td><td style="text-align: left">[4] T 1 l 7 T 3 $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">[r] r ⊣</td><td style="text-align: left">[1] l 4 T 1 l 7 T 3 $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">[r] r ⊣</td><td style="text-align: left">[4] T 1 l 4 T 1 l 7 T 3 $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">[r] ⊣</td><td style="text-align: left">[5] r 4 T 1 l 4 T 1 l 7 T 3 $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">[r] ⊣</td><td style="text-align: left">[4] T 1 l 7 T 3 $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">⊣</td><td style="text-align: left">[5] r 4 T 1 l 7 T 3 $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">⊣</td><td style="text-align: left">[7] T 3 $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">ε</td><td style="text-align: left">[6] ⊣ 7 T 3 $ 2</td></tr>
+  <tr><td style="text-align: left">loop</td><td style="text-align: left">ε</td><td style="text-align: left">[8] S 3 $ 2</td></tr>
+  <tr><td style="text-align: left">accept</td><td style="text-align: left">ε</td><td style="text-align: left">2</td></tr>
+</table></div>
+</div>
+<p>You can visualize the LR automaton using <code class="docutils literal notranslate"><span class="pre">grammars.lr_automaton</span></code>, and you can also build an LR(1) parser using <code class="docutils literal notranslate"><span class="pre">mode='lr1'</span></code>.</p>
+</div>
+</div>
+<div class="section" id="From-PDAs-to-CFGs">
+<h2>From PDAs to CFGs<a class="headerlink" href="#From-PDAs-to-CFGs" title="Permalink to this headline">¶</a></h2>
+<p>The conversion in the reverse direction, from PDA to CFG, is actually related to the algorithm that Tock uses internally to simulate PDAs. We use the <code class="docutils literal notranslate"><span class="pre">remove_useless</span></code> method to reduce the size of the converted CFG.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">m</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;examples/sipser-2-14.csv&#39;</span><span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">to_grammar</span><span class="p">(</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">remove_useless</span><span class="p">()</span>
+<span class="n">g</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+nonterminals: {(q1,q1),(q1,q4),(q2,q2),(q2,q3),(q3,q3),(q4,q4),(start,accept)}<br>
 start: (start,accept)<br>
 (q2,q3) &rarr; 0 (q2,q2) 1<br>
 (q2,q3) &rarr; 0 (q2,q3) 1<br>
@@ -503,15 +591,15 @@ start: (start,accept)<br>
 (q1,q1) &rarr; (q1,q1) (q1,q1)<br>
 (q1,q4) &rarr; (q1,q1) (q1,q4)<br>
 (q1,q4) &rarr; (q1,q4) (q4,q4)<br>
-(q2,q2) &rarr; (q2,q2) (q2,q2)<br>
-(q2,q3) &rarr; (q2,q2) (q2,q3)<br>
-(q2,q3) &rarr; (q2,q3) (q3,q3)<br>
-(q3,q3) &rarr; (q3,q3) (q3,q3)<br>
 (q4,q4) &rarr; (q4,q4) (q4,q4)<br>
+(q3,q3) &rarr; (q3,q3) (q3,q3)<br>
+(q2,q3) &rarr; (q2,q3) (q3,q3)<br>
+(q2,q3) &rarr; (q2,q2) (q2,q3)<br>
+(q2,q2) &rarr; (q2,q2) (q2,q2)<br>
 (q1,q1) &rarr; ε<br>
-(q2,q2) &rarr; ε<br>
+(q4,q4) &rarr; ε<br>
 (q3,q3) &rarr; ε<br>
-(q4,q4) &rarr; ε</div>
+(q2,q2) &rarr; ε</div>
 </div>
 </div>
 </div>

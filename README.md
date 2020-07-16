@@ -28,10 +28,7 @@ Steps:
 2. Install [Jupyter](http://jupyter.org) by running `pip install
    jupyter` (or `conda install jupyter` if you use Anaconda).
 
-3. Install [GraphViz](http://www.graphviz.org). But if you don't have
-   it, Tock will attempt to download and use
-   [Viz.js](https://github.com/mdaines/viz.js), which is slower but
-   otherwise identical.
+3. Install [GraphViz](http://www.graphviz.org).
 
 Copying
 -------

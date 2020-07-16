@@ -140,8 +140,9 @@ class Configuration:
 
 class Path:
     """A sequence of `Configurations`."""
-    def __init__(self, configs):
+    def __init__(self, configs, accept):
         self.configs = configs
+        self.accept = accept
 
     def __len__(self):
         return len(self.configs)
@@ -158,6 +159,10 @@ class Path:
                 html.extend(['<td style="text-align: left">', store._repr_html_(), '</td>'])
             html.append('</tr>\n')
         html.append('</table>\n')
+        if self.accept:
+            html.append('<p>accept</p')
+        else:
+            html.append('<p>reject</p')
         return ''.join(html)
 
 @dataclasses.dataclass(frozen=True, order=True)

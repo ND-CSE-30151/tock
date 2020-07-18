@@ -1,4 +1,5 @@
 import sys, subprocess
+import re
 
 def run_dot(dot):
     from IPython.display import SVG
@@ -10,4 +11,6 @@ def run_dot(dot):
     out, err = process.communicate(dot)
     if err:
         raise Exception(err)
-    return SVG(out.decode('utf8'))
+    out = out.decode('utf8')
+    out = re.sub(r'<title>.*?</title>', '', out)
+    return SVG(out)

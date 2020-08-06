@@ -280,6 +280,13 @@ class String:
         else:
             return ' '.join(map(repr_html, self.values))
 
+    def __add__(self, other):
+        return String(self.values + other.values)
+    def __mul__(self, n):
+        return String(self.values * n)
+    def __rmul__(self, n):
+        return String(n * self.values )
+
 class Tuple(tuple):
     def __str__(self):
         return '('+','.join(map(str, self))+')'

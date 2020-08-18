@@ -6,11 +6,11 @@ class Tree:
         self.children = children or []
 
     def svg(self):
-        node_width = 10 # per character, approximate
-        node_height = 16
+        node_width = 9 # per character, approximate
+        node_height = 14
         node_depth = 4
-        sister_distance = 16
-        level_distance = 16
+        sister_distance = 14
+        level_distance = 14
 
         pos = {}
         def layout(node, x1, y1):

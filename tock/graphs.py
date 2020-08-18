@@ -60,10 +60,11 @@ class Graph:
         if len(start) != 1: 
             raise ValueError("graph does not have exactly one start node")
 
-        path = []
+        nodes = []
+        edges = []
         [v] = start
         while True:
-            path.append(v)
+            nodes.append(v)
             u = v
             vs = self.edges.get(u, ())
             if len(vs) == 0:
@@ -71,26 +72,35 @@ class Graph:
             elif len(vs) > 1:
                 raise ValueError("graph does not have exactly one path")
             [v] = vs
+            if len(self.edges[u][v]) != 1:
+                raise ValueError("graph does not have exactly one path")
+            [e] = self.edges[u][v]
+            edges.append(e)
 
-        return machines.Path(path, self.nodes[v].get('accept', False))
+        return Path(nodes, edges, self.nodes[v].get('accept', False))
 
     def shortest_path(self):
         """Finds the shortest path from the start node to an accept node. If
         there is more than one, chooses one arbitrarily."""
 
         start = [v for v in self.nodes if self.nodes[v].get('start', False)]
-        if len(start) != 1: raise ValueError("graph does not have exactly one start node")
+        if len(start) != 1:
+            raise ValueError("graph does not have exactly one start node")
         frontier = collections.deque(start)
         pred = {start[0]: None}
         while len(frontier) > 0:
             u = frontier.popleft()
             if self.nodes[u].get('accept', False):
-                path = []
+                nodes = []
+                edges = []
                 while u is not None:
-                    path.append(u)
+                    nodes.append(u)
+                    if pred[u] is not None:
+                        edges.append(self.edges[pred[u]][u][0])
                     u = pred[u]
-                path.reverse()
-                return machines.Path(path, True)
+                nodes.reverse()
+                edges.reverse()
+                return Path(nodes, edges, True)
             for v in self.edges.get(u, ()):
                 if v not in pred:
                     frontier.append(v)
@@ -292,3 +302,32 @@ def to_graph(m):
         t = t[:m.state] + t[m.state+1:]
         g.add_edge(q, r, {'label': t})
     return g
+
+class Path:
+    def __init__(self, nodes, edges, accept):
+        self.nodes = nodes
+        self.edges = edges
+        self.accept = accept
+
+    def __len__(self):
+        return len(self.nodes)
+    def __getitem__(self, i):
+        return self.nodes[i]
+
+    def __str__(self):
+        return '\n'.join(map(str, self.nodes))
+    def _repr_html_(self):
+        html = ['<table style="font-family: Courier, monospace;">\n']
+        for config in self.nodes:
+            if not isinstance(config, machines.Configuration):
+                raise TypeError('A Path can only displayed as HTML if its nodes are Configurations')
+            html.append('  <tr>')
+            for store in config.stores:
+                html.extend(['<td style="text-align: left">', store._repr_html_(), '</td>'])
+            html.append('</tr>\n')
+        html.append('</table>\n')
+        if self.accept:
+            html.append('<p>accept</p')
+        else:
+            html.append('<p>reject</p')
+        return ''.join(html)

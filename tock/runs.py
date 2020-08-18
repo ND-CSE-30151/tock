@@ -110,7 +110,7 @@ def run_bfs(m, w, trace=False, steps=1000):
                     chart[nconfig] = chart[tconfig]+1
                     if trace: print("add: {}".format(nconfig))
                     agenda.append(nconfig)
-                run.add_edge(tconfig, nconfig)
+                run.add_edge(tconfig, nconfig, {'transition': rule})
 
     # If input tape is one-way, then rank all nodes by input position
     if m.store_types[m.input] == machines.STREAM:
@@ -127,30 +127,35 @@ def run_bfs(m, w, trace=False, steps=1000):
 
     return run
 
-def run_pda(m, w, stack=2, trace=False, show_stack=3):
-    """Runs a nondeterministic pushdown automaton using the cubic
-    algorithm of: Bernard Lang, "Deterministic techniques for efficient 
-    non-deterministic parsers." doi:10.1007/3-540-06841-4_65 .
+def run_pda(m, w, stack=2, trace=False, show_stack=3, keep_nodes=False):
+    """Runs a nondeterministic pushdown automaton using a cubic-time
+    algorithm based on: Bernard Lang, "Deterministic techniques for
+    efficient non-deterministic parsers." doi:10.1007/3-540-06841-4_65
 
     Arguments:
 
-        m (Machine):      The machine to run, which must be PDA-like.
-        w (String):       The string to run on.
-        stack (int):      Which store is the stack.
-        trace (bool):     Print the steps of the simulation to stdout.
-        show_stack (int): The maximum depth of the stack to show.
+        m (Machine):       The machine to run, which must be a PDA.
+        w (String):        The string to run on.
+        stack (int):       Which store is the stack.
+        trace (bool):      Print the steps of the simulation to stdout.
+        show_stack (int):  The maximum depth of the stack to show.
+        keep_nodes (bool): Keep all nodes that aren't PDA configurations
 
     Returns:
 
         Same as `run`. Because stacks are truncated, the number of nodes
         in the returned graph may be less than the actual number of
         configurations (which may be infinite).
+
     """
 
-    """The items are pairs of configurations (parent, child), where
+    """The items one have of the following two forms:
 
-       - parent is None and child's stack has no elided items
-       - child has one more elided item than parent
+       - [None => r, j, Y], in which case Y is a complete stack and
+         (r, j, Y) is reachable from the start configuration.
+
+       - [q, i, Xz => r, j, Y], in which case for any R, (q, i, XzR)
+         can reach (r, j, YzR).
 
     The inference rules are:
 
@@ -161,17 +166,21 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
     
     Push:
     
-    [q, i, yz => r, j, xy']
+    [q, i, Yz => r, j, Xy']
     -----------------------
-    [r, j, xy' => r, j, x]
+    [r, j, Xy' => r, j, X]
     
     Pop:
     
-    [q, i, yz => r, j, xy'] [r, j, xy' => s, k, &]
+    [q, i, Yz => r, j, Xy'] [r, j, Xy' => s, k, Z]
     ----------------------------------------------
-                 [q, i, yz => s, k, y']
+                 [q, i, Yz => s, k, Zy']
 
-    Apply: applies a transition to child
+    Apply:
+
+     [q, i, Xz => r, j, Y]
+    ------------------------ (r, j, Y) yields (r', j', Y')
+    [q, i, Xz => r', j', Y']
 
     """
 
@@ -181,7 +190,6 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
     chart = set()
     index_left = collections.defaultdict(set)
     index_right = collections.defaultdict(set)
-    backpointers = collections.defaultdict(set)
     run = graphs.Graph()
     run.attrs['rankdir'] = 'LR'
 
@@ -226,17 +234,19 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
         rprev = r
 
     def get_node(parent, child):
+        """Convert a parent-child pair into a single Configuration,
+        because the nodes of the run Graph must be Configurations."""
         if parent is not None:
-            # In the run graph, we don't show the parent,
-            # but if there is one, add a ...
             child = list(child)
-            child[stack] = Store(child[stack].values + ("…",), child[stack].position)
+            child[stack] = Store(child[stack].values + (f'…{hash(parent)}',), child[stack].position)
         return Configuration(child)
 
     def add_node(parent, child, attrs=None):
         node = get_node(parent, child)
         attrs = {} if attrs is None else dict(attrs)
         label = list(node)
+        if len(label[stack])> 0 and label[stack][-1].startswith('…'):
+            label[stack] = Store(label[stack][:-1].values + ('…',), label[stack].position)
         attrs['rank'] = label.pop(m.input)
         attrs['label'] = Configuration(label)
         run.add_node(node, attrs)
@@ -244,64 +254,79 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3):
     agenda.append((None, config))
     add_node(None, config, {'start': True})
 
-    def add(parent, child):
+    def add(parent, child, aparent, achild, oparent=None, ochild=None, transition=None):
         if (parent, child) in chart:
             if trace: print("merge: {} => {}".format(parent, child))
         else:
             chart.add((parent, child))
             if trace: print("add: {} => {}".format(parent, child))
             agenda.append((parent, child))
+        attrs = {}
+        if ochild:
+            attrs['prev'] = get_node(oparent, ochild)
+        if transition:
+            attrs['transition'] = transition
+        run.add_edge(get_node(aparent, achild),
+                     get_node(parent, child),
+                     attrs)
 
     while len(agenda) > 0:
         parent, child = agenda.popleft()
         if trace: print("trigger: {} => {}".format(parent, child))
+        
+        add_node(parent, child)
 
         for aconfig in m.accept_configs:
-            if aconfig.match(child) and (parent is None or len(child[stack]) == show_stack):
+            if (aconfig.match(child) and
+                (parent is None or len(child[stack]) == show_stack)):
                 add_node(parent, child, {'accept': True})
 
-        # The stack shows too many items (push)
         if len(child[stack]) > show_stack:
+            # The stack shows too many items (Push)
             grandchild = pop(child)
-            add(child, grandchild)
+            add(child, grandchild, parent, child)
+                         
+            # Left antecedent of the Pop rule
             index_right[child].add(parent)
-            for ant in backpointers[get_node(parent, child)]:
-                backpointers[get_node(child, grandchild)].add(ant)
-
-            # This item can also be the left antecedent of the Pop rule
             for grandchild in index_left[child]:
-                grandchild = push(grandchild, child[stack][-1])
-                add(parent, grandchild)
-                for ant in backpointers[get_node(parent, child)]:
-                    backpointers[get_node(parent, grandchild)].add(ant)
+                grandchild1 = push(grandchild, child[stack][-1])
+                add(parent, grandchild1, child, grandchild, parent, child)
 
-        # The stack shows too few items (pop)
+        # The stack shows too few items (right antecedent of Pop rule)
         elif parent is not None and len(child[stack]) < show_stack:
-            if len(parent[stack]) == 0:
-                assert False
-            else:
-                aunt = push(child, parent[stack][-1])
             index_left[parent].add(child)
-
+            aunt = push(child, parent[stack][-1])
             for grandparent in index_right[parent]:
-                add(grandparent, aunt)
+                add(grandparent, aunt, parent, child, grandparent, parent)
 
-            for ant in backpointers[get_node(parent, child)]:
-                backpointers[get_node(grandparent, aunt)].add(ant)
-
-        # The stack is just right
+        # The stack is just right (Apply)
         else:
-            add_node(parent, child)
             for transition in m.transitions:
                 if transition.match(child):
                     sister = transition.apply(child)
-                    add(parent, sister)
-                    backpointers[get_node(parent, sister)].add(get_node(parent, child))
+                    add(parent, sister, parent, child, transition=transition)
 
-    # Add run edges only between configurations whose stack is
-    # just right
-    for config2 in run.nodes:
-        for config1 in backpointers[config2]:
-            run.add_edge(config1, config2)
+    # Remove any edges that don't have transitions
+    if not keep_nodes:
+        done = False
+        deleted_nodes = set()
+        while not done:
+            done = True
+            for u in run.edges:
+                new_edges = {}
+                for v in run.edges[u]:
+                    for e in run.edges[u][v]:
+                        if 'transition' not in e and 'label' not in e:
+                            assert u != v
+                            for w in run.edges.get(v, []):
+                                new_edges.setdefault(w, []).extend(run.edges[v][w])
+                            deleted_nodes.add(v)
+                            done = False
+                        else:
+                            new_edges.setdefault(v, []).append(e)
+                run.edges[u] = new_edges
+        for v in deleted_nodes:
+            del run.nodes[v]
+            if v in run.edges: del run.edges[v]
 
     return run

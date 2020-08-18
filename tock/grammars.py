@@ -1,10 +1,14 @@
 import collections
 import dataclasses
+import random
+import itertools
 from . import machines
 from . import syntax
 from . import operations
+from . import runs
+from . import trees
 
-__all__ = ['Grammar', 'from_grammar', 'to_grammar']
+__all__ = ['Grammar', 'from_grammar', 'to_grammar', 'any_parse', 'only_parse', 'all_parses']
 
 class Grammar:
     """A string-rewriting grammar."""
@@ -76,11 +80,13 @@ class Grammar:
     def set_start_nonterminal(self, x):
         """Set the start symbol to `x`. If `x` is not already a nonterminal,
         it is added to the nonterminal alphabet."""
+        x = syntax.Symbol(x)
         self.add_nonterminal(x)
         self.start_nonterminal = x
 
     def add_nonterminal(self, x):
         """Add `x` to the nonterminal alphabet."""
+        x = syntax.Symbol(x)
         self.nonterminals.add(x)
         
     def add_rule(self, lhs, rhs):
@@ -694,3 +700,80 @@ def pda_to_cfg(m):
 def to_grammar(m):
     if m.is_pushdown():
         return pda_to_cfg(m)
+
+def pda_paths(r):
+    # To do: move to runs.py
+    # Index the edges of r in reverse
+    ants = collections.defaultdict(list)
+    for u in r.edges:
+        for v in r.edges[u]:
+            for e in r.edges[u][v]:
+                ants[v].append((e, u))
+
+    def visit(v):
+        axiom = False
+        if 'start' in r.nodes[v]:
+            axiom = True
+        else:
+            assert len(ants[v]) > 0
+            for e, u in ants[v]:
+                if 'prev' in e:
+                    for p1 in visit(e['prev']):
+                        for p2 in visit(u):
+                            yield p1 + p2
+                elif 'transition' in e:
+                    for p in visit(u):
+                        yield p + [e['transition']]
+                else:
+                    axiom = True
+        if axiom:
+            yield []
+
+    for v in r.nodes:
+        if 'accept' in r.nodes[v]:
+            yield from visit(v)
+
+def pda_path_to_tree(path, mode='bottomup'):
+    if mode != 'bottomup':
+        raise NotImplementedError
+    stack = []
+    for trans in path:
+        [q], a, x = trans.lhs
+        [r], _, y = trans.rhs
+        if q == r == 'loop':
+            if len(a) == 1:
+                stack.append(trees.Tree(a[0]))
+            elif len(x) == 0:
+                stack.append(trees.Tree(y[0], [trees.Tree('ε')]))
+            else:
+                stack[-len(x):] = [trees.Tree(y[0], stack[-len(x):])]
+    assert len(stack) == 1
+    return stack[0]
+
+def only_parse(g, w):
+    m = from_grammar(g, mode='bottomup')
+    r = runs.run_pda(m, w, show_stack=0, keep_nodes=True)
+    paths = list(itertools.islice(pda_paths(r), 2))
+    if len(paths) == 0:
+        raise ValueError('no parse')
+    elif len(paths) == 1:
+        return pda_path_to_tree(paths[0])
+    else:
+        raise ValueError('more than one possible parse')
+                
+def any_parse(g, w):
+    m = from_grammar(g, mode='bottomup')
+    r = runs.run_pda(m, w, show_stack=0, keep_nodes=True)
+    paths = pda_paths(r)
+    try:
+        path = next(paths)
+    except StopIteration:
+        raise ValueError('no parse')
+    return pda_path_to_tree(path)
+
+def all_parses(g, w):
+    m = from_grammar(g, mode='bottomup')
+    r = runs.run_pda(m, w, show_stack=0, keep_nodes=True)
+    paths = pda_paths(r)
+    for path in paths:
+        yield pda_path_to_tree(path)

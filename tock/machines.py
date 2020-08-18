@@ -138,33 +138,6 @@ class Configuration:
                 return False
         return True
 
-class Path:
-    """A sequence of `Configurations`."""
-    def __init__(self, configs, accept):
-        self.configs = configs
-        self.accept = accept
-
-    def __len__(self):
-        return len(self.configs)
-    def __getitem__(self, i):
-        return self.configs[i]
-
-    def __str__(self):
-        return '\n'.join(map(str, self.configs))
-    def _repr_html_(self):
-        html = ['<table style="font-family: Courier, monospace;">\n']
-        for config in self.configs:
-            html.append('  <tr>')
-            for store in config.stores:
-                html.extend(['<td style="text-align: left">', store._repr_html_(), '</td>'])
-            html.append('</tr>\n')
-        html.append('</table>\n')
-        if self.accept:
-            html.append('<p>accept</p')
-        else:
-            html.append('<p>reject</p')
-        return ''.join(html)
-
 @dataclasses.dataclass(frozen=True, order=True)
 class Transition:
     """A transition from one `Configuration` to another `Configuration`.

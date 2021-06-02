@@ -588,7 +588,7 @@ function main(name) {
         movingObject = false;
         originalClick = mouse;
 
-        if(Jupyter) {
+        if(typeof Jupyter !== 'undefined') {
             if(selectedObject == null)
                 Jupyter.keyboard_manager.enable();
             else
@@ -628,7 +628,7 @@ function main(name) {
 
         if(selectedObject == null) {
             selectedObject = new Node(mouse.x, mouse.y);
-            if(Jupyter) Jupyter.keyboard_manager.disable();
+            if(typeof Jupyter !== 'undefined') Jupyter.keyboard_manager.disable();
             nodes.push(selectedObject);
             resetCaret();
             draw();
@@ -823,7 +823,7 @@ function save(name) {
             tgf.push(getNodeId(links[i].node) + ' ' + getNodeId(links[i].node) + ' ' + links[i].text);
     }
     
-    if (Jupyter) {
+    if (typeof Jupyter !== 'undefined') {
         var cmd = 'import tock; tock.graphs.editor_save("' + name + '", """' + tgf.join('\n') + '""")';
         function handle (r) {
             if (r.content.status == "error") {
@@ -832,7 +832,7 @@ function save(name) {
             }
         }
         Jupyter.notebook.kernel.execute(cmd, {"shell": {"reply": handle}});
-    } else if (google) {
+    } else if (typeof google !== 'undefined') {
         var result = google.colab.kernel.invokeFunction('notebook.editor_save', [name, tgf.join('\n')]);
         console.log(result);
     }

@@ -1,4 +1,4 @@
-include README.ipynb README.md LICENSE.txt
-include docs/*.ipynb
+include README.md LICENSE.txt
 include examples/*.csv examples/*.tgf
+include tock/editor.js
 prune unused

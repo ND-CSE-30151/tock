@@ -832,9 +832,6 @@ function save(name) {
         var cmd = 'import tock; tock.graphs.editor_save("' + name + '", """' + tgf.join('\n') + '""")';
         Jupyter.notebook.kernel.execute(cmd, {"shell": {"reply": handle}});
     } else if (typeof google !== 'undefined') {
-        function handle (r) {
-            console.log(r);
-        }
-        var result = google.colab.kernel.invokeFunction('notebook.editor_save', [name, tgf.join('\n')]).then(handle);
+        var result = google.colab.kernel.invokeFunction('notebook.editor_save', [name, tgf.join('\n')]);
     }
 }

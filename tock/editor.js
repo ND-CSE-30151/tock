@@ -588,10 +588,6 @@ function main(name) {
         movingObject = false;
         originalClick = mouse;
 
-        if(selectedObject == null)
-            Jupyter.keyboard_manager.enable();
-        else
-            Jupyter.keyboard_manager.disable();
         if(selectedObject != null) {
             if(shift && selectedObject instanceof Node) {
                 currentLink = new SelfLink(selectedObject, mouse);
@@ -624,7 +620,6 @@ function main(name) {
 
         if(selectedObject == null) {
             selectedObject = new Node(mouse.x, mouse.y);
-            Jupyter.keyboard_manager.disable();
             nodes.push(selectedObject);
             resetCaret();
             draw();

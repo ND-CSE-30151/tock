@@ -604,6 +604,9 @@ function main(name) {
 
         draw();
 
+        console.log("document.activeElement =", document.activeElement);
+        console.log("canvasHasFocus() =", canvasHasFocus());
+        
         if(canvasHasFocus()) {
             // disable drag-and-drop only if the canvas is already focused
             return false;

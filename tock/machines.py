@@ -397,6 +397,8 @@ class Machine:
                 b, [d] = t.rhs[ri:ri+2]
                 if d == 'L':
                     p = -1
+                elif d == 'S':
+                    p = 0
                 elif d == 'R':
                     p = len(b)
                 else:
@@ -442,6 +444,8 @@ class Machine:
                     b = t.rhs[si].values
                     if t.rhs[si].position == -1:
                         d = 'L'
+                    elif t.rhs[si].position == 0:
+                        d = 'S'
                     elif t.rhs[si].position == len(b):
                         d = 'R'
                     else:
@@ -592,7 +596,7 @@ def from_transitions(transitions, start_state, accept_states):
             rhs_vocab[si].update(rhs[si])
             
     for si in range(lhs_size):
-        if si+1 < rhs_size and len(rhs_vocab[si+1]) > 0 and rhs_vocab[si+1].issubset({'L', 'R'}):
+        if si+1 < rhs_size and len(rhs_vocab[si+1]) > 0 and rhs_vocab[si+1].issubset({'L', 'S', 'R'}):
             store_types.append(TAPE)
             rhs_size -= 1
             del rhs_vocab[si+1]

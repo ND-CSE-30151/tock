@@ -604,10 +604,9 @@ function main(name) {
 
         draw();
 
-        console.log("document.activeElement =", document.activeElement);
-        console.log("canvasHasFocus() =", canvasHasFocus());
-        
-        if(canvasHasFocus()) {
+        // In Colab the canvas is inside an iframe, which seems to cause trouble
+        // with this first case.
+        if(0 && canvasHasFocus()) {
             // disable drag-and-drop only if the canvas is already focused
             return false;
         } else {

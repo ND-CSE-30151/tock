@@ -808,7 +808,6 @@ function save(name) {
         if(links[i] instanceof StartLink)
             start = getNodeId(links[i].node);
     }
-    console.log('start', start);
     for(var i = 0; i < nodes.length; i++) {
         var text = nodes[i].text;
         if (nodes[i].isAcceptState) text = '@' + text;
@@ -824,16 +823,18 @@ function save(name) {
     }
     
     if (typeof Jupyter !== 'undefined') {
-        var cmd = 'import tock; tock.graphs.editor_save("' + name + '", """' + tgf.join('\n') + '""")';
         function handle (r) {
             if (r.content.status == "error") {
                 console.log('Jupyter kernel returned error: ' + r.content.evalue);
                 console.log(r);
             }
         }
+        var cmd = 'import tock; tock.graphs.editor_save("' + name + '", """' + tgf.join('\n') + '""")';
         Jupyter.notebook.kernel.execute(cmd, {"shell": {"reply": handle}});
     } else if (typeof google !== 'undefined') {
-        var result = google.colab.kernel.invokeFunction('notebook.editor_save', [name, tgf.join('\n')]);
-        console.log(result);
+        function handle (r) {
+            console.log(r);
+        }
+        var result = google.colab.kernel.invokeFunction('notebook.editor_save', [name, tgf.join('\n')]).then(handle);
     }
 }

@@ -588,10 +588,12 @@ function main(name) {
         movingObject = false;
         originalClick = mouse;
 
-        if(selectedObject == null)
-            Jupyter.keyboard_manager.enable();
-        else
-            Jupyter.keyboard_manager.disable();
+        if(Jupyter) {
+            if(selectedObject == null)
+                Jupyter.keyboard_manager.enable();
+            else
+                Jupyter.keyboard_manager.disable();
+        }
         if(selectedObject != null) {
             if(shift && selectedObject instanceof Node) {
                 currentLink = new SelfLink(selectedObject, mouse);
@@ -626,7 +628,7 @@ function main(name) {
 
         if(selectedObject == null) {
             selectedObject = new Node(mouse.x, mouse.y);
-            Jupyter.keyboard_manager.disable();
+            if(Jupyter) Jupyter.keyboard_manager.disable();
             nodes.push(selectedObject);
             resetCaret();
             draw();
@@ -799,18 +801,6 @@ function getNodeId(node) {
             return i;
 }
 
-function execute(cmd) {
-    console.log(cmd);
-    function handle_jupyter (r) {
-        if (r.content.status == "error") {
-            console.log('Jupyter kernel returned error: ' + r.content.evalue);
-            console.log(r);
-        }
-    }
-    
-    IPython.notebook.kernel.execute(cmd, { "shell": {"reply": handle_jupyter} });
-}
-
 function save(name) {
     var tgf = [];
     var start;
@@ -832,6 +822,18 @@ function save(name) {
         else if(links[i] instanceof SelfLink)
             tgf.push(getNodeId(links[i].node) + ' ' + getNodeId(links[i].node) + ' ' + links[i].text);
     }
-    var cmd = 'import tock; tock.graphs.editor_save("' + name + '", """' + tgf.join('\n') + '""")';
-    execute(cmd);
+    
+    if (Jupyter) {
+        var cmd = 'import tock; tock.graphs.editor_save("' + name + '", """' + tgf.join('\n') + '""")';
+        function handle (r) {
+            if (r.content.status == "error") {
+                console.log('Jupyter kernel returned error: ' + r.content.evalue);
+                console.log(r);
+            }
+        }
+        Jupyter.notebook.kernel.execute(cmd, {"shell": {"reply": handle}});
+    } else if (google) {
+        var result = google.colab.kernel.invokeFunction('notebook.editor_save', [name, tgf.join('\n')]);
+        console.log(result);
+    }
 }

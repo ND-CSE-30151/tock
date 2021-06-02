@@ -349,6 +349,13 @@ def editor(graph):
     import importlib.resources
     src = importlib.resources.read_text(__package__, 'editor.js') + f'main({id(graph)});'
     _editors[id(graph)] = graph;
+
+    try:
+        import google.colab
+        google.colab.output.register_callback('notebook.editor_save', editor_save)
+    except ImportError:
+        pass
+    
     return IPython.display.Javascript(src)
 
 def editor_save(editor_id, tgf):

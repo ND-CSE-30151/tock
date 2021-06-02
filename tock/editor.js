@@ -588,10 +588,12 @@ function main(name) {
         movingObject = false;
         originalClick = mouse;
 
-        if(selectedObject == null)
-            Jupyter.keyboard_manager.enable();
-        else
-            Jupyter.keyboard_manager.disable();
+        if(typeof Jupyter !== 'undefined') {
+            if(selectedObject == null)
+                Jupyter.keyboard_manager.enable();
+            else
+                Jupyter.keyboard_manager.disable();
+        }
         if(selectedObject != null) {
             if(shift && selectedObject instanceof Node) {
                 currentLink = new SelfLink(selectedObject, mouse);
@@ -608,7 +610,9 @@ function main(name) {
 
         draw();
 
-        if(canvasHasFocus()) {
+        // In Colab the canvas is inside an iframe, which seems to cause trouble
+        // with this first case.
+        if(0 && canvasHasFocus()) {
             // disable drag-and-drop only if the canvas is already focused
             return false;
         } else {
@@ -624,7 +628,7 @@ function main(name) {
 
         if(selectedObject == null) {
             selectedObject = new Node(mouse.x, mouse.y);
-            Jupyter.keyboard_manager.disable();
+            if(typeof Jupyter !== 'undefined') Jupyter.keyboard_manager.disable();
             nodes.push(selectedObject);
             resetCaret();
             draw();
@@ -797,18 +801,6 @@ function getNodeId(node) {
             return i;
 }
 
-function execute(cmd) {
-    console.log(cmd);
-    function handle_jupyter (r) {
-        if (r.content.status == "error") {
-            console.log('Jupyter kernel returned error: ' + r.content.evalue);
-            console.log(r);
-        }
-    }
-    
-    IPython.notebook.kernel.execute(cmd, { "shell": {"reply": handle_jupyter} });
-}
-
 function save(name) {
     var tgf = [];
     var start;
@@ -816,7 +808,6 @@ function save(name) {
         if(links[i] instanceof StartLink)
             start = getNodeId(links[i].node);
     }
-    console.log('start', start);
     for(var i = 0; i < nodes.length; i++) {
         var text = nodes[i].text;
         if (nodes[i].isAcceptState) text = '@' + text;
@@ -830,6 +821,17 @@ function save(name) {
         else if(links[i] instanceof SelfLink)
             tgf.push(getNodeId(links[i].node) + ' ' + getNodeId(links[i].node) + ' ' + links[i].text);
     }
-    var cmd = 'import tock; tock.graphs.editor_save("' + name + '", """' + tgf.join('\n') + '""")';
-    execute(cmd);
+    
+    if (typeof Jupyter !== 'undefined') {
+        function handle (r) {
+            if (r.content.status == "error") {
+                console.log('Jupyter kernel returned error: ' + r.content.evalue);
+                console.log(r);
+            }
+        }
+        var cmd = 'import tock; tock.graphs.editor_save("' + name + '", """' + tgf.join('\n') + '""")';
+        Jupyter.notebook.kernel.execute(cmd, {"shell": {"reply": handle}});
+    } else if (typeof google !== 'undefined') {
+        var result = google.colab.kernel.invokeFunction('notebook.editor_save', [name, tgf.join('\n')]);
+    }
 }

@@ -4,7 +4,7 @@ from setuptools import setup
 
 from os import path
 this_directory = path.abspath(path.dirname(__file__))
-with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+with open(path.join(this_directory, 'README.md')) as f:
     long_description = f.read()
 
 setup(name='tock',
@@ -23,6 +23,8 @@ setup(name='tock',
         'Programming Language :: Python :: 3',
         ],
       packages=['tock'],
+      package_data={'tock': ['tock/editor.js']},
+      include_package_data=True,
       python_requires='>=3.7',
       install_requires=['openpyxl'],
       long_description=long_description,

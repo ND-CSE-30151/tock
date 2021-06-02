@@ -222,35 +222,45 @@ class Graph:
         from .graphviz import run_dot
         display(run_dot(self._repr_dot_()))
 
-def read_tgf(filename):
-    """Reads a file in Trivial Graph Format. Edge labels are read into the
-    `label` attribute."""
+def _tgf_to_graph(lines):
     g = Graph()
-    with open(filename) as file:
-        states = {}
+    
+    states = {}
+    section = 0
 
-        # Nodes
-        for line in file:
-            line = line.strip()
-            if line == "": 
+    for line in lines:
+        line = line.strip()
+        if line == "": 
+            continue
+        fields = line.split()
+        
+        if section == 0:
+            # Nodes
+            if fields == ["#"]:
+                section = 1
                 continue
-            elif line == "#":
-                break
-            i, q = line.split(None, 1)
+            if len(fields) != 2:
+                raise ValueError(f"A node must have an id and a label (not {line})")
+            i, q = fields
             q, attrs = syntax.str_to_state(q)
             states[i] = q
             g.add_node(q, attrs)
 
-        # Edges
-        for line in file:
-            line = line.strip()
-            if line == "": 
-                continue
-            i, j, t = line.split(None, 2)
+        elif section == 1:
+            # Edges
+            if len(fields) != 3:
+                raise ValueError(f"An edge must have a tail, a head, and a label (not {line})")
+            i, j, t = fields
             q, r = states[i], states[j]
             t = syntax.str_to_transition(t)
             g.add_edge(q, r, {'label':t})
-    return from_graph(g)
+    return g
+        
+def read_tgf(filename):
+    """Reads a file in Trivial Graph Format. Edge labels are read into the
+    `label` attribute."""
+    with open(filename) as file:
+        return from_graph(_tgf_to_graph(file))
 
 def from_graph(g):
     """Converts a `Graph` to a `Machine`."""
@@ -331,3 +341,18 @@ class Path:
         else:
             html.append('<p>reject</p')
         return ''.join(html)
+
+_editors = {}
+
+def editor(graph):
+    import IPython
+    import importlib.resources
+    src = importlib.resources.read_text(__package__, 'editor.js') + f'main({id(graph)});'
+    _editors[id(graph)] = graph;
+    return IPython.display.Javascript(src)
+
+def editor_save(editor_id, tgf):
+    g = _editors[int(editor_id)]
+    gnew = _tgf_to_graph(tgf.split('\n'))
+    g.nodes = gnew.nodes
+    g.edges = gnew.edges

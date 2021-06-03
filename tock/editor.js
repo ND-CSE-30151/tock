@@ -845,7 +845,7 @@ function save(name) {
         var cmd = 'import tock; tock.graphs.editor_save("' + name + '", """' + tgf + '""")';
         Jupyter.notebook.kernel.execute(cmd, {"shell": {"reply": handle}});
     } else if (typeof google !== 'undefined') {
-        function handle (errr) {
+        function handle (err) {
             message('error: ' + err);
             console.log(err);
         }

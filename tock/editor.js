@@ -27,6 +27,9 @@
 */
 
 /* 
+   Bugs:
+   - In Jupyter, if the canvas is too wide, a horizontal scrollbar appears,
+     which makes the output too high, so a vertical scrollbar appears too.
    To do:
    - Delete nodes
    - Delete edges
@@ -567,10 +570,15 @@ function snapNode(node) {
     }
 }
 
+var message_bar;
+function message(s) {
+    message_bar.innerHTML = s;
+}
+
 function main(name) {
     canvas = document.createElement("canvas");
     canvas.setAttribute("style", "border: 1px solid black;");
-    canvas.width = 800;
+    canvas.width = 600;
     canvas.height = 600;
     element.append(canvas);
     draw();
@@ -581,6 +589,10 @@ function main(name) {
     save_button.innerHTML = "Save";
     save_button.onclick = function() {save(name)};
     element.append(save_button);
+
+    message_bar = document.createElement("span");
+    message_bar.setAttribute("style", "margin: 0 10px; height: 1000px");
+    element.append(message_bar);
 
     canvas.onmousedown = function(e) {
         var mouse = crossBrowserRelativeMousePos(e);
@@ -821,17 +833,22 @@ function save(name) {
         else if(links[i] instanceof SelfLink)
             tgf.push(getNodeId(links[i].node) + ' ' + getNodeId(links[i].node) + ' ' + links[i].text);
     }
-    
+
+    tgf = tgf.join('\n');
     if (typeof Jupyter !== 'undefined') {
         function handle (r) {
             if (r.content.status == "error") {
-                console.log('Jupyter kernel returned error: ' + r.content.evalue);
+                message('error: ' + r.content.evalue);
                 console.log(r);
             }
         }
-        var cmd = 'import tock; tock.graphs.editor_save("' + name + '", """' + tgf.join('\n') + '""")';
+        var cmd = 'import tock; tock.graphs.editor_save("' + name + '", """' + tgf + '""")';
         Jupyter.notebook.kernel.execute(cmd, {"shell": {"reply": handle}});
     } else if (typeof google !== 'undefined') {
-        var result = google.colab.kernel.invokeFunction('notebook.editor_save', [name, tgf.join('\n')]);
+        function handle (errr) {
+            message('error: ' + err);
+            console.log(err);
+        }
+        var result = google.colab.kernel.invokeFunction('notebook.editor_save', [name, tgf]).catch(handle);
     }
 }

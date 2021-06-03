@@ -234,11 +234,10 @@ def _tgf_to_graph(lines):
             continue
         fields = line.split()
         
-        if section == 0:
+        if fields == ["#"]:
+            section += 1
+        elif section == 0:
             # Nodes
-            if fields == ["#"]:
-                section = 1
-                continue
             if len(fields) != 2:
                 raise ValueError(f"A node must have an id and a label (not {line})")
             i, q = fields

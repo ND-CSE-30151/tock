@@ -2,7 +2,7 @@ import collections
 from . import machines
 from . import syntax
 
-__all__ = ['Graph', 'from_graph', 'write_dot', 'read_tgf', 'to_graph']
+__all__ = ['Graph', 'from_graph', 'write_dot', 'read_tgf', 'to_graph', 'editor']
 
 class Graph:
     """A directed graph. Both nodes and edges can have a `dict` of attributes.
@@ -341,13 +341,10 @@ class Path:
             html.append('<p>reject</p')
         return ''.join(html)
 
-_editors = {}
-
-def editor(graph):
+def editor():
     import IPython
     import importlib.resources
-    src = importlib.resources.read_text(__package__, 'editor.js') + f'main({id(graph)});'
-    _editors[id(graph)] = graph;
+    src = importlib.resources.read_text(__package__, 'editor.js') + f'main();'
 
     try:
         import google.colab
@@ -357,8 +354,8 @@ def editor(graph):
     
     return IPython.display.Javascript(src)
 
-def editor_save(editor_id, tgf):
-    g = _editors[int(editor_id)]
-    gnew = _tgf_to_graph(tgf.split('\n'))
-    g.nodes = gnew.nodes
-    g.edges = gnew.edges
+def editor_save(name, tgf):
+    import builtins
+    g = _tgf_to_graph(tgf.split('\n'))
+    builtins.__dict__[name] = from_graph(g)
+    

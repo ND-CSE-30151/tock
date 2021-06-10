@@ -575,7 +575,7 @@ function message(s) {
     message_bar.innerHTML = s;
 }
 
-function main(name) {
+function main() {
     canvas = document.createElement("canvas");
     canvas.setAttribute("style", "border: 1px solid black;");
     canvas.width = 600;
@@ -586,12 +586,22 @@ function main(name) {
     element.append(document.createElement("br"));
 
     var save_button = document.createElement("button");
-    save_button.innerHTML = "Save";
-    save_button.onclick = function() {save(name)};
+    save_button.innerHTML = "Assign to";
+    save_button.onclick = function() {
+        if (name_field.value == "")
+            message("Please enter a variable name.");
+        else
+            save(name_field.value);
+    };
     element.append(save_button);
 
+    var name_field = document.createElement("input");
+    name_field.setAttribute("placeholder", "variable");
+    name_field.setAttribute("style", "margin: 0 10px;");
+    element.append(name_field);
+
     message_bar = document.createElement("span");
-    message_bar.setAttribute("style", "margin: 0 10px; height: 1000px");
+    message_bar.setAttribute("style", "margin: 0 10px;");
     element.append(message_bar);
 
     canvas.onmousedown = function(e) {

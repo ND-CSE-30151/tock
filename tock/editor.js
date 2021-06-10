@@ -837,7 +837,9 @@ function save(name) {
     tgf = tgf.join('\n');
     if (typeof Jupyter !== 'undefined') {
         function handle (r) {
-            if (r.content.status == "error") {
+            if (r.content.status == "ok") {
+                message('Save successful');
+            } else if (r.content.status == "error") {
                 message('error: ' + r.content.evalue);
                 console.log(r);
             }
@@ -845,10 +847,6 @@ function save(name) {
         var cmd = 'import tock; tock.graphs.editor_save("' + name + '", """' + tgf + '""")';
         Jupyter.notebook.kernel.execute(cmd, {"shell": {"reply": handle}});
     } else if (typeof google !== 'undefined') {
-        function handle (err) {
-            message('error: ' + err);
-            console.log(err);
-        }
-        var result = google.colab.kernel.invokeFunction('notebook.editor_save', [name, tgf]).catch(handle);
+        var result = google.colab.kernel.invokeFunction('notebook.editor_save', [name, tgf]).then(() => message('Save successful'), message);
     }
 }

@@ -31,18 +31,21 @@
    - In Jupyter, if the canvas is too wide, a horizontal scrollbar appears,
      which makes the output too high, so a vertical scrollbar appears too.
    To do:
-   - Delete nodes
-   - Delete edges
+   - Change keybinding for delete node/edge
    - Change edge's endpoint
    - Start state instead of arrow from nowhere
-   - Save button
+   - Load from variable
+   - Help
+   - Better error messages
+   - Map -> to \rightarrow, maybe & to \epsilon
+   - Map > and @ to start/accept state?
+   - Better resolution
 */
 
 function StartLink(node, start) {
     this.node = node;
     this.deltaX = 0;
     this.deltaY = 0;
-    this.text = '';
 
     if(start) {
         this.setAnchorPoint(start.x, start.y);
@@ -82,10 +85,6 @@ StartLink.prototype.draw = function(c) {
     c.moveTo(stuff.startX, stuff.startY);
     c.lineTo(stuff.endX, stuff.endY);
     c.stroke();
-
-    // draw the text at the end without the arrow
-    var textAngle = Math.atan2(stuff.startY - stuff.endY, stuff.startX - stuff.endX);
-    drawText(c, this.text, stuff.startX, stuff.startY, textAngle, selectedObject == this);
 
     // draw the head of the arrow
     drawArrow(c, stuff.endX, stuff.endY, Math.atan2(-this.deltaY, -this.deltaX));
@@ -458,7 +457,7 @@ function canvasHasFocus() {
 
 function drawText(c, originalText, x, y, angleOrNull, isSelected) {
     var text = convertLatexShortcuts(originalText);
-    c.font = '20px "Times New Roman", serif';
+    c.font = '20px "Courier", serif';
     var width = c.measureText(text).width;
 
     // center the text
@@ -702,6 +701,12 @@ function main() {
         if(currentLink != null) {
             if(!(currentLink instanceof TemporaryLink)) {
                 selectedObject = currentLink;
+                if (currentLink instanceof StartLink) {
+                    for(var i=0; i<links.length; i++) {
+                        if (links[i] instanceof StartLink)
+                            links.splice(i--, 1);
+                    }
+                }
                 links.push(currentLink);
                 resetCaret();
             }

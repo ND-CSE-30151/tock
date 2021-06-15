@@ -33,13 +33,11 @@
    To do:
    - Change keybinding for delete node/edge
    - Change edge's endpoint
-   - Start state instead of arrow from nowhere
    - Load from variable
    - Help
    - Better error messages
    - Map -> to \rightarrow, maybe & to \epsilon
    - Map > and @ to start/accept state?
-   - Better resolution
 */
 
 function StartLink(node, start) {
@@ -277,7 +275,7 @@ Node.prototype.draw = function(c) {
     // draw a double circle for an accept state
     if(this.isAcceptState) {
         c.beginPath();
-        c.arc(this.x, this.y, nodeRadius - 6, 0, 2 * Math.PI, false);
+        c.arc(this.x, this.y, nodeRadius * 0.8, 0, 2 * Math.PI, false);
         c.stroke();
     }
 };
@@ -436,12 +434,12 @@ function textToXML(text) {
 }
 
 function drawArrow(c, x, y, angle) {
-    var dx = Math.cos(angle);
-    var dy = Math.sin(angle);
+    var dx = Math.cos(angle) * arrowSize;
+    var dy = Math.sin(angle) * arrowSize;
     c.beginPath();
     c.moveTo(x, y);
-    c.lineTo(x - 8 * dx + 5 * dy, y - 8 * dy - 5 * dx);
-    c.lineTo(x - 8 * dx - 5 * dy, y - 8 * dy + 5 * dx);
+    c.lineTo(x - 2 * dx + dy, y - 2 * dy - dx);
+    c.lineTo(x - 2 * dx - dy, y - 2 * dy + dx);
     c.fill();
 }
 
@@ -457,7 +455,7 @@ function canvasHasFocus() {
 
 function drawText(c, originalText, x, y, angleOrNull, isSelected) {
     var text = convertLatexShortcuts(originalText);
-    c.font = '20px "Courier", serif';
+    c.font = ''+fontSize+'px "Courier", monospace';
     var width = c.measureText(text).width;
 
     // center the text
@@ -484,8 +482,8 @@ function drawText(c, originalText, x, y, angleOrNull, isSelected) {
         if(isSelected && caretVisible && canvasHasFocus() && document.hasFocus()) {
             x += width;
             c.beginPath();
-            c.moveTo(x, y - 10);
-            c.lineTo(x, y + 10);
+            c.moveTo(x, y - fontSize/2);
+            c.lineTo(x, y + fontSize/2);
             c.stroke();
         }
     }
@@ -501,7 +499,11 @@ function resetCaret() {
 }
 
 var canvas;
+var canvas_dpr;
 var nodeRadius = 30;
+var arrowSize = 4;
+var lineWidth = 1;
+var fontSize = 16;
 var nodes = [];
 var links = [];
 
@@ -519,17 +521,17 @@ function drawUsing(c) {
     c.translate(0.5, 0.5);
 
     for(var i = 0; i < nodes.length; i++) {
-        c.lineWidth = 1;
+        c.lineWidth = lineWidth;
         c.fillStyle = c.strokeStyle = (nodes[i] == selectedObject) ? 'blue' : 'black';
         nodes[i].draw(c);
     }
     for(var i = 0; i < links.length; i++) {
-        c.lineWidth = 1;
+        c.lineWidth = lineWidth;
         c.fillStyle = c.strokeStyle = (links[i] == selectedObject) ? 'blue' : 'black';
         links[i].draw(c);
     }
     if(currentLink != null) {
-        c.lineWidth = 1;
+        c.lineWidth = lineWidth;
         c.fillStyle = c.strokeStyle = 'black';
         currentLink.draw(c);
     }
@@ -576,10 +578,16 @@ function message(s) {
 
 function main() {
     canvas = document.createElement("canvas");
-    canvas.setAttribute("style", "border: 1px solid black;");
-    canvas.width = 600;
-    canvas.height = 600;
+    canvas.setAttribute("style", "border: 1px solid black; width: 600px; height: 600px;");
+    canvas_dpr = window.devicePixelRatio || 1;
+    canvas.width = 600 * canvas_dpr;
+    canvas.height = 600 * canvas_dpr;
     element.append(canvas);
+    
+    nodeRadius *= canvas_dpr; arrowSize *= canvas_dpr;
+    lineWidth *= canvas_dpr; fontSize *= canvas_dpr;
+    snapToPadding *= canvas_dpr; hitTargetPadding *= canvas_dpr;
+    
     draw();
 
     element.append(document.createElement("br"));
@@ -802,15 +810,14 @@ function crossBrowserElementPos(e) {
         y -= obj.scrollTop;
         obj = obj.parentElement;
     }
-    return { 'x': x, 'y': y };
+    return { 'x': x * canvas_dpr, 'y': y * canvas_dpr };
 }
 
 function crossBrowserMousePos(e) {
     e = e || window.event;
-    return {
-        'x': e.pageX || e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft,
-        'y': e.pageY || e.clientY + document.body.scrollTop + document.documentElement.scrollTop,
-    };
+    var x = e.pageX || e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+    var y = e.pageY || e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+    return { 'x': x * canvas_dpr, 'y': y * canvas_dpr };
 }
 
 function crossBrowserRelativeMousePos(e) {

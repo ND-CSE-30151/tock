@@ -481,10 +481,13 @@ function drawText(c, originalText, x, y, angleOrNull, isSelected) {
         c.fillText(text, x, y + 6);
         if(isSelected && caretVisible && canvasHasFocus() && document.hasFocus()) {
             x += width;
+            var saveLineWidth = c.lineWidth;
+            c.lineWidth = lineWidth;
             c.beginPath();
             c.moveTo(x, y - fontSize/2);
             c.lineTo(x, y + fontSize/2);
             c.stroke();
+            c.lineWidth = saveLineWidth;
         }
     }
 }
@@ -504,6 +507,7 @@ var nodeRadius = 30;
 var arrowSize = 4;
 var lineWidth = 1;
 var fontSize = 16;
+var selectColor = '#00823e';
 var nodes = [];
 var links = [];
 
@@ -521,13 +525,23 @@ function drawUsing(c) {
     c.translate(0.5, 0.5);
 
     for(var i = 0; i < nodes.length; i++) {
-        c.lineWidth = lineWidth;
-        c.fillStyle = c.strokeStyle = (nodes[i] == selectedObject) ? 'blue' : 'black';
+        if (nodes[i] == selectedObject) {
+            c.lineWidth = 3*lineWidth;
+            c.fillStyle = c.strokeStyle = selectColor;
+        } else {
+            c.lineWidth = lineWidth;
+            c.fillStyle = c.strokeStyle = 'black';
+        }
         nodes[i].draw(c);
     }
     for(var i = 0; i < links.length; i++) {
-        c.lineWidth = lineWidth;
-        c.fillStyle = c.strokeStyle = (links[i] == selectedObject) ? 'blue' : 'black';
+        if (links[i] == selectedObject) {
+            c.lineWidth = 3*lineWidth;
+            c.fillStyle = c.strokeStyle = selectColor;
+        } else {
+            c.lineWidth = lineWidth;
+            c.fillStyle = c.strokeStyle = 'black';
+        }
         links[i].draw(c);
     }
     if(currentLink != null) {

@@ -444,18 +444,13 @@ function drawArrow(c, x, y, angle) {
 }
 
 function canvasHasFocus() {
-    /* Return true iff the document.activeElement is undefined or
-       contains the canvas.  The active element could be either the
-       notebook cell containing the canvas or the document.body. */
-    if (!document.activeElement) return true;
-    for (var e = canvas; e; e = e.parentElement)
-        if (document.activeElement == e) return true;
-    return false;
+    return document.activeElement == canvas;
 }
 
 function drawText(c, originalText, x, y, angleOrNull, isSelected) {
-    var text = convertLatexShortcuts(originalText);
+    c.save();
     c.font = ''+fontSize+'px "Courier", monospace';
+    var text = convertLatexShortcuts(originalText);
     var width = c.measureText(text).width;
 
     // center the text
@@ -473,23 +468,19 @@ function drawText(c, originalText, x, y, angleOrNull, isSelected) {
     }
 
     // draw text and caret (round the coordinates so the caret falls on a pixel)
-    if('advancedFillText' in c) {
-        c.advancedFillText(text, originalText, x + width / 2, y, angleOrNull);
-    } else {
-        x = Math.round(x);
-        y = Math.round(y);
-        c.fillText(text, x, y + 6);
-        if(isSelected && caretVisible && canvasHasFocus() && document.hasFocus()) {
-            x += width;
-            var saveLineWidth = c.lineWidth;
-            c.lineWidth = lineWidth;
-            c.beginPath();
-            c.moveTo(x, y - fontSize/2);
-            c.lineTo(x, y + fontSize/2);
-            c.stroke();
-            c.lineWidth = saveLineWidth;
-        }
+    x = Math.round(x);
+    y = Math.round(y);
+    c.textBaseline = "middle";
+    c.fillText(text, x, y);
+    if(isSelected && caretVisible && canvasHasFocus() && document.hasFocus()) {
+        x += width;
+        c.lineWidth = lineWidth;
+        c.beginPath();
+        c.moveTo(x, y - fontSize/2);
+        c.lineTo(x, y + fontSize/2);
+        c.stroke();
     }
+    c.restore();
 }
 
 var caretTimer;
@@ -592,7 +583,8 @@ function message(s) {
 
 function main() {
     canvas = document.createElement("canvas");
-    canvas.setAttribute("style", "border: 1px solid black; width: 600px; height: 600px;");
+    canvas.setAttribute("style", "outline: 1px solid black; width: 600px; height: 600px;");
+    canvas.setAttribute("tabindex", -1); // make canvas focusable
     canvas_dpr = window.devicePixelRatio || 1;
     canvas.width = 600 * canvas_dpr;
     canvas.height = 600 * canvas_dpr;
@@ -631,12 +623,6 @@ function main() {
         movingObject = false;
         originalClick = mouse;
 
-        if(typeof Jupyter !== 'undefined') {
-            if(selectedObject == null)
-                Jupyter.keyboard_manager.enable();
-            else
-                Jupyter.keyboard_manager.disable();
-        }
         if(selectedObject != null) {
             if(shift && selectedObject instanceof Node) {
                 currentLink = new SelfLink(selectedObject, mouse);

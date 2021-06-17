@@ -949,7 +949,7 @@ function load(ei) {
         function success (r) {
             message('Load successful');
             console.log(r);
-            var tgf = null;
+            var tgf = r.data['text/plain'];;
             from_tgf(tgf);
             draw();
         }

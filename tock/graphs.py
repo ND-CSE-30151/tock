@@ -222,44 +222,74 @@ class Graph:
         from .graphviz import run_dot
         display(run_dot(self._repr_dot_()))
 
-def _tgf_to_graph(lines):
+def graph_to_json(g):
+    j = {'nodes': {}, 'edges': {}}
+    if len(set(str(v) for v in g.nodes)) != len(g.nodes):
+        raise ValueError('node names not unique')
+    for v in g.nodes:
+        j['nodes'][str(v)] = {
+            'start': g.nodes[v].get('start', False),
+            'accept': g.nodes[v].get('accept', False),
+        }
+    for u in g.edges:
+        j['edges'][u] = {}
+        for v in g.edges[u]:
+            j['edges'][u][v] = []
+            for e in g.edges[u][v]:
+                j['edges'][u][v].append({
+                    'label': str(e['label']),
+                })
+    return j
+
+def json_to_graph(j):
     g = Graph()
-    
-    states = {}
-    section = 0
+    for v in j['nodes']:
+        g.add_node(str(v), {
+            'start': j['nodes'][v]['start'],
+            'accept': j['nodes'][v]['accept']})
+    for u in j['edges']:
+        for v in j['edges'][u]:
+            for e in j['edges'][u][v]:
+                g.add_edge(u, v,
+                           {'label': syntax.str_to_transition(e['label'])})
 
-    for line in lines:
-        line = line.strip()
-        if line == "": 
-            continue
-        fields = line.split()
-        
-        if fields == ["#"]:
-            section += 1
-        elif section == 0:
-            # Nodes
-            if len(fields) != 2:
-                raise ValueError(f"A node must have an id and a label (not {line})")
-            i, q = fields
-            q, attrs = syntax.str_to_state(q)
-            states[i] = q
-            g.add_node(q, attrs)
-
-        elif section == 1:
-            # Edges
-            if len(fields) != 3:
-                raise ValueError(f"An edge must have a tail, a head, and a label (not {line})")
-            i, j, t = fields
-            q, r = states[i], states[j]
-            t = syntax.str_to_transition(t)
-            g.add_edge(q, r, {'label':t})
     return g
-        
+
 def read_tgf(filename):
     """Reads a file in Trivial Graph Format. Edge labels are read into the
     `label` attribute."""
     with open(filename) as file:
-        return from_graph(_tgf_to_graph(file))
+        g = Graph()
+
+        states = {}
+        section = 0
+
+        for line in file:
+            line = line.strip()
+            if line == "": 
+                continue
+            fields = line.split()
+
+            if fields == ["#"]:
+                section += 1
+            elif section == 0:
+                # Nodes
+                if len(fields) != 2:
+                    raise ValueError(f"A node must have an id and a label (not {line})")
+                i, q = fields
+                q, attrs = syntax.str_to_state(q)
+                states[i] = q
+                g.add_node(q, attrs)
+
+            elif section == 1:
+                # Edges
+                if len(fields) != 3:
+                    raise ValueError(f"An edge must have a tail, a head, and a label (not {line})")
+                i, j, t = fields
+                q, r = states[i], states[j]
+                t = syntax.str_to_transition(t)
+                g.add_edge(q, r, {'label':t})
+    return from_graph(g)
 
 def from_graph(g):
     """Converts a `Graph` to a `Machine`."""
@@ -284,24 +314,6 @@ def from_graph(g):
         raise ValueError("missing start state")
 
     return machines.from_transitions(transitions, start_state, accept_states)
-
-def _graph_to_tgf(g):
-    res = []
-    node_index = {}
-    for i, q in enumerate(sorted(g.nodes, key=id)):
-        node_index[q] = i
-        label = q
-        if g.nodes[q].get('start', False):
-            label = ">"+label
-        if g.nodes[q].get('accept', False):
-            label = "@"+label
-        res.append(f'{i} {label}')
-    res.append('#')
-    for q in g.edges:
-        for r in g.edges[q]:
-            for e in g.edges[q][r]:
-                res.append(f"{node_index[q]} {node_index[r]} {e['label']}")
-    return '\n'.join(res)
 
 def write_dot(x, filename):
     """Writes a `Machine` or `Graph` to file named `filename` in GraphViz
@@ -382,8 +394,9 @@ class Editor:
         import IPython
         IPython.display.display(IPython.display.Javascript(self.src))
 
-    def save(self, tgf):
-        m = from_graph(_tgf_to_graph(tgf.split('\n')))
+    def save(self, g):
+        import json
+        m = from_graph(json_to_graph(json.loads(g)))
         self.m.transitions = m.transitions
         self.m.store_types = m.store_types
         self.m.state = m.state
@@ -392,7 +405,7 @@ class Editor:
         self.m.accept_configs = m.accept_configs
 
     def load(self):
-        return _graph_to_tgf(to_graph(self.m))
+        return graph_to_json(to_graph(self.m))
 
 def editor_save(ei, tgf):
     Editor._editors[ei].save(tgf)

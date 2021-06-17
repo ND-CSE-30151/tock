@@ -835,33 +835,43 @@ function getNodeId(node) {
             return i;
 }
 
-function to_tgf() {
-    var tgf = [];
+function to_json() {
+    var g = {'nodes': {}, 'edges': {}};
     var start;
     for(var i = 0; i < links.length; i++) {
         if(links[i] instanceof StartLink)
             start = getNodeId(links[i].node);
     }
-    for(var i = 0; i < nodes.length; i++) {
-        var text = nodes[i].text;
-        if (nodes[i].isAcceptState) text = '@' + text;
-        if (i == start) text = '>' + text;
-        tgf.push(i + ' ' + text);
+    for (var i = 0; i < nodes.length; i++) {
+        g.nodes[nodes[i].text] = {
+            'start': i == start,
+            'accept': nodes[i].isAcceptState
+        };
     }
-    tgf.push("#");
+    if (g.nodes.length != nodes.length) {
+        message("All states must have unique names.");
+        return null;
+    }
     for(var i = 0; i < links.length; i++) {
-        if(links[i] instanceof Link)
-            tgf.push(getNodeId(links[i].nodeA) + ' ' + getNodeId(links[i].nodeB) + ' ' + links[i].text);
-        else if(links[i] instanceof SelfLink)
-            tgf.push(getNodeId(links[i].node) + ' ' + getNodeId(links[i].node) + ' ' + links[i].text);
+        if(links[i] instanceof Link) {
+            var u = links[i].nodeA.text;
+            var v = links[i].nodeB.text;
+            if (!(u in g.edges)) g.edges[u] = {};
+            if (!(v in g.edges[u])) g.edges[u][v] = [];
+            g.edges[u][v].push({ 'label': links[i].text });
+        } else if(links[i] instanceof SelfLink) {
+            var v = links[i].node.text;
+            if (!(v in g.edges)) g.edges[v] = {};
+            if (!(v in g.edges[v])) g.edges[v][v] = [];
+            g.edges[v][v].push({ 'label': links[i].text });
+        }
     }
-
-    tgf = tgf.join('\n');
-    return tgf;
+    return g;
 }
 
 function save(ei) {
-    var tgf = to_tgf();
+    var g = to_json();
+    if (g === null) return;
     if (typeof Jupyter !== 'undefined') {
         function handle (r) {
             if (r.content.status == "ok") {
@@ -871,63 +881,76 @@ function save(ei) {
                 console.log(r);
             }
         }
-        var cmd = 'import tock; tock.graphs.editor_save(' + ei + ', """' + tgf + '""")';
+        var cmd = 'import tock; tock.graphs.editor_save(' + ei + ', """' + JSON.stringify(g) + '""")';
+        console.log(cmd);
         Jupyter.notebook.kernel.execute(cmd, {"shell": {"reply": handle}});
     } else if (typeof google !== 'undefined') {
-        var result = google.colab.kernel.invokeFunction('notebook.editor_save', [ei, tgf]).then(() => message('Save successful'), message);
+        var result = google.colab.kernel.invokeFunction('notebook.editor_save', [ei, g]).then(() => message('Save successful'), message);
     }
 }
 
-function from_tgf(tgf) {
+function from_json(g) {
+    // Clear the current graph
     nodes = [];
     links = [];
     selectedObject = null;
-    
-    var lines = tgf.split("\n");
-    var section = 0;
-    var node_index = {};
-    var edge_index = {};
-    for (var li=0; li<lines.length; li++) {
-        if (lines[li] === "#") section++;
-        else if (section === 0) {
-            var m = lines[li].match(/^(\S+) (.*)/);
-            var newnode = new Node(0, 0); // will move later
-            nodes.push(newnode);
-            node_index[m[1]] = newnode;
-            var label = m[2];
-            while (label[0] === "@" || label[0] === ">") { 
-                if (label[0] === "@")
-                    newnode.isAcceptState = true;
-                else if (label[0] === ">")
-                    links.push(new StartLink(newnode, {'x':newnode.x-nodeRadius*2,'y':newnode.y}));
-                label = label.substring(1);
+
+    var node_index = {}
+    for (var v in g.nodes) {
+        var newnode = new Node(0, 0); // will move later
+        var label = v;
+        if (g.nodes[v].start)
+            links.push(new StartLink(newnode, {'x':newnode.x-nodeRadius*2,'y':newnode.y}));
+        if (g.nodes[v].accept)
+            newnode.isAcceptState = true;
+        newnode.text = label;
+        nodes.push(newnode);
+        node_index[v] = newnode;
+    }
+
+    for (var u in g.edges) {
+        var unode = node_index[u];
+        for (var v in g.edges[u]) {
+            var vnode = node_index[v];
+            for (var i=0; i<g.edges[u][v].length; i++) {
+                var newlink;
+                if (u == v)
+                    newlink = new SelfLink(unode, {'x':newnode.x, 'y':newnode.y-1});
+                else
+                    newlink = new Link(unode, vnode);
+                newlink.text = g.edges[u][v][i].label;
+                links.push(newlink);
             }
-            newnode.text = label;
-        } else if (section == 1) {
-            var m = lines[li].match(/^(\S+) (\S+) (.*)/);
-            var newlink;
-            if (m[1] === m[2])
-                newlink = new SelfLink(node_index[m[1]], {'x':newnode.x,'y':newnode.y-1});
-            else {
-                newlink = new Link(node_index[m[1]], node_index[m[2]]);
-                var ij = m[1] + "-" + m[2];
-                if (!(ij in edge_index))
-                    edge_index[ij] = [];
-                edge_index[ij].push(newlink);
-            }
-            newlink.text = m[3];
-            links.push(newlink);
         }
     }
+}
+
+function layout() {
     /* Very crude layout algorithm */
+    
+    // Identify parallel edges
+    var edge_index = {};
+    for (var ei=0; ei<links.length; ei++)
+        if (links[ei] instanceof Link) {
+            var estr = getNodeId(links[ei].nodeA) + "-" + getNodeId(links[ei].nodeB);
+            if (!(estr in edge_index))
+                edge_index[estr] = [];
+            edge_index[estr].push(links[ei]);
+        }
+
+    // Arrange nodes in a circle
     for (var vi=0; vi<nodes.length; vi++) {
         nodes[vi].x = (canvas.width/2)+(canvas.width/4)*Math.cos(vi/nodes.length*2*Math.PI);
 
         nodes[vi].y = (canvas.height/2)+(canvas.height/4)*Math.sin(vi/nodes.length*2*Math.PI);
     }
-    for (var ij in edge_index)
-        for (var ei=0; ei<edge_index[ij].length; ei++)
-            edge_index[ij][ei].perpendicularPart = nodeRadius * (ei+0.5);
+
+    // Bend edges
+    for (var estr in edge_index)
+        for (var ei=0; ei<edge_index[estr].length; ei++) {
+            edge_index[estr][ei].parallelPart = 0.5;
+            edge_index[estr][ei].perpendicularPart = nodeRadius * (ei+0.5);
+        }
 }
 
 function load(ei) {
@@ -935,23 +958,24 @@ function load(ei) {
         function handle (r) {
             if (r.msg_type == "stream") {
                 message('Load successful');
-                var tgf = r.content.text;
-                from_tgf(tgf);
+                from_json(JSON.parse(r.content.text));
+                layout();
                 draw();
             } else if (r.msg_type == "error") {
                 message(r.content.ename + ": " + r.content.evalue);
                 console.log(r);
             }
         }
-        var cmd = 'import tock; print(tock.graphs.editor_load(' + ei + '), end="")';
+        var cmd = 'import tock; import json; print(json.dumps(tock.graphs.editor_load(' + ei + ')))';
         Jupyter.notebook.kernel.execute(cmd, {"iopub": {"output": handle}});
     } else if (typeof google !== 'undefined') {
         function success (r) {
             message('Load successful');
             console.log(r);
-            var tgf = JSON.parse(r.data['text/plain'])
-            console.log(tgf);;
-            from_tgf(tgf);
+            var g = JSON.parse(r.data['application/json'])
+            console.log(g);
+            from_json(g);
+            layout();
             draw();
         }
         var result = google.colab.kernel.invokeFunction('notebook.editor_load', [ei]).then(success, message);

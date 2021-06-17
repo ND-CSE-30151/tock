@@ -949,7 +949,8 @@ function load(ei) {
         function success (r) {
             message('Load successful');
             console.log(r);
-            var tgf = JSON.parse(r.data['text/plain']);
+            var tgf = JSON.parse(r.data['text/plain'])
+            console.log(tgf);;
             from_tgf(tgf);
             draw();
         }

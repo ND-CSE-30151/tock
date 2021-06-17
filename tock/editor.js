@@ -30,14 +30,16 @@
    Bugs:
    - In Jupyter, if the canvas is too wide, a horizontal scrollbar appears,
      which makes the output too high, so a vertical scrollbar appears too.
+
    To do:
    - Change keybinding for delete node/edge
    - Change edge's endpoint
-   - Load from variable
    - Help
    - Better error messages
    - Map -> to \rightarrow, maybe & to \epsilon
    - Map > and @ to start/accept state?
+   - \epsilon is not recognized
+   - Start "edge" constant length
 */
 
 function StartLink(node, start) {
@@ -581,7 +583,7 @@ function message(s) {
     message_bar.innerHTML = s;
 }
 
-function main() {
+function main(ei) {
     canvas = document.createElement("canvas");
     canvas.setAttribute("style", "outline: 1px solid black; width: 600px; height: 600px;");
     canvas.setAttribute("tabindex", -1); // make canvas focusable
@@ -593,28 +595,26 @@ function main() {
     nodeRadius *= canvas_dpr; arrowSize *= canvas_dpr;
     lineWidth *= canvas_dpr; fontSize *= canvas_dpr;
     snapToPadding *= canvas_dpr; hitTargetPadding *= canvas_dpr;
-    
-    draw();
+
+    load(ei);
+    //draw();
 
     element.append(document.createElement("br"));
 
+    var load_button = document.createElement("button");
+    load_button.setAttribute("style", "margin: 0 5px 0 0;");
+    load_button.innerHTML = "Load";
+    load_button.onclick = function() { load(ei); };
+    element.append(load_button);
+
     var save_button = document.createElement("button");
-    save_button.innerHTML = "Assign to";
-    save_button.onclick = function() {
-        if (name_field.value == "")
-            message("Please enter a variable name.");
-        else
-            save(name_field.value);
-    };
+    save_button.setAttribute("style", "margin: 0 5px;");
+    save_button.innerHTML = "Save";
+    save_button.onclick = function() { save(ei); };
     element.append(save_button);
 
-    var name_field = document.createElement("input");
-    name_field.setAttribute("placeholder", "variable");
-    name_field.setAttribute("style", "margin: 0 10px;");
-    element.append(name_field);
-
     message_bar = document.createElement("span");
-    message_bar.setAttribute("style", "margin: 0 10px;");
+    message_bar.setAttribute("style", "margin: 0 5px;");
     element.append(message_bar);
 
     canvas.onmousedown = function(e) {
@@ -835,7 +835,7 @@ function getNodeId(node) {
             return i;
 }
 
-function save(name) {
+function to_tgf() {
     var tgf = [];
     var start;
     for(var i = 0; i < links.length; i++) {
@@ -857,18 +857,102 @@ function save(name) {
     }
 
     tgf = tgf.join('\n');
+    return tgf;
+}
+
+function save(ei) {
+    var tgf = to_tgf();
     if (typeof Jupyter !== 'undefined') {
         function handle (r) {
             if (r.content.status == "ok") {
                 message('Save successful');
             } else if (r.content.status == "error") {
-                message('error: ' + r.content.evalue);
+                message(r.content.ename + ": " + r.content.evalue);
                 console.log(r);
             }
         }
-        var cmd = 'import tock; tock.graphs.editor_save("' + name + '", """' + tgf + '""")';
+        var cmd = 'import tock; tock.graphs.editor_save(' + ei + ', """' + tgf + '""")';
         Jupyter.notebook.kernel.execute(cmd, {"shell": {"reply": handle}});
     } else if (typeof google !== 'undefined') {
-        var result = google.colab.kernel.invokeFunction('notebook.editor_save', [name, tgf]).then(() => message('Save successful'), message);
+        var result = google.colab.kernel.invokeFunction('notebook.editor_save', [ei, tgf]).then(() => message('Save successful'), message);
+    }
+}
+
+function from_tgf(tgf) {
+    nodes = [];
+    links = [];
+    selectedObject = null;
+    
+    var lines = tgf.split("\n");
+    var section = 0;
+    var node_index = {};
+    var edge_index = {};
+    for (var li=0; li<lines.length; li++) {
+        if (lines[li] === "#") section++;
+        else if (section === 0) {
+            var m = lines[li].match(/^(\S+) (.*)/);
+            var newnode = new Node(0, 0); // will move later
+            nodes.push(newnode);
+            node_index[m[1]] = newnode;
+            var label = m[2];
+            while (label[0] === "@" || label[0] === ">") { 
+                if (label[0] === "@")
+                    newnode.isAcceptState = true;
+                else if (label[0] === ">")
+                    links.push(new StartLink(newnode, {'x':newnode.x-nodeRadius*2,'y':newnode.y}));
+                label = label.substring(1);
+            }
+            newnode.text = label;
+        } else if (section == 1) {
+            var m = lines[li].match(/^(\S+) (\S+) (.*)/);
+            var newlink;
+            if (m[1] === m[2])
+                newlink = new SelfLink(node_index[m[1]], {'x':newnode.x,'y':newnode.y-1});
+            else {
+                newlink = new Link(node_index[m[1]], node_index[m[2]]);
+                var ij = m[1] + "-" + m[2];
+                if (!(ij in edge_index))
+                    edge_index[ij] = [];
+                edge_index[ij].push(newlink);
+            }
+            newlink.text = m[3];
+            links.push(newlink);
+        }
+    }
+    /* Very crude layout algorithm */
+    for (var vi=0; vi<nodes.length; vi++) {
+        nodes[vi].x = (canvas.width/2)+(canvas.width/4)*Math.cos(vi/nodes.length*2*Math.PI);
+
+        nodes[vi].y = (canvas.height/2)+(canvas.height/4)*Math.sin(vi/nodes.length*2*Math.PI);
+    }
+    for (var ij in edge_index)
+        for (var ei=0; ei<edge_index[ij].length; ei++)
+            edge_index[ij][ei].perpendicularPart = nodeRadius * (ei+0.5);
+}
+
+function load(ei) {
+    if (typeof Jupyter !== 'undefined') {
+        function handle (r) {
+            if (r.msg_type == "stream") {
+                message('Load successful');
+                var tgf = r.content.text;
+                from_tgf(tgf);
+                draw();
+            } else if (r.msg_type == "error") {
+                message(r.content.ename + ": " + r.content.evalue);
+                console.log(r);
+            }
+        }
+        var cmd = 'import tock; print(tock.graphs.editor_load(' + ei + '), end="")';
+        Jupyter.notebook.kernel.execute(cmd, {"iopub": {"output": handle}});
+    } else if (typeof google !== 'undefined') {
+        function success (r) {
+            message('Load successful');
+            console.log(r);
+            var tgf = null;
+            from_tgf(tgf);
+            draw();
+        }
+        var result = google.colab.kernel.invokeFunction('notebook.editor_load', [ei]).then(success, message);
     }
 }

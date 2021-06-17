@@ -2,7 +2,7 @@ import collections
 from . import machines
 from . import syntax
 
-__all__ = ['Graph', 'from_graph', 'write_dot', 'read_tgf', 'to_graph', 'editor']
+__all__ = ['Graph', 'from_graph', 'write_dot', 'read_tgf', 'to_graph', 'Editor']
 
 class Graph:
     """A directed graph. Both nodes and edges can have a `dict` of attributes.
@@ -285,6 +285,24 @@ def from_graph(g):
 
     return machines.from_transitions(transitions, start_state, accept_states)
 
+def _graph_to_tgf(g):
+    res = []
+    node_index = {}
+    for i, q in enumerate(sorted(g.nodes, key=id)):
+        node_index[q] = i
+        label = q
+        if g.nodes[q].get('start', False):
+            label = ">"+label
+        if g.nodes[q].get('accept', False):
+            label = "@"+label
+        res.append(f'{i} {label}')
+    res.append('#')
+    for q in g.edges:
+        for r in g.edges[q]:
+            for e in g.edges[q][r]:
+                res.append(f"{node_index[q]} {node_index[r]} {e['label']}")
+    return '\n'.join(res)
+
 def write_dot(x, filename):
     """Writes a `Machine` or `Graph` to file named `filename` in GraphViz
     (DOT) format."""
@@ -341,21 +359,42 @@ class Path:
             html.append('<p>reject</p')
         return ''.join(html)
 
-def editor():
-    import IPython
-    import importlib.resources
-    src = importlib.resources.read_text(__package__, 'editor.js') + f'main();'
-
-    try:
-        import google.colab
-        google.colab.output.register_callback('notebook.editor_save', editor_save)
-    except ImportError:
-        pass
+class Editor:
+    _editors = []
     
-    return IPython.display.Javascript(src)
+    def __init__(self, m):
+        self.m = m
+        
+        import importlib.resources
+        self.src = importlib.resources.read_text(__package__, 'editor.js');
+        self.src = self.src + f'main({len(Editor._editors)});'
+        Editor._editors.append(self)
 
-def editor_save(name, tgf):
-    import builtins
-    g = _tgf_to_graph(tgf.split('\n'))
-    builtins.__dict__[name] = from_graph(g)
+        try:
+            import google.colab
+            google.colab.output.register_callback('notebook.editor_save', editor_save)
+        except ImportError:
+            pass
+
+    def _ipython_display_(self):
+        # bad to have more than one of these per Editor object?
+        import IPython
+        IPython.display.display(IPython.display.Javascript(self.src))
+
+    def save(self, tgf):
+        m = from_graph(_tgf_to_graph(tgf.split('\n')))
+        self.m.transitions = m.transitions
+        self.m.store_types = m.store_types
+        self.m.state = m.state
+        self.m.input = m.input
+        self.m.start_config = m.start_config
+        self.m.accept_configs = m.accept_configs
+
+    def load(self):
+        return _graph_to_tgf(to_graph(self.m))
+
+def editor_save(ei, tgf):
+    Editor._editors[ei].save(tgf)
     
+def editor_load(ei):
+    return Editor._editors[ei].load()

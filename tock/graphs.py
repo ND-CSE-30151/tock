@@ -118,7 +118,7 @@ class Graph:
     def __getitem__(self, u):
         return self.edges[u]
 
-    def _repr_dot_(self):
+    def _repr_dot_(self, merge_parallel=True, index=None):
         def repr_html(x):
             if hasattr(x, '_repr_html_'):
                 return x._repr_html_()
@@ -134,7 +134,12 @@ class Graph:
 
         # Draw nodes
         result.append('  _START[shape=none,label=""];\n')
-        index = {}
+        if index is None:
+            index = {}
+        else:
+            if not isinstance(index, dict):
+                raise TypeError('index must be a dict')
+            index.clear()
         for i, q in enumerate(sorted(self.nodes, key=id)):
             index[q] = i
 
@@ -191,28 +196,44 @@ class Graph:
         # Draw normal edges
         for u in self.edges:
             for v in self.edges[u]:
-                attrs = {}
-
-                labels = []
+                edges = []
                 for e in self.edges[u][v]:
+                    attrs = {}
                     for key, val in e.items():
                         if key == 'label':
-                            labels.append('<tr><td>{}</td></tr>'.format(repr_html(e['label'])))
+                            attrs['label'] = repr_html(e['label'])
                         elif key in ['style', 'color']:
                             attrs[key] = val
+                    edges.append(attrs)
 
-                if labels:
-                    attrs['label'] = '<<table border="0" cellpadding="1">{}</table>>'.format(''.join(labels))
-
-                # Within-rank edges don't constrain position of v if v's position is already determined
-                if 'rank' in self.nodes[u] and 'rank' in self.nodes[v] and self.nodes[u]['rank'] == self.nodes[v]['rank'] and v in node_has_constraint:
-                    attrs['constraint'] = 'false'
-
-                if attrs:
-                    attrs = ','.join('{}={}'.format(key, val) for key, val in attrs.items())
-                    result.append('  {} -> {}[{}];'.format(index[u], index[v], attrs))
+                if merge_parallel:
+                    attrs = {}
+                    labels = []
+                    for e in edges:
+                        labels.append(e['label'])
+                        # In principle it's possible for parallel edges to have
+                        # different attributes, but not for the cases where
+                        # we currently use attributes.
+                        attrs.update(e)
+                    if labels:
+                        labels = [f'<tr><td>{label}</td></tr>' for label in labels]
+                        attrs['label'] = '<<table border="0" cellpadding="1">{}</table>>'.format(''.join(labels))
+                    edges = [attrs]
+                        
                 else:
-                    result.append('  {} -> {};'.format(index[u], index[v]))
+                    for attrs in edges:
+                        attrs['label'] = f"<{attrs['label']}>"
+
+                for attrs in edges:
+                    # Within-rank edges don't constrain position of v if v's position is already determined
+                    if 'rank' in self.nodes[u] and 'rank' in self.nodes[v] and self.nodes[u]['rank'] == self.nodes[v]['rank'] and v in node_has_constraint:
+                        attrs['constraint'] = 'false'
+
+                    if attrs:
+                        attrs = ','.join('{}={}'.format(key, val) for key, val in attrs.items())
+                        result.append('  {} -> {}[{}];'.format(index[u], index[v], attrs))
+                    else:
+                        result.append('  {} -> {};'.format(index[u], index[v]))
         
         result.append('}')
         return '\n'.join(result)
@@ -224,21 +245,24 @@ class Graph:
 
 def graph_to_json(g):
     j = {'nodes': {}, 'edges': {}}
-    if len(set(str(v) for v in g.nodes)) != len(g.nodes):
-        raise ValueError('node names not unique')
+    for attr in ['xmin', 'xmax', 'ymin', 'ymax']:
+        if attr in g.attrs:
+            j[attr] = g.attrs[attr]
     for v in g.nodes:
-        j['nodes'][str(v)] = {
-            'start': g.nodes[v].get('start', False),
-            'accept': g.nodes[v].get('accept', False),
-        }
+        j['nodes'][v] = {}
+        for attr in ['start', 'accept', 'x', 'y', 'startx', 'starty']:
+            if attr in g.nodes[v]:
+                j['nodes'][str(v)][attr] = g.nodes[v][attr]
     for u in g.edges:
         j['edges'][u] = {}
         for v in g.edges[u]:
             j['edges'][u][v] = []
             for e in g.edges[u][v]:
-                j['edges'][u][v].append({
-                    'label': str(e['label']),
-                })
+                attrs = {'label': str(e['label'])}
+                for attr in ['anchorx', 'anchory']:
+                    if attr in e:
+                        attrs[attr] = e[attr]
+                j['edges'][u][v].append(attrs)
     return j
 
 def json_to_graph(j):
@@ -252,7 +276,6 @@ def json_to_graph(j):
             for e in j['edges'][u][v]:
                 g.add_edge(u, v,
                            {'label': syntax.str_to_transition(e['label'])})
-
     return g
 
 def read_tgf(filename):
@@ -371,6 +394,61 @@ class Path:
             html.append('<p>reject</p')
         return ''.join(html)
 
+def layout(g):
+    import pydot
+    from .graphviz import run_dot
+
+    def parse_string(s):
+        if s.startswith('"') and s.endswith('"'):
+            s = s[1:-1]
+            s = s.replace('\\\n','')
+        return s
+    
+    node_index = {}
+    dot = g._repr_dot_(index=node_index, merge_parallel=False)
+    dot = run_dot(dot, format="dot")
+    dot = pydot.graph_from_dot_data(dot)[0]
+    
+    bbox = parse_string(dot.get_bb()).split(',')
+    g.attrs['xmin'] = bbox[0]
+    g.attrs['ymin'] = bbox[1]
+    g.attrs['xmax'] = bbox[2]
+    g.attrs['ymax'] = bbox[3]
+
+    for v in g.nodes:
+        vid = node_index[v]
+        vdot = dot.get_node(str(vid))[0]
+        pos = parse_string(vdot.get_attributes()['pos'])
+        x, y = pos.split(',', 1)
+        g.nodes[v]['x'] = float(x)
+        g.nodes[v]['y'] = float(y)
+        if g.nodes[v].get('start', False):
+            sdot = dot.get_node('_START')[0]
+            pos = parse_string(sdot.get_attributes()['pos'])
+            x, y = pos.split(',', 1)
+            g.nodes[v]['startx'] = float(x)
+            g.nodes[v]['starty'] = float(y)
+        
+    for u in g.edges:
+        uid = node_index[u]
+        for v in g.edges[u]:
+            vid = node_index[v]
+            edots = dot.get_edge(str(uid), str(vid))
+            for e, edot in zip(g.edges[u][v], edots):
+                pos = parse_string(edot.get_attributes()['pos'])
+                points = []
+                start = end = None
+                for pstr in pos.split():
+                    fields = pstr.split(',')
+                    if fields[0] not in ['s', 'e']:
+                        points.append(tuple(map(float, fields)))
+                # Every third point is actually on the curve.
+                # Choose the middle(ish) one.
+                points = points[::3]
+                e['anchorx'] = points[len(points)//2][0]
+                e['anchory'] = points[len(points)//2][1]
+    return g
+
 class Editor:
     _editors = []
     
@@ -405,7 +483,9 @@ class Editor:
         self.m.accept_configs = m.accept_configs
 
     def load(self):
-        return graph_to_json(to_graph(self.m))
+        g = to_graph(self.m)
+        layout(g)
+        return graph_to_json(g)
 
 def editor_save(ei, tgf):
     Editor._editors[ei].save(tgf)

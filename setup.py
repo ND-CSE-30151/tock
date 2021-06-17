@@ -26,7 +26,7 @@ setup(name='tock',
       package_data={'tock': ['tock/editor.js']},
       include_package_data=True,
       python_requires='>=3.7',
-      install_requires=['openpyxl'],
+      install_requires=['openpyxl', 'pydot'],
       long_description=long_description,
       long_description_content_type='text/markdown',
       )

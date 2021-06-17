@@ -596,7 +596,7 @@ function main(ei) {
     lineWidth *= canvas_dpr; fontSize *= canvas_dpr;
     snapToPadding *= canvas_dpr; hitTargetPadding *= canvas_dpr;
 
-    load(ei);
+    load(ei); // bug: if there is an error later in the notebook, this doesn't work
     //draw();
 
     element.append(document.createElement("br"));
@@ -895,12 +895,22 @@ function from_json(g) {
     links = [];
     selectedObject = null;
 
+    // Transform from graphviz coordinates to ours
+    var eps = Math.min(canvas.width, canvas.height)*0.03; 
+    function tx(x) { return (x-g.xmin+eps) / (g.xmax-g.xmin+2*eps) * canvas.width; }
+    function ty(y) { return (g.ymax-y+eps) / (g.ymax-g.ymin+2*eps) * canvas.height; }
+
     var node_index = {}
     for (var v in g.nodes) {
-        var newnode = new Node(0, 0); // will move later
+        var newnode;
+        if ('x' in g.nodes[v] && 'y' in g.nodes[v])
+            newnode = new Node(tx(g.nodes[v].x), ty(g.nodes[v].y));
+        else
+            newnode = new Node(0, 0); // will move later
         var label = v;
         if (g.nodes[v].start)
-            links.push(new StartLink(newnode, {'x':newnode.x-nodeRadius*2,'y':newnode.y}));
+            links.push(new StartLink(newnode, {'x': tx(g.nodes[v].startx),
+                                               'y': ty(g.nodes[v].starty)}));
         if (g.nodes[v].accept)
             newnode.isAcceptState = true;
         newnode.text = label;
@@ -915,42 +925,16 @@ function from_json(g) {
             for (var i=0; i<g.edges[u][v].length; i++) {
                 var newlink;
                 if (u == v)
-                    newlink = new SelfLink(unode, {'x':newnode.x, 'y':newnode.y-1});
+                    newlink = new SelfLink(unode);
                 else
                     newlink = new Link(unode, vnode);
+                newlink.setAnchorPoint(tx(g.edges[u][v][i].anchorx),
+                                       ty(g.edges[u][v][i].anchory));
                 newlink.text = g.edges[u][v][i].label;
                 links.push(newlink);
             }
         }
     }
-}
-
-function layout() {
-    /* Very crude layout algorithm */
-    
-    // Identify parallel edges
-    var edge_index = {};
-    for (var ei=0; ei<links.length; ei++)
-        if (links[ei] instanceof Link) {
-            var estr = getNodeId(links[ei].nodeA) + "-" + getNodeId(links[ei].nodeB);
-            if (!(estr in edge_index))
-                edge_index[estr] = [];
-            edge_index[estr].push(links[ei]);
-        }
-
-    // Arrange nodes in a circle
-    for (var vi=0; vi<nodes.length; vi++) {
-        nodes[vi].x = (canvas.width/2)+(canvas.width/4)*Math.cos(vi/nodes.length*2*Math.PI);
-
-        nodes[vi].y = (canvas.height/2)+(canvas.height/4)*Math.sin(vi/nodes.length*2*Math.PI);
-    }
-
-    // Bend edges
-    for (var estr in edge_index)
-        for (var ei=0; ei<edge_index[estr].length; ei++) {
-            edge_index[estr][ei].parallelPart = 0.5;
-            edge_index[estr][ei].perpendicularPart = nodeRadius * (ei+0.5);
-        }
 }
 
 function load(ei) {
@@ -959,7 +943,6 @@ function load(ei) {
             if (r.msg_type == "stream") {
                 message('Load successful');
                 from_json(JSON.parse(r.content.text));
-                layout();
                 draw();
             } else if (r.msg_type == "error") {
                 message(r.content.ename + ": " + r.content.evalue);

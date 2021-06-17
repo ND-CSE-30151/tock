@@ -372,6 +372,7 @@ class Editor:
 
         try:
             import google.colab
+            google.colab.output.register_callback('notebook.editor_load', editor_load)
             google.colab.output.register_callback('notebook.editor_save', editor_save)
         except ImportError:
             pass

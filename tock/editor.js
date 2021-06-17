@@ -36,10 +36,7 @@
    - Change edge's endpoint
    - Help
    - Better error messages
-   - Map -> to \rightarrow, maybe & to \epsilon
    - Map > and @ to start/accept state?
-   - \epsilon is not recognized
-   - Start "edge" constant length
 */
 
 function StartLink(node, start) {
@@ -399,40 +396,11 @@ function circleFromThreePoints(x1, y1, x2, y2, x3, y3) {
     };
 }
 
-function fixed(number, digits) {
-    return number.toFixed(digits).replace(/0+$/, '').replace(/\.$/, '');
-}
-
-var greekLetterNames = [ 'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi', 'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega' ];
-
-function convertLatexShortcuts(text) {
-    // html greek characters
-    for(var i = 0; i < greekLetterNames.length; i++) {
-        var name = greekLetterNames[i];
-        text = text.replace(new RegExp('\\\\' + name, 'g'), String.fromCharCode(913 + i + (i > 16)));
-        text = text.replace(new RegExp('\\\\' + name.toLowerCase(), 'g'), String.fromCharCode(945 + i + (i > 16)));
-    }
-
-    // subscripts
-    for(var i = 0; i < 10; i++) {
-        text = text.replace(new RegExp('_' + i, 'g'), String.fromCharCode(8320 + i));
-    }
-
+var mappings = {'&': 'ε', '|-': '⊢', '-|': '⊣', '_': '␣', '->': '→'}
+function convertShortcuts(text) {
+    for (var s in mappings)
+        text = text.replace(s, mappings[s]);
     return text;
-}
-
-function textToXML(text) {
-    text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    var result = '';
-    for(var i = 0; i < text.length; i++) {
-        var c = text.charCodeAt(i);
-        if(c >= 0x20 && c <= 0x7E) {
-            result += text[i];
-        } else {
-            result += '&#' + c + ';';
-        }
-    }
-    return result;
 }
 
 function drawArrow(c, x, y, angle) {
@@ -452,7 +420,7 @@ function canvasHasFocus() {
 function drawText(c, originalText, x, y, angleOrNull, isSelected) {
     c.save();
     c.font = ''+fontSize+'px "Courier", monospace';
-    var text = convertLatexShortcuts(originalText);
+    var text = convertShortcuts(originalText);
     var width = c.measureText(text).width;
 
     // center the text

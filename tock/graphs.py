@@ -481,8 +481,7 @@ class Editor:
         IPython.display.display(IPython.display.Javascript(self.src))
 
     def save(self, g):
-        import json
-        m = from_graph(json_to_graph(json.loads(g)))
+        m = from_graph(json_to_graph(g))
         self.m.transitions = m.transitions
         self.m.store_types = m.store_types
         self.m.state = m.state
@@ -495,8 +494,8 @@ class Editor:
         layout(g)
         return graph_to_json(g)
 
-def editor_save(ei, tgf):
-    Editor._editors[ei].save(tgf)
+def editor_save(ei, g):
+    Editor._editors[ei].save(g)
     
 def editor_load(ei):
     return Editor._editors[ei].load()

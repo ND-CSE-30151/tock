@@ -812,10 +812,8 @@ function to_json() {
             'accept': nodes[i].isAcceptState
         };
     }
-    if (g.nodes.length != nodes.length) {
+    if (Object.keys(g.nodes).length != nodes.length) {
         message("All states must have unique names.");
-        console.log(g.nodes);
-        console.log(nodes);
         return null;
     }
     for(var i = 0; i < links.length; i++) {
@@ -848,7 +846,6 @@ function save(ei) {
             }
         }
         var cmd = 'import tock; tock.graphs.editor_save(' + ei + ', """' + JSON.stringify(g) + '""")';
-        console.log(cmd);
         Jupyter.notebook.kernel.execute(cmd, {"shell": {"reply": handle}});
     } else if (typeof google !== 'undefined') {
         var result = google.colab.kernel.invokeFunction('notebook.editor_save', [ei, g]).then(() => message('Save successful'), message);
@@ -920,7 +917,6 @@ function load(ei) {
     } else if (typeof google !== 'undefined') {
         function success (r) {
             message('Load successful');
-            console.log(r);
             from_json(r.data['application/json']);
             draw();
         }

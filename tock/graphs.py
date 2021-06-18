@@ -470,7 +470,7 @@ class Editor:
             import google.colab
             import json
             google.colab.output.register_callback('notebook.editor_load',
-                                                  lambda ei: json.dump(editor_load(ei)))
+                                                  lambda ei: json.dumps(editor_load(ei)))
             google.colab.output.register_callback('notebook.editor_save', editor_save)
         except ImportError:
             pass

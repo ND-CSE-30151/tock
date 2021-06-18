@@ -442,11 +442,17 @@ def layout(g):
                     fields = pstr.split(',')
                     if fields[0] not in ['s', 'e']:
                         points.append(tuple(map(float, fields)))
-                # Every third point is actually on the curve.
-                # Choose the middle(ish) one.
-                points = points[::3]
-                e['anchorx'] = points[len(points)//2][0]
-                e['anchory'] = points[len(points)//2][1]
+                if len(points) % 2 == 1:
+                    # Every third point is actually on the curve.
+                    # Choose the middle one.
+                    e['anchorx'] = points[len(points)//2][0]
+                    e['anchory'] = points[len(points)//2][1]
+                else:
+                    # Find the middle of the middle spline
+                    i = len(points)//2-2
+                    e['anchorx'] = (points[i][0] + points[i+1][0]*23 + points[i+2][0]*23 + points[i+3][0])/48
+                    e['anchory'] = (points[i][1] + points[i+1][1]*23 + points[i+2][1]*23 + points[i+3][1])/48
+                                    
     return g
 
 class Editor:

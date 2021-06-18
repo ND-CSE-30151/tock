@@ -814,6 +814,8 @@ function to_json() {
     }
     if (g.nodes.length != nodes.length) {
         message("All states must have unique names.");
+        console.log(g.nodes);
+        console.log(nodes);
         return null;
     }
     for(var i = 0; i < links.length; i++) {

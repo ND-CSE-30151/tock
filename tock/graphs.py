@@ -442,11 +442,17 @@ def layout(g):
                     fields = pstr.split(',')
                     if fields[0] not in ['s', 'e']:
                         points.append(tuple(map(float, fields)))
-                # Every third point is actually on the curve.
-                # Choose the middle(ish) one.
-                points = points[::3]
-                e['anchorx'] = points[len(points)//2][0]
-                e['anchory'] = points[len(points)//2][1]
+                if len(points) % 2 == 1:
+                    # Every third point is actually on the curve.
+                    # Choose the middle one.
+                    e['anchorx'] = points[len(points)//2][0]
+                    e['anchory'] = points[len(points)//2][1]
+                else:
+                    # Find the middle of the middle spline
+                    i = len(points)//2-2
+                    e['anchorx'] = (points[i][0] + points[i+1][0]*23 + points[i+2][0]*23 + points[i+3][0])/48
+                    e['anchory'] = (points[i][1] + points[i+1][1]*23 + points[i+2][1]*23 + points[i+3][1])/48
+                                    
     return g
 
 class Editor:
@@ -462,7 +468,9 @@ class Editor:
 
         try:
             import google.colab
-            google.colab.output.register_callback('notebook.editor_load', editor_load)
+            import IPython.display
+            google.colab.output.register_callback('notebook.editor_load',
+                                                  lambda ei: IPython.display.JSON(editor_load(ei)))
             google.colab.output.register_callback('notebook.editor_save', editor_save)
         except ImportError:
             pass
@@ -473,8 +481,7 @@ class Editor:
         IPython.display.display(IPython.display.Javascript(self.src))
 
     def save(self, g):
-        import json
-        m = from_graph(json_to_graph(json.loads(g)))
+        m = from_graph(json_to_graph(g))
         self.m.transitions = m.transitions
         self.m.store_types = m.store_types
         self.m.state = m.state
@@ -487,8 +494,8 @@ class Editor:
         layout(g)
         return graph_to_json(g)
 
-def editor_save(ei, tgf):
-    Editor._editors[ei].save(tgf)
+def editor_save(ei, g):
+    Editor._editors[ei].save(g)
     
 def editor_load(ei):
     return Editor._editors[ei].load()

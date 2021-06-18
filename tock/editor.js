@@ -34,7 +34,6 @@
    To do:
    - Change keybinding for delete node/edge
    - Change edge's endpoint
-   - Help
    - Better error messages
    - Map > and @ to start/accept state?
 */
@@ -430,8 +429,8 @@ function drawText(c, originalText, x, y, angleOrNull, isSelected) {
     if(angleOrNull != null) {
         var cos = Math.cos(angleOrNull);
         var sin = Math.sin(angleOrNull);
-        var cornerPointX = (width / 2 + 5) * (cos > 0 ? 1 : -1);
-        var cornerPointY = (10 + 5) * (sin > 0 ? 1 : -1);
+        var cornerPointX = (width / 2 + fontSize/4) * (cos > 0 ? 1 : -1);
+        var cornerPointY = (fontSize/2 + 5) * (sin > 0 ? 1 : -1);
         var slide = sin * Math.pow(Math.abs(sin), 40) * cornerPointX - cos * Math.pow(Math.abs(cos), 10) * cornerPointY;
         x += cornerPointX - sin * slide;
         y += cornerPointY + cos * slide;
@@ -569,20 +568,17 @@ function main(ei) {
 
     element.append(document.createElement("br"));
 
-    var load_button = document.createElement("button");
-    load_button.setAttribute("style", "margin: 0 5px 0 0;");
-    load_button.innerHTML = "Load";
-    load_button.onclick = function() { load(ei); };
-    element.append(load_button);
-
-    var save_button = document.createElement("button");
-    save_button.setAttribute("style", "margin: 0 5px;");
-    save_button.innerHTML = "Save";
-    save_button.onclick = function() { save(ei); };
-    element.append(save_button);
+    function make_button(label, callback) {
+        var button = document.createElement("button");
+        button.setAttribute("style", "margin: 0 10px 0 0;");
+        button.innerHTML = label;
+        button.onclick = callback;
+        element.append(button);
+    }
+    make_button('Load', function() { load(ei); });
+    make_button('Save', function() { save(ei); });
 
     message_bar = document.createElement("span");
-    message_bar.setAttribute("style", "margin: 0 5px;");
     element.append(message_bar);
 
     canvas.onmousedown = function(e) {
@@ -816,7 +812,7 @@ function to_json() {
             'accept': nodes[i].isAcceptState
         };
     }
-    if (g.nodes.length != nodes.length) {
+    if (Object.keys(g.nodes).length != nodes.length) {
         message("All states must have unique names.");
         return null;
     }
@@ -849,8 +845,7 @@ function save(ei) {
                 console.log(r);
             }
         }
-        var cmd = 'import tock; tock.graphs.editor_save(' + ei + ', """' + JSON.stringify(g) + '""")';
-        console.log(cmd);
+        var cmd = 'import tock, json; tock.graphs.editor_save(' + ei + ', json.loads("""' + JSON.stringify(g) + '"""))';
         Jupyter.notebook.kernel.execute(cmd, {"shell": {"reply": handle}});
     } else if (typeof google !== 'undefined') {
         var result = google.colab.kernel.invokeFunction('notebook.editor_save', [ei, g]).then(() => message('Save successful'), message);
@@ -922,13 +917,10 @@ function load(ei) {
     } else if (typeof google !== 'undefined') {
         function success (r) {
             message('Load successful');
-            console.log(r);
-            var g = JSON.parse(r.data['application/json'])
-            console.log(g);
-            from_json(g);
-            layout();
+            from_json(r.data['application/json']);
             draw();
         }
         var result = google.colab.kernel.invokeFunction('notebook.editor_load', [ei]).then(success, message);
     }
 }
+

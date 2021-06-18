@@ -919,10 +919,7 @@ function load(ei) {
         function success (r) {
             message('Load successful');
             console.log(r);
-            var g = JSON.parse(r.data['application/json'])
-            console.log(g);
-            from_json(g);
-            layout();
+            from_json(JSON.parse(r.data['text/plain']));
             draw();
         }
         var result = google.colab.kernel.invokeFunction('notebook.editor_load', [ei]).then(success, message);

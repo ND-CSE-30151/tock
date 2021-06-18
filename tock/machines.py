@@ -56,7 +56,7 @@ class Store(syntax.String):
             elif self.position == -1:
                 return "^ ε"
             else:
-                raise ValueError()
+                raise ValueError(f"Position {self.position} out of range")
 
         # Special case to avoid printing states as [q]
         elif len(self) == 1 and self.position == 0:
@@ -113,7 +113,7 @@ class Configuration:
         elif isinstance(arg, (list, tuple)):
             stores = tuple(x if isinstance(x, Store) else Store(x) for x in arg)
         else:
-            raise TypeError("can't construct Configuration from {}".format(type(arg)))
+            raise TypeError("Can't construct Configuration from {}".format(type(arg)))
         object.__setattr__(self, 'stores', stores)
 
     def __str__(self):
@@ -162,13 +162,13 @@ class Transition:
                 lhs = arg.lhs
                 rhs = arg.rhs
             else:
-                raise TypeError("can't construct Transition from {}".format(type(arg)))
+                raise TypeError(f"Can't construct Transition from an object of type {type(arg)}")
         elif len(args) == 2:
             lhs, rhs = args
             lhs = Configuration(lhs)
             rhs = Configuration(rhs)
         else:
-            raise TypeError("invalid arguments to Transition")
+            raise TypeError("Invalid arguments to Transition")
         object.__setattr__(self, 'lhs', lhs)
         object.__setattr__(self, 'rhs', rhs)
 
@@ -185,13 +185,13 @@ class Transition:
             
             i = position - x.position
             if i < 0:
-                raise ValueError("transition cannot apply")
+                raise ValueError("Transition cannot apply")
             n = len(x)
             # Pad store with blanks to fit x
             while i+n > len(values) and x[len(values)-i] == syntax.BLANK:
                 values.append(syntax.BLANK)
             if tuple(values[i:i+n]) != x.values:
-                raise ValueError("transition cannot apply")
+                raise ValueError("Transition cannot apply")
             values[i:i+n] = y.values
             position = i + y.position
 
@@ -311,8 +311,8 @@ class Machine:
 
     def get_start_state(self):
         """Return the start state."""
-        if self.state is None: raise ValueError("no state defined")
-        if self.start_config is None: raise ValueError("no start state")
+        if self.state is None: raise ValueError("This Machine doesn't have a state")
+        if self.start_config is None: raise ValueError("This Machine doesn't have a start state")
         [q] = self.start_config[self.state]
         return q
 
@@ -323,7 +323,7 @@ class Machine:
         """
         config = [[]] * self.num_stores
         if self.state is None:
-            raise ValueError("no state defined")
+            raise ValueError("This Machine doesn't have a state")
         config[self.state] = [q]
         self.start_config = Configuration(config)
 
@@ -335,7 +335,7 @@ class Machine:
         """
         config = [[]] * self.num_stores
 
-        if self.state is None: raise ValueError("no state defined")
+        if self.state is None: raise ValueError("This Machine doesn't have a state")
         config[self.state] = [q]
 
         if self.input is not None and self.store_types[self.input] == STREAM:
@@ -351,7 +351,7 @@ class Machine:
 
     def get_accept_states(self):
         """Return the set of accept states."""
-        if self.state is None: raise ValueError("no state defined")
+        if self.state is None: raise ValueError("This Machine doesn't have a state")
         states = set()
         for config in self.accept_configs:
             [q] = config[self.state]
@@ -361,7 +361,7 @@ class Machine:
     @property
     def states(self):
         """The set of all possible states."""
-        if self.state is None: raise ValueError("no state defined")
+        if self.state is None: raise ValueError("This Machine doesn't have a state")
         return (set(t.lhs[self.state][0] for t in self.transitions) | 
                 set(t.rhs[self.state][0] for t in self.transitions))
 
@@ -384,15 +384,25 @@ class Machine:
         li = ri = 0
         for si, st in enumerate(self.store_types):
             if st == BASE:
+                if li >= len(t.lhs):
+                    raise TypeError("Too few things on left-hand side of arrow")
+                if ri >= len(t.rhs):
+                    raise TypeError("Too few things on right-hand side of arrow")
                 lhs.append(t.lhs[li])
                 rhs.append(t.rhs[ri])
                 li += 1
                 ri += 1
             elif st == STREAM:
+                if li >= len(t.lhs):
+                    raise TypeError("Too few things on left-hand side of arrow")
                 lhs.append(t.lhs[li])
                 li += 1
                 rhs.append(Store())
             elif st == TAPE:
+                if li >= len(t.lhs):
+                    raise TypeError("Too few things on left-hand side of arrow")
+                if ri+1 >= len(t.rhs):
+                    raise TypeError("Too few things on right-hand side of arrow")
                 lhs.append(t.lhs[li])
                 b, [d] = t.rhs[ri:ri+2]
                 if d == 'L':
@@ -402,19 +412,19 @@ class Machine:
                 elif d == 'R':
                     p = len(b)
                 else:
-                    raise ValueError('invalid move {}'.format(repr(d)))
+                    raise ValueError('Invalid move {} (allowed moves are L, S, and R)'.format(repr(d)))
                 rhs.append(Store(b, p))
                 li += 1
                 ri += 2
             else:
                 assert False
 
-        if li != len(t.lhs):
-            raise TypeError("wrong number of stores on left-hand side")
-        if ri != len(t.rhs):
-            raise TypeError("wrong number of stores on right-hand side")
+        if li < len(t.lhs):
+            raise TypeError("Too many things on left-hand side of arrow")
+        if ri < len(t.rhs):
+            raise TypeError("Too many things on right-hand side of arrow")
         if len(lhs) != len(rhs):
-            raise TypeError("left-hand side and right-hand side must have same number of stores")
+            raise TypeError("Left-hand side and right-hand side must have same number of stores")
 
         self.transitions.append(Transition(lhs, rhs))
 
@@ -449,7 +459,7 @@ class Machine:
                     elif t.rhs[si].position == len(b):
                         d = 'R'
                     else:
-                        raise ValueError('no move for length {} and position {}'.format(len(b), t.rhs[si].position))
+                        raise ValueError('No move for length {} and position {}'.format(len(b), t.rhs[si].position))
                     ts.append(Transition([t.lhs[si]], [b, d]))
                 else:
                     assert False
@@ -462,6 +472,10 @@ class Machine:
         from IPython.display import display # type: ignore
         from .graphs import to_graph
         display(to_graph(self))
+
+    def edit(self):
+        from .graphs import Editor
+        return Editor(self)
 
     ### Testing for different types of automata
 
@@ -582,10 +596,10 @@ def from_transitions(transitions, start_state, accept_states):
         rhs_sizes.add(len(rhs))
             
     if len(lhs_sizes) != 1:
-        raise ValueError('all left-hand sides must have the same size')
+        raise ValueError('All left-hand sides must have the same size')
     [lhs_size] = lhs_sizes
     if len(rhs_sizes) != 1:
-        raise ValueError('all right-hand sides must have the same size')
+        raise ValueError('All right-hand sides must have the same size')
     [rhs_size] = rhs_sizes
 
     store_types = []
@@ -608,7 +622,7 @@ def from_transitions(transitions, start_state, accept_states):
     elif lhs_size-1 == rhs_size:
         store_types[1] = STREAM
     else:
-        raise ValueError("right-hand sides must either be same size or one smaller than left-hand sides")
+        raise ValueError("Right-hand sides must either be same size or one smaller than left-hand sides")
 
     m = Machine(store_types, state=0, input=1)
 

@@ -58,7 +58,7 @@ class Graph:
         raises ValueError."""
         start = [v for v in self.nodes if self.nodes[v].get('start', False)]
         if len(start) != 1: 
-            raise ValueError("graph does not have exactly one start node")
+            raise ValueError("There must be exactly one start node")
 
         nodes = []
         edges = []
@@ -70,10 +70,10 @@ class Graph:
             if len(vs) == 0:
                 break
             elif len(vs) > 1:
-                raise ValueError("graph does not have exactly one path")
+                raise ValueError("There must be exactly one path")
             [v] = vs
             if len(self.edges[u][v]) != 1:
-                raise ValueError("graph does not have exactly one path")
+                raise ValueError("There must be exactly one path")
             [e] = self.edges[u][v]
             edges.append(e)
 
@@ -85,7 +85,7 @@ class Graph:
 
         start = [v for v in self.nodes if self.nodes[v].get('start', False)]
         if len(start) != 1:
-            raise ValueError("graph does not have exactly one start node")
+            raise ValueError("There must be exactly one start node")
         frontier = collections.deque(start)
         pred = {start[0]: None}
         while len(frontier) > 0:
@@ -105,7 +105,7 @@ class Graph:
                 if v not in pred:
                     frontier.append(v)
                     pred[v] = u
-        raise ValueError("graph does not have an accepting path")
+        raise ValueError("There is no accepting path")
 
     def has_path(self):
         """Returns `True` iff there is a path from the start node to an accept node."""
@@ -329,12 +329,12 @@ def from_graph(g):
     for q in g.nodes:
         if g.nodes[q].get('start', False):
             if start_state is not None:
-                raise ValueError("more than one start state")
+                raise ValueError("A Machine must have only one start state")
             start_state = q
         if g.nodes[q].get('accept', False):
             accept_states.add(q)
     if start_state is None:
-        raise ValueError("missing start state")
+        raise ValueError("A Machine must have one start state")
 
     return machines.from_transitions(transitions, start_state, accept_states)
 
@@ -480,14 +480,41 @@ class Editor:
         import IPython
         IPython.display.display(IPython.display.Javascript(self.src))
 
-    def save(self, g):
-        m = from_graph(json_to_graph(g))
-        self.m.transitions = m.transitions
-        self.m.store_types = m.store_types
-        self.m.state = m.state
-        self.m.input = m.input
-        self.m.start_config = m.start_config
-        self.m.accept_configs = m.accept_configs
+    def save(self, j):
+        g = json_to_graph(j)
+
+        # from_graph knows how to convert g to a Machine, but tries to
+        # guess store_types whereas we know what it should actually
+        # be. So we can do some more careful validation here.
+
+        self.m.transitions = []
+        for q in g.edges:
+            for r in g.edges[q]:
+                for e in g.edges[q][r]:
+                    t = e['label']
+                    lhs = list(t.lhs)
+                    lhs[self.m.state:self.m.state] = [q]
+                    rhs = list(t.rhs)
+                    rhs[self.m.state:self.m.state] = [r]
+                    try:
+                        self.m.add_transition(lhs, rhs)
+                    except Exception as e:
+                        raise ValueError(f"Error in transition from {q} on {t} to {r} ({e})")
+        
+        start_state = None
+        accept_states = set()
+        for q in g.nodes:
+            if g.nodes[q].get('start', False):
+                if start_state is not None:
+                    raise ValueError("A Machine must have only one start state")
+                start_state = q
+            if g.nodes[q].get('accept', False):
+                accept_states.add(q)
+        if start_state is None:
+            raise ValueError("A Machine must have one start state")
+        self.m.set_start_state(start_state)
+        self.m.accept_configs.clear()
+        self.m.add_accept_states(accept_states)
 
     def load(self):
         g = to_graph(self.m)

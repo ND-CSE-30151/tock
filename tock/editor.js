@@ -813,7 +813,7 @@ function to_json() {
         };
     }
     if (Object.keys(g.nodes).length != nodes.length) {
-        message("All states must have unique names.");
+        message("Every state must have a unique name.");
         return null;
     }
     for(var i = 0; i < links.length; i++) {
@@ -834,6 +834,17 @@ function to_json() {
 }
 
 function save(ei) {
+    for (var vi=0; vi<nodes.length; vi++)
+        if (nodes[vi].text === "") {
+            message('Every state must have a nonempty name.');
+            return;
+        }
+    for (var li=0; li<links.length; li++)
+        if ((links[li] instanceof Link || links[li] instanceof SelfLink) && links[li].text === "") {
+            message('Every transition must have a nonempty label.');
+            return;
+        }
+    
     var g = to_json();
     if (g === null) return;
     if (typeof Jupyter !== 'undefined') {
@@ -841,7 +852,7 @@ function save(ei) {
             if (r.content.status == "ok") {
                 message('Save successful');
             } else if (r.content.status == "error") {
-                message(r.content.ename + ": " + r.content.evalue);
+                message(r.content.evalue);
                 console.log(r);
             }
         }
@@ -908,7 +919,7 @@ function load(ei) {
                 from_json(JSON.parse(r.content.text));
                 draw();
             } else if (r.msg_type == "error") {
-                message(r.content.ename + ": " + r.content.evalue);
+                message(r.content.evalue);
                 console.log(r);
             }
         }
@@ -923,4 +934,3 @@ function load(ei) {
         var result = google.colab.kernel.invokeFunction('notebook.editor_load', [ei]).then(success, message);
     }
 }
-

@@ -468,9 +468,9 @@ class Editor:
 
         try:
             import google.colab
-            import json
+            import IPython.display
             google.colab.output.register_callback('notebook.editor_load',
-                                                  lambda ei: json.dumps(editor_load(ei)))
+                                                  lambda ei: IPython.display.JSON(editor_load(ei)))
             google.colab.output.register_callback('notebook.editor_save', editor_save)
         except ImportError:
             pass

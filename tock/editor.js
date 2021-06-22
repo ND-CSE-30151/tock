@@ -420,11 +420,12 @@ function drawText(c, originalText, x, y, angleOrNull, isSelected, maxWidth) {
     var text = convertShortcuts(originalText);
     c.save();
 
-    c.font = ''+fontSize+'px monospace';
+    var tmpFontSize = fontSize;
+    c.font = ''+tmpFontSize+'px monospace';
     var width = c.measureText(text).width;
 
-    var tmpFontSize = fontSize;
-    while (maxWidth !== undefined && width > maxWidth) {
+    // resize to fit in maxWidth
+    if (maxWidth !== undefined && width > maxWidth) {
         tmpFontSize *= maxWidth/width;
         c.font = ''+tmpFontSize+'px monospace';
         width = c.measureText(text).width;

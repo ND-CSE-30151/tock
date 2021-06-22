@@ -3,7 +3,7 @@ import csv
 from . import machines
 from . import syntax
 
-__all__ = ['Table', 'from_table', 'read_csv', 'read_excel', 'to_table']
+__all__ = ['Table', 'from_table', 'read_csv', 'read_excel', 'to_table', 'write_csv']
 
 class Table:
     """A simple class that just stores a list of lists of strings.
@@ -24,7 +24,7 @@ class Table:
 
     def _repr_html_(self):
         result = []
-        result.append('<table style="font-family: Courier, monospace;">')
+        result.append('<table style="font-family: monospace;">')
 
         for i, row in enumerate(self.rows):
             result.append('  <tr>')
@@ -202,3 +202,14 @@ def to_table(m):
             row.append(syntax.configs_to_str(transitions[q,condition]))
         rows.append(row)
     return Table(rows, num_header_rows=num_header_rows)
+
+def write_csv(m, filename):
+    """Writes `Machine` `m` to file named by `filename`."""
+    t = to_table(m)
+    with open(filename, 'w') as file:
+        writer = csv.writer(file)
+        for i, row in enumerate(t.rows):
+            if i < t.num_header_rows:
+                assert row[0] == ''
+            writer.writerow(row)
+        

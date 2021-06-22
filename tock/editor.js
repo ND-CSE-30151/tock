@@ -34,8 +34,8 @@
    To do:
    - Change keybinding for delete node/edge
    - Change edge's endpoint
-   - Better error messages
    - Map > and @ to start/accept state?
+   - Help
 */
 
 function StartLink(node, start) {
@@ -268,7 +268,7 @@ Node.prototype.draw = function(c) {
     c.stroke();
 
     // draw the text
-    drawText(c, this.text, this.x, this.y, null, selectedObject == this);
+    drawText(c, this.text, this.x, this.y, null, selectedObject == this, nodeRadius*1.6);
 
     // draw a double circle for an accept state
     if(this.isAcceptState) {
@@ -416,11 +416,19 @@ function canvasHasFocus() {
     return document.activeElement == canvas;
 }
 
-function drawText(c, originalText, x, y, angleOrNull, isSelected) {
-    c.save();
-    c.font = ''+fontSize+'px "Courier", monospace';
+function drawText(c, originalText, x, y, angleOrNull, isSelected, maxWidth) {
     var text = convertShortcuts(originalText);
+    c.save();
+
+    c.font = ''+fontSize+'px monospace';
     var width = c.measureText(text).width;
+
+    var tmpFontSize = fontSize;
+    while (maxWidth !== undefined && width > maxWidth) {
+        tmpFontSize *= maxWidth/width;
+        c.font = ''+tmpFontSize+'px monospace';
+        width = c.measureText(text).width;
+    }
 
     // center the text
     x -= width / 2;

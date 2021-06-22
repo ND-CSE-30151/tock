@@ -129,8 +129,8 @@ class Graph:
         result.append('digraph {')
         for key, val in self.attrs.items():
             result.append('  {}={};'.format(key, val))
-        result.append('  node [fontname=Courier,fontsize=10,shape=box,style=rounded,height=0,width=0,margin="0.055,0.042"];')
-        result.append('  edge [arrowhead=vee,arrowsize=0.5,fontname=Courier,fontsize=9];')
+        result.append('  node [fontname=Monospace,fontsize=10,shape=box,style=rounded,height=0,width=0,margin="0.055,0.042"];')
+        result.append('  edge [arrowhead=vee,arrowsize=0.5,fontname=Monospace,fontsize=9];')
 
         # Draw nodes
         result.append('  _START[shape=none,label=""];\n')
@@ -379,7 +379,7 @@ class Path:
     def __str__(self):
         return '\n'.join(map(str, self.nodes))
     def _repr_html_(self):
-        html = ['<table style="font-family: Courier, monospace;">\n']
+        html = ['<table style="font-family: Monospace, monospace;">\n']
         for config in self.nodes:
             if not isinstance(config, machines.Configuration):
                 raise TypeError('A Path can only displayed as HTML if its nodes are Configurations')

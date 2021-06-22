@@ -707,29 +707,31 @@ document.onkeydown = function(e) {
         // don't read keystrokes when other things have focus
         return true;
     } else if(key == 8) { // backspace key
-        if(selectedObject != null && 'text' in selectedObject) {
-            selectedObject.text = selectedObject.text.substr(0, selectedObject.text.length - 1);
-            resetCaret();
-            draw();
+        if (!shift) {
+            if(selectedObject != null && 'text' in selectedObject) {
+                selectedObject.text = selectedObject.text.substr(0, selectedObject.text.length - 1);
+                resetCaret();
+                draw();
+            }
+        } else {
+            if(selectedObject != null) {
+                for(var i = 0; i < nodes.length; i++) {
+                    if(nodes[i] == selectedObject) {
+                        nodes.splice(i--, 1);
+                    }
+                }
+                for(var i = 0; i < links.length; i++) {
+                    if(links[i] == selectedObject || links[i].node == selectedObject || links[i].nodeA == selectedObject || links[i].nodeB == selectedObject) {
+                        links.splice(i--, 1);
+                    }
+                }
+                selectedObject = null;
+                draw();
+            }
         }
 
         // backspace is a shortcut for the back button, but do NOT want to change pages
         return false;
-    } else if(key == 46) { // delete key
-        if(selectedObject != null) {
-            for(var i = 0; i < nodes.length; i++) {
-                if(nodes[i] == selectedObject) {
-                    nodes.splice(i--, 1);
-                }
-            }
-            for(var i = 0; i < links.length; i++) {
-                if(links[i] == selectedObject || links[i].node == selectedObject || links[i].nodeA == selectedObject || links[i].nodeB == selectedObject) {
-                    links.splice(i--, 1);
-                }
-            }
-            selectedObject = null;
-            draw();
-        }
     }
 };
 

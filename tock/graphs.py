@@ -450,8 +450,8 @@ def layout(g):
                 else:
                     # Find the middle of the middle spline
                     i = len(points)//2-2
-                    e['anchorx'] = (points[i][0] + points[i+1][0]*23 + points[i+2][0]*23 + points[i+3][0])/48
-                    e['anchory'] = (points[i][1] + points[i+1][1]*23 + points[i+2][1]*23 + points[i+3][1])/48
+                    e['anchorx'] = (points[i][0] + points[i+1][0]*3 + points[i+2][0]*3 + points[i+3][0])/8
+                    e['anchory'] = (points[i][1] + points[i+1][1]*3 + points[i+2][1]*3 + points[i+3][1])/8
                                     
     return g
 

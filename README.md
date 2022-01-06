@@ -18,6 +18,7 @@ Tock depends on the following:
 -  [GraphViz](http://www.graphviz.org) (to draw graphs)
 -  [Jupyter](http://jupyter.org) (to
    view notebooks)
+-  [pydot](https://pypi.org/project/pydot/) (to edit machines)   
 -  [openpyxl](https://pypi.python.org/pypi/openpyxl) (to open Excel
    files)
 

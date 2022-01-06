@@ -474,6 +474,7 @@ class Machine:
         display(to_graph(self))
 
     def edit(self):
+        """In a Jupyter notebook, returns a visual editor for this Machine."""
         from .graphs import Editor
         return Editor(self)
 

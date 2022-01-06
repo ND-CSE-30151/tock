@@ -1,20 +1,21 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>More general machines &#8212; tock  documentation</title>
-    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
-    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Reference" href="../reference/index.html" />
@@ -40,21 +41,35 @@
 /* CSS for nbsphinx extension */
 
 /* remove conflicting styling from Sphinx themes */
-div.nbinput.container,
-div.nbinput.container div.prompt,
-div.nbinput.container div.input_area,
-div.nbinput.container div[class*=highlight],
-div.nbinput.container div[class*=highlight] pre,
-div.nboutput.container,
-div.nboutput.container div.prompt,
-div.nboutput.container div.output_area,
-div.nboutput.container div[class*=highlight],
-div.nboutput.container div[class*=highlight] pre {
-    background: none;
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
     border: none;
-    padding: 0 0;
+    padding: 0;
     margin: 0;
     box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
 }
 
 /* avoid gaps between output lines */
@@ -101,20 +116,33 @@ div.nboutput.container div.prompt pre {
 /* all prompts */
 div.nbinput.container div.prompt,
 div.nboutput.container div.prompt {
-    min-width: 5.5ex;
-    padding-top: 0.3rem;
-    padding-right: 0.3rem;
-    text-align: right;
-    flex: 0;
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
 }
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
 @media (max-width: 540px) {
     div.nbinput.container div.prompt,
     div.nboutput.container div.prompt {
+        width: unset;
         text-align: left;
         padding: 0.4em;
     }
     div.nboutput.container div.prompt.empty {
         padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
     }
 }
 
@@ -142,7 +170,7 @@ div.nboutput.container div.output_area {
 div.nbinput.container div.input_area {
     border: 1px solid #e0e0e0;
     border-radius: 2px;
-    background: #f5f5f5;
+    /*background: #f5f5f5;*/
 }
 
 /* override MathJax center alignment in output cells */
@@ -207,7 +235,8 @@ div.nboutput.container div.output_area div[class*=highlight].math,
 div.nboutput.container div.output_area.rendered_html,
 div.nboutput.container div.output_area > div.output_javascript,
 div.nboutput.container div.output_area:not(.rendered_html) > img{
-    padding: 0.3rem;
+    padding: 5px;
+    margin: 0;
 }
 
 /* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
@@ -255,7 +284,7 @@ div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
-<div class="section" id="More-general-machines">
+<section id="More-general-machines">
 <h1>More general machines<a class="headerlink" href="#More-general-machines" title="Permalink to this headline">¶</a></h1>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
@@ -358,15 +387,15 @@ False
 </div>
 <p>This is something like a 2-stack PDA that recognizes the language <span class="math notranslate nohighlight">\(\{w\#\#\#w\}\)</span>. It works by transferring the first half of the input to the first stack, transferring the first stack to the second stack (reversing it), then checking the second half of the input against it.</p>
 <p>This example also demonstrates that we can read three <code class="docutils literal notranslate"><span class="pre">#</span></code> signs in one transition.</p>
-<div class="section" id="Store-types">
+<section id="Store-types">
 <h2>Store types<a class="headerlink" href="#Store-types" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="BASE">
+<section id="BASE">
 <h3>BASE<a class="headerlink" href="#BASE" title="Permalink to this headline">¶</a></h3>
 <p>Our example above demonstrated the BASE store type. We used a BASE store like a stack, and showed that if the lhs of a transition has more than one symbol, it pops that many symbols. Likewise, if the rhs of a transition has more than one symbol, it pushes that many symbols.</p>
 <p>Additionally, a BASE store has a head like a Turing machine; it just happens that we left the head in position 0. If the rhs is <code class="docutils literal notranslate"><span class="pre">^</span> <span class="pre">v</span></code>, where <code class="docutils literal notranslate"><span class="pre">v</span></code> is a string, the head moves to the cell to the left of <code class="docutils literal notranslate"><span class="pre">v</span></code>; if the rhs is <code class="docutils literal notranslate"><span class="pre">v</span> <span class="pre">^</span></code>, the head moves to the cell to the right of <code class="docutils literal notranslate"><span class="pre">v</span></code>.</p>
 <p>For more information, see the reference section on <a class="reference internal" href="../reference/internals.html"><span class="doc">Internals</span></a>.</p>
-</div>
-<div class="section" id="STREAM">
+</section>
+<section id="STREAM">
 <h3>STREAM<a class="headerlink" href="#STREAM" title="Permalink to this headline">¶</a></h3>
 <p>The above example looked different from a standard PDA because the right-hand sides of transitions explicitly popped input symbols as they were read. And it had to explicitly check for a blank (<code class="docutils literal notranslate"><span class="pre">_</span></code>) indicating the end of the string before accepting. To make the input look more like a finite or pushdown automaton’s, use the store type STREAM.</p>
 <p>A store of type STREAM (which only really makes sense for the input store) has two properties.</p>
@@ -398,8 +427,8 @@ False
 <img alt="../_images/tutorial_General_12_0.svg" src="../_images/tutorial_General_12_0.svg" /></div>
 </div>
 <p>This looks just like a pushdown automaton.</p>
-</div>
-<div class="section" id="TAPE">
+</section>
+<section id="TAPE">
 <h3>TAPE<a class="headerlink" href="#TAPE" title="Permalink to this headline">¶</a></h3>
 <p>The caret (<code class="docutils literal notranslate"><span class="pre">^</span></code>) notation above can be used to move the head as in a Turing machine, but to get more standard notation, use a store of type <code class="docutils literal notranslate"><span class="pre">TAPE</span></code>. Then the right-hand-side of a transition has two entries for that store, a write and a move (which can be <code class="docutils literal notranslate"><span class="pre">L</span></code> or <code class="docutils literal notranslate"><span class="pre">R</span></code>).</p>
 <div class="nbinput docutils container">
@@ -421,9 +450,9 @@ False
 <div class="output_area docutils container">
 <img alt="../_images/tutorial_General_15_0.svg" src="../_images/tutorial_General_15_0.svg" /></div>
 </div>
-</div>
-</div>
-<div class="section" id="Low-level-interface">
+</section>
+</section>
+<section id="Low-level-interface">
 <h2>Low-level interface<a class="headerlink" href="#Low-level-interface" title="Permalink to this headline">¶</a></h2>
 <p>Instead of creating an automaton using <code class="docutils literal notranslate"><span class="pre">set_start_state</span></code>, <code class="docutils literal notranslate"><span class="pre">add_transition</span></code>, and <code class="docutils literal notranslate"><span class="pre">add_accept_state</span></code>, you can also directly access the members <code class="docutils literal notranslate"><span class="pre">start_config</span></code>, <code class="docutils literal notranslate"><span class="pre">transitions</span></code>, and <code class="docutils literal notranslate"><span class="pre">accept_config</span></code>.</p>
 <p>This interface completely ignores store types. Transitions are created as for BASE stores:</p>
@@ -543,8 +572,8 @@ q2,ε
 q4,␣,ε
 </pre></div></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
           </div>
@@ -563,7 +592,7 @@ q4,␣,ε
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorial</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="DFAs.html">Deterministic finite automata</a></li>
@@ -593,12 +622,12 @@ q4,␣,ε
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -612,10 +641,10 @@ q4,␣,ε
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2020, David Chiang.
+      &copy;2021, David Chiang.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.3.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

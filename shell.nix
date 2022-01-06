@@ -1,7 +1,8 @@
 with import <nixpkgs> {};
 let 
   myPython = python38.withPackages (ps: with ps; [
-          pip setuptools
+          pip setuptools twine
+          mypy
           sphinx nbsphinx
           jupyter
           pydot

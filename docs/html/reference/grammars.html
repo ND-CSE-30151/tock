@@ -4,7 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Regular expressions and grammars &#8212; tock  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -40,10 +40,10 @@
 <span id="module-tock-regexps"></span><h2>Module tock.regexps<a class="headerlink" href="#module-tock.regexps" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="tock.regexps.RegularExpression">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">tock.regexps.</span></span><span class="sig-name descname"><span class="pre">RegularExpression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.RegularExpression" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tock.regexps.</span></span><span class="sig-name descname"><span class="pre">RegularExpression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.RegularExpression" title="Permalink to this definition">¶</a></dt>
 <dd><p>A (abstract syntax tree of a) regular expression.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>op</strong> (<em>str</em>) – Possible values are: ‘union’, ‘concatenation’, ‘star’, ‘symbol’.</p></li>
 <li><p><strong>args</strong> – tuple of <cite>RegularExpression</cite> or <cite>Symbol</cite> objects.</p></li>
@@ -54,7 +54,7 @@
 <p>The empty set is represented as RegularExpression(‘union’, ()).</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="tock.regexps.RegularExpression.from_str">
-<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.RegularExpression.from_str" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.RegularExpression.from_str" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs a <cite>RegularExpression</cite> from a <cite>str</cite>.</p>
 <p>Regular expressions allow the following operations (precedence
 from lowest to highest):</p>
@@ -77,7 +77,7 @@ a space. For example, <code class="docutils literal notranslate"><span class="pr
 <span class="sig-prename descclassname"><span class="pre">tock.regexps.</span></span><span class="sig-name descname"><span class="pre">from_regexp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.from_regexp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a regular expression to a NFA.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>e</strong> (<a class="reference internal" href="#tock.regexps.RegularExpression" title="tock.regexps.RegularExpression"><em>RegularExpression</em></a><em> or </em><em>str</em>) – the regular expression to convert.</p></li>
 <li><p><strong>display_steps</strong> (<em>bool</em>) – if True and if run inside a Jupyter notebook,
@@ -92,7 +92,7 @@ displays all steps of the conversion.</p></li>
 <span class="sig-prename descclassname"><span class="pre">tock.regexps.</span></span><span class="sig-name descname"><span class="pre">to_regexp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.to_regexp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a finite automaton to a regular expression.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>m</strong> (<a class="reference internal" href="machines.html#tock.machines.Machine" title="tock.machines.Machine"><em>Machine</em></a>) – the automaton to convert, which must be a finite automaton.</p></li>
 <li><p><strong>display_steps</strong> (<em>bool</em>) – if True and if run inside a Jupyter notebook,
@@ -107,7 +107,7 @@ displays all steps of the conversion.</p></li>
 <span id="module-tock-grammars"></span><h2>Module tock.grammars<a class="headerlink" href="#module-tock.grammars" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="tock.grammars.Grammar">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">tock.grammars.</span></span><span class="sig-name descname"><span class="pre">Grammar</span></span><a class="headerlink" href="#tock.grammars.Grammar" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tock.grammars.</span></span><span class="sig-name descname"><span class="pre">Grammar</span></span><a class="headerlink" href="#tock.grammars.Grammar" title="Permalink to this definition">¶</a></dt>
 <dd><p>A string-rewriting grammar.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="tock.grammars.Grammar.add_nonterminal">
@@ -145,16 +145,16 @@ whether α ⇒* ε.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tock.grammars.Grammar.from_file">
-<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.from_file" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.from_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read a grammar from a file.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>filename</strong> (<em>str</em>) – name of file to read from</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>a CFG</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#tock.grammars.Grammar" title="tock.grammars.Grammar">Grammar</a></p>
 </dd>
 </dl>
@@ -171,16 +171,16 @@ start symbol.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tock.grammars.Grammar.from_lines">
-<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.from_lines" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.from_lines" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read a grammar from a list of strings (see <cite>from_file</cite>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>lines</strong> – a list of strings</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>a CFG</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#tock.grammars.Grammar" title="tock.grammars.Grammar">Grammar</a></p>
 </dd>
 </dl>
@@ -256,7 +256,7 @@ it is added to the nonterminal alphabet.</p>
 <span class="sig-prename descclassname"><span class="pre">tock.grammars.</span></span><span class="sig-name descname"><span class="pre">from_grammar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'topdown'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.from_grammar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a CFG to a PDA.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>g</strong> (<a class="reference internal" href="#tock.grammars.Grammar" title="tock.grammars.Grammar"><em>Grammar</em></a>) – the grammar to convert, which must be a CFG.</p></li>
 <li><p><strong>mode</strong> (<em>str</em>) – <p>selects which algorithm to use. Possible values are:</p>
@@ -270,10 +270,10 @@ it is added to the nonterminal alphabet.</p>
 </p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>a PDA equivalent to <cite>g</cite>.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="machines.html#tock.machines.Machine" title="tock.machines.Machine">Machine</a></p>
 </dd>
 </dl>
@@ -348,7 +348,7 @@ it is added to the nonterminal alphabet.</p>
       &copy;2022, David Chiang.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

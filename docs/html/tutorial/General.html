@@ -4,7 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>More general machines &#8212; tock  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -14,8 +14,8 @@
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Reference" href="../reference/index.html" />
@@ -246,7 +246,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
-.prompt a.copybtn {
+.prompt .copybtn {
     display: none;
 }
 
@@ -290,8 +290,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">tock</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tock</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
 </div>
@@ -300,8 +299,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m1</span> <span class="o">=</span> <span class="n">Machine</span><span class="p">([</span><span class="n">BASE</span><span class="p">,</span> <span class="n">BASE</span><span class="p">,</span> <span class="n">BASE</span><span class="p">,</span> <span class="n">BASE</span><span class="p">],</span> <span class="n">state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m1</span> <span class="o">=</span> <span class="n">Machine</span><span class="p">([</span><span class="n">BASE</span><span class="p">,</span> <span class="n">BASE</span><span class="p">,</span> <span class="n">BASE</span><span class="p">,</span> <span class="n">BASE</span><span class="p">],</span> <span class="n">state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -313,8 +311,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m1</span><span class="o">.</span><span class="n">set_start_state</span><span class="p">(</span><span class="s1">&#39;q1&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m1</span><span class="o">.</span><span class="n">set_start_state</span><span class="p">(</span><span class="s1">&#39;q1&#39;</span><span class="p">)</span>
 <span class="n">m1</span><span class="o">.</span><span class="n">add_transition</span><span class="p">(</span><span class="s1">&#39;q1, &amp;, &amp;, &amp; -&gt; q2, &amp;, $, $&#39;</span><span class="p">)</span>
 <span class="n">m1</span><span class="o">.</span><span class="n">add_transition</span><span class="p">(</span><span class="s1">&#39;q2, a, &amp;, &amp; -&gt; q2, &amp;, a, &amp;&#39;</span><span class="p">)</span>
 <span class="n">m1</span><span class="o">.</span><span class="n">add_transition</span><span class="p">(</span><span class="s1">&#39;q2, b, &amp;, &amp; -&gt; q2, &amp;, b, &amp;&#39;</span><span class="p">)</span>
@@ -340,8 +337,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">run</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="s1">&#39;a a b # # # a a b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">run</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="s1">&#39;a a b # # # a a b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -371,8 +367,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">run</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="s1">&#39;a a b # # # b a a&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">has_path</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">run</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="s1">&#39;a a b # # # b a a&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">has_path</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -407,8 +402,7 @@ False
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m2</span> <span class="o">=</span> <span class="n">Machine</span><span class="p">([</span><span class="n">BASE</span><span class="p">,</span> <span class="n">STREAM</span><span class="p">,</span> <span class="n">BASE</span><span class="p">],</span> <span class="n">state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m2</span> <span class="o">=</span> <span class="n">Machine</span><span class="p">([</span><span class="n">BASE</span><span class="p">,</span> <span class="n">STREAM</span><span class="p">,</span> <span class="n">BASE</span><span class="p">],</span> <span class="n">state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">m2</span><span class="o">.</span><span class="n">set_start_state</span><span class="p">(</span><span class="s1">&#39;q1&#39;</span><span class="p">)</span>
 <span class="n">m2</span><span class="o">.</span><span class="n">add_transition</span><span class="p">(</span><span class="s1">&#39;q1, &amp;, &amp; -&gt; q2, $&#39;</span><span class="p">)</span>
 <span class="n">m2</span><span class="o">.</span><span class="n">add_transition</span><span class="p">(</span><span class="s1">&#39;q2, a, &amp; -&gt; q2, a&#39;</span><span class="p">)</span>
@@ -435,8 +429,7 @@ False
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m3</span> <span class="o">=</span> <span class="n">Machine</span><span class="p">([</span><span class="n">BASE</span><span class="p">,</span> <span class="n">TAPE</span><span class="p">],</span> <span class="n">state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m3</span> <span class="o">=</span> <span class="n">Machine</span><span class="p">([</span><span class="n">BASE</span><span class="p">,</span> <span class="n">TAPE</span><span class="p">],</span> <span class="n">state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">m3</span><span class="o">.</span><span class="n">set_start_state</span><span class="p">(</span><span class="s1">&#39;q1&#39;</span><span class="p">)</span>
 <span class="n">m3</span><span class="o">.</span><span class="n">add_transition</span><span class="p">(</span><span class="s1">&#39;q1, a -&gt; q2, b, R&#39;</span><span class="p">)</span>
 <span class="n">m3</span><span class="o">.</span><span class="n">add_accept_state</span><span class="p">(</span><span class="s1">&#39;q2&#39;</span><span class="p">)</span>
@@ -460,8 +453,7 @@ False
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">m3</span><span class="o">.</span><span class="n">transitions</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">m3</span><span class="o">.</span><span class="n">transitions</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -477,8 +469,7 @@ q1,a → q2,b ^
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m3</span><span class="o">.</span><span class="n">transitions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">machines</span><span class="o">.</span><span class="n">Transition</span><span class="p">(</span><span class="s1">&#39;q1, b -&gt; q2, c ^&#39;</span><span class="p">))</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m3</span><span class="o">.</span><span class="n">transitions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">machines</span><span class="o">.</span><span class="n">Transition</span><span class="p">(</span><span class="s1">&#39;q1, b -&gt; q2, c ^&#39;</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">m3</span><span class="o">.</span><span class="n">transitions</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -497,8 +488,7 @@ q1,b → q2,c ^
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m3</span><span class="o">.</span><span class="n">start_config</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m3</span><span class="o">.</span><span class="n">start_config</span>
 </pre></div>
 </div>
 </div>
@@ -513,8 +503,7 @@ q1,ε</div>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m3</span><span class="o">.</span><span class="n">start_config</span> <span class="o">=</span> <span class="n">machines</span><span class="o">.</span><span class="n">Configuration</span><span class="p">(</span><span class="s1">&#39;q2, &amp;&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m3</span><span class="o">.</span><span class="n">start_config</span> <span class="o">=</span> <span class="n">machines</span><span class="o">.</span><span class="n">Configuration</span><span class="p">(</span><span class="s1">&#39;q2, &amp;&#39;</span><span class="p">)</span>
 <span class="n">m3</span><span class="o">.</span><span class="n">start_config</span>
 </pre></div>
 </div>
@@ -531,8 +520,7 @@ q2,ε</div>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">m3</span><span class="o">.</span><span class="n">accept_configs</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">m3</span><span class="o">.</span><span class="n">accept_configs</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -548,8 +536,7 @@ q2,ε
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># accept in state q3 if current symbol is a</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># accept in state q3 if current symbol is a</span>
 <span class="n">m3</span><span class="o">.</span><span class="n">accept_configs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">machines</span><span class="o">.</span><span class="n">Configuration</span><span class="p">(</span><span class="s1">&#39;q3, a&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -559,8 +546,7 @@ q2,ε
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">m2</span><span class="o">.</span><span class="n">accept_configs</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">m2</span><span class="o">.</span><span class="n">accept_configs</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -596,7 +582,6 @@ q4,␣,ε
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorial</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="DFAs.html">Deterministic finite automata</a></li>
-<li class="toctree-l2"><a class="reference internal" href="DFAs.html#Editing-DFAs-graphically">Editing DFAs graphically</a></li>
 <li class="toctree-l2"><a class="reference internal" href="NFAs.html">Nondeterministic finite automata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Regexps.html">Regular expressions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="CFGs.html">Context-free grammars</a></li>
@@ -645,7 +630,7 @@ q4,␣,ε
       &copy;2022, David Chiang.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

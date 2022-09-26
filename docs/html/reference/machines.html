@@ -4,7 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Machines &#8212; tock  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -42,14 +42,14 @@
 and associated classes and functions.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="tock.machines.Machine">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Machine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">store_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Machine" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Machine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">store_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Machine" title="Permalink to this definition">¶</a></dt>
 <dd><p>A machine (automaton) that accepts or rejects strings. It has one
 or more stores, which can act as states, stacks, tapes, etc. When
 it is run on a string, the stores are initialized to a start
 configuration and rewritten by transitions until an accept
 configuration is reached or no more rewrites are possible.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>store_types</strong> – A list of store types, one for each
 store. Allowed types are <cite>BASE</cite>, <cite>STREAM</cite>, and <cite>TAPE</cite>. See
@@ -68,7 +68,7 @@ to the string.</p></li>
 <p><strong>High-level interface</strong></p>
 <dl class="py property">
 <dt class="sig sig-object py" id="tock.machines.Machine.num_stores">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">num_stores</span></span><a class="headerlink" href="#tock.machines.Machine.num_stores" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_stores</span></span><a class="headerlink" href="#tock.machines.Machine.num_stores" title="Permalink to this definition">¶</a></dt>
 <dd><p>How many stores the Machine has.</p>
 </dd></dl>
 
@@ -110,7 +110,7 @@ have an additional field to indicate a move (L or R).</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="tock.machines.Machine.states">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">states</span></span><a class="headerlink" href="#tock.machines.Machine.states" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">states</span></span><a class="headerlink" href="#tock.machines.Machine.states" title="Permalink to this definition">¶</a></dt>
 <dd><p>The set of all possible states.</p>
 </dd></dl>
 
@@ -179,17 +179,17 @@ conditions.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="tock.machines.Store">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Store" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Store" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="id1">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">store</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">store</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
 <dd><p>A string together with a head position. It is used either as a
 store of a Machine or as a pattern to be matched against a store of a
 Machine.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>values</strong> – Sequence of Symbols</p></li>
 <li><p><strong>position</strong> (<em>int</em>) – The head position, between -1 and len(values)</p></li>
@@ -215,15 +215,15 @@ to have symbols that aren’t found in <cite>self</cite>.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="tock.machines.Configuration">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stores</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Configuration" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stores</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Configuration" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="id2">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
 <dd><p>A configuration, which is essentially a tuple of <cite>Stores</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>stores</strong> – A tuple of Stores</p></li>
 <li><p><strong>config</strong> (<a class="reference internal" href="#id2" title="tock.machines.Configuration"><em>Configuration</em></a><em> or </em><em>str</em>) – Another Configuration to copy, or a str to convert to a Configuration</p></li>
@@ -242,15 +242,15 @@ to have symbols that aren’t found in self.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="tock.machines.Transition">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Transition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lhs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Transition" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Transition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lhs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Transition" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="id3">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Transition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Transition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
 <dd><p>A transition from one <cite>Configuration</cite> to another <cite>Configuration</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>lhs</strong> (<a class="reference internal" href="#id2" title="tock.machines.Configuration"><em>Configuration</em></a>) – left-hand side</p></li>
 <li><p><strong>rhs</strong> (<a class="reference internal" href="#id2" title="tock.machines.Configuration"><em>Configuration</em></a>) – right-hand side</p></li>
@@ -273,7 +273,7 @@ to have symbols that aren’t found in self.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="tock.machines.AlignedTransition">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">AlignedTransition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transitions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.AlignedTransition" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">AlignedTransition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transitions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.AlignedTransition" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <cite>Transition</cite> that has an alignment between the lhs and rhs. These
 are generated by <cite>get_transitions</cite> so that even if the number of
 lhs and rhs stores changes, we can still keep track of their
@@ -325,37 +325,37 @@ strings accepted by <cite>m</cite>.</p>
 <span id="module-tock-run"></span><h2>Module tock.run<a class="headerlink" href="#module-tock.run" title="Permalink to this headline">¶</a></h2>
 <p>Runs machine <cite>m</cite> on string <cite>w</cite>, automatically selecting a search method.</p>
 <dl class="field-list simple">
-<dt class="field-odd">param m</dt>
+<dt class="field-odd">param m<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The machine to run.</p>
 </dd>
-<dt class="field-even">type m</dt>
+<dt class="field-even">type m<span class="colon">:</span></dt>
 <dd class="field-even"><p>Machine</p>
 </dd>
-<dt class="field-odd">param w</dt>
+<dt class="field-odd">param w<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The string to run on.</p>
 </dd>
-<dt class="field-even">type w</dt>
+<dt class="field-even">type w<span class="colon">:</span></dt>
 <dd class="field-even"><p>String</p>
 </dd>
-<dt class="field-odd">param trace</dt>
+<dt class="field-odd">param trace<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Print the steps of the simulation to stdout.</p>
 </dd>
-<dt class="field-even">type trace</dt>
+<dt class="field-even">type trace<span class="colon">:</span></dt>
 <dd class="field-even"><p>bool</p>
 </dd>
-<dt class="field-odd">param steps</dt>
+<dt class="field-odd">param steps<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Maximum number of steps to run the simulation.</p>
 </dd>
-<dt class="field-even">type steps</dt>
+<dt class="field-even">type steps<span class="colon">:</span></dt>
 <dd class="field-even"><p>int</p>
 </dd>
-<dt class="field-odd">param show_stack</dt>
+<dt class="field-odd">param show_stack<span class="colon">:</span></dt>
 <dd class="field-odd"><p>For PDAs, the maximum depth of the stack to show.</p>
 </dd>
-<dt class="field-even">type show_stack</dt>
+<dt class="field-even">type show_stack<span class="colon">:</span></dt>
 <dd class="field-even"><p>int</p>
 </dd>
-<dt class="field-odd">returns</dt>
+<dt class="field-odd">returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A Graph whose nodes are the configurations reachable from the
 start configuration (which has the attribute <cite>start=True</cite>). It has
 an accept configuration (attribute <cite>accept=True</cite>) iff <cite>m</cite> accepts
@@ -431,7 +431,7 @@ an accept configuration (attribute <cite>accept=True</cite>) iff <cite>m</cite> 
       &copy;2022, David Chiang.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

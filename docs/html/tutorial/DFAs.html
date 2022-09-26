@@ -4,7 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Deterministic finite automata &#8212; tock  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -14,8 +14,8 @@
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Nondeterministic finite automata" href="NFAs.html" />
@@ -246,7 +246,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
-.prompt a.copybtn {
+.prompt .copybtn {
     display: none;
 }
 
@@ -290,8 +290,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">tock</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tock</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
 </div>
@@ -303,8 +302,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;examples/sipser-1-4.csv&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;examples/sipser-1-4.csv&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -313,8 +311,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m</span> <span class="o">=</span> <span class="n">read_tgf</span><span class="p">(</span><span class="s2">&quot;examples/sipser-1-4.tgf&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">read_tgf</span><span class="p">(</span><span class="s2">&quot;examples/sipser-1-4.tgf&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -326,8 +323,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m</span> <span class="o">=</span> <span class="n">FiniteAutomaton</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">FiniteAutomaton</span><span class="p">()</span>
 <span class="n">m</span><span class="o">.</span><span class="n">set_start_state</span><span class="p">(</span><span class="s1">&#39;q1&#39;</span><span class="p">)</span>
 <span class="n">m</span><span class="o">.</span><span class="n">add_accept_state</span><span class="p">(</span><span class="s1">&#39;q2&#39;</span><span class="p">)</span>
 <span class="n">m</span><span class="o">.</span><span class="n">add_transition</span><span class="p">(</span><span class="s1">&#39;q1, 0 -&gt; q1&#39;</span><span class="p">)</span>
@@ -340,8 +336,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m</span><span class="o">.</span><span class="n">add_transition</span><span class="p">(</span><span class="s1">&#39;q2, 0&#39;</span><span class="p">,</span> <span class="s1">&#39;q3&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m</span><span class="o">.</span><span class="n">add_transition</span><span class="p">(</span><span class="s1">&#39;q2, 0&#39;</span><span class="p">,</span> <span class="s1">&#39;q3&#39;</span><span class="p">)</span>
 <span class="n">m</span><span class="o">.</span><span class="n">add_transition</span><span class="p">([</span><span class="s1">&#39;q2&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;q3&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -351,23 +346,20 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m</span><span class="o">.</span><span class="n">add_transitions</span><span class="p">([</span><span class="s1">&#39;q3, 0 -&gt; q2&#39;</span><span class="p">,</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m</span><span class="o">.</span><span class="n">add_transitions</span><span class="p">([</span><span class="s1">&#39;q3, 0 -&gt; q2&#39;</span><span class="p">,</span>
                    <span class="s1">&#39;q3, 1 -&gt; q2&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
 </section>
-</section>
 <section id="Editing-DFAs-graphically">
-<h1>Editing DFAs graphically<a class="headerlink" href="#Editing-DFAs-graphically" title="Permalink to this headline">¶</a></h1>
+<h2>Editing DFAs graphically<a class="headerlink" href="#Editing-DFAs-graphically" title="Permalink to this headline">¶</a></h2>
 <p>In a Jupyter notebook, you can edit a DFA graphically.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m</span><span class="o">.</span><span class="n">edit</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m</span><span class="o">.</span><span class="n">edit</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -1328,6 +1320,7 @@ function load(ei) {
 main(0);
 </script></div>
 </div>
+</section>
 <section id="Inspecting-DFAs">
 <h2>Inspecting DFAs<a class="headerlink" href="#Inspecting-DFAs" title="Permalink to this headline">¶</a></h2>
 <p>Once a machine is loaded, we can test whether it is indeed a DFA:</p>
@@ -1335,8 +1328,7 @@ main(0);
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m</span><span class="o">.</span><span class="n">is_finite</span><span class="p">()</span> <span class="c1"># is it a finite automaton?</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m</span><span class="o">.</span><span class="n">is_finite</span><span class="p">()</span> <span class="c1"># is it a finite automaton?</span>
 </pre></div>
 </div>
 </div>
@@ -1353,8 +1345,7 @@ True
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">m</span><span class="o">.</span><span class="n">is_deterministic</span><span class="p">()</span> <span class="c1"># is it deterministic?</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m</span><span class="o">.</span><span class="n">is_deterministic</span><span class="p">()</span> <span class="c1"># is it deterministic?</span>
 </pre></div>
 </div>
 </div>
@@ -1372,8 +1363,7 @@ True
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">to_table</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">to_table</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1412,8 +1402,7 @@ True
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">to_graph</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">to_graph</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1428,8 +1417,7 @@ True
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">get_transitions</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">get_transitions</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1454,8 +1442,7 @@ q3,1 → q2
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">run</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;0 0 0 1 1 1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">only_path</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">run</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;0 0 0 1 1 1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">only_path</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -1481,50 +1468,15 @@ q3,1 → q2
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">run</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;0 0 0 1 1 1&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">run</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;0 0 0 1 1 1&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
+<div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">KeyError</span>                                  Traceback (most recent call last)
-<span class="ansi-green-fg">/nix/store/c2nsl18bwhqbrnvr0ld035yl3vzr45k0-python3-3.8.12-env/lib/python3.8/site-packages/IPython/core/formatters.py</span> in <span class="ansi-cyan-fg">__call__</span><span class="ansi-blue-fg">(self, obj)</span>
-<span class="ansi-green-intense-fg ansi-bold">    916</span>             method <span class="ansi-blue-fg">=</span> get_real_method<span class="ansi-blue-fg">(</span>obj<span class="ansi-blue-fg">,</span> self<span class="ansi-blue-fg">.</span>print_method<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    917</span>             <span class="ansi-green-fg">if</span> method <span class="ansi-green-fg">is</span> <span class="ansi-green-fg">not</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-fg">--&gt; 918</span><span class="ansi-red-fg">                 </span>method<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    919</span>                 <span class="ansi-green-fg">return</span> <span class="ansi-green-fg">True</span>
-<span class="ansi-green-intense-fg ansi-bold">    920</span>
-
-<span class="ansi-green-fg">~/Work/Teaching/Theory/tock/tock/graphs.py</span> in <span class="ansi-cyan-fg">_ipython_display_</span><span class="ansi-blue-fg">(self)</span>
-<span class="ansi-green-intense-fg ansi-bold">    242</span>         <span class="ansi-green-fg">from</span> IPython<span class="ansi-blue-fg">.</span>display <span class="ansi-green-fg">import</span> display <span class="ansi-red-fg"># type: ignore</span>
-<span class="ansi-green-intense-fg ansi-bold">    243</span>         <span class="ansi-green-fg">from</span> <span class="ansi-blue-fg">.</span>graphviz <span class="ansi-green-fg">import</span> run_dot
-<span class="ansi-green-fg">--&gt; 244</span><span class="ansi-red-fg">         </span>display<span class="ansi-blue-fg">(</span>run_dot<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>_repr_dot_<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    245</span>
-<span class="ansi-green-intense-fg ansi-bold">    246</span> <span class="ansi-green-fg">def</span> graph_to_json<span class="ansi-blue-fg">(</span>g<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-
-<span class="ansi-green-fg">~/Work/Teaching/Theory/tock/tock/graphs.py</span> in <span class="ansi-cyan-fg">_repr_dot_</span><span class="ansi-blue-fg">(self, merge_parallel, index)</span>
-<span class="ansi-green-intense-fg ansi-bold">    211</span>                     labels <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">]</span>
-<span class="ansi-green-intense-fg ansi-bold">    212</span>                     <span class="ansi-green-fg">for</span> e <span class="ansi-green-fg">in</span> edges<span class="ansi-blue-fg">:</span>
-<span class="ansi-green-fg">--&gt; 213</span><span class="ansi-red-fg">                         </span>labels<span class="ansi-blue-fg">.</span>append<span class="ansi-blue-fg">(</span>e<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">&#39;label&#39;</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    214</span>                         <span class="ansi-red-fg"># In principle it&#39;s possible for parallel edges to have</span>
-<span class="ansi-green-intense-fg ansi-bold">    215</span>                         <span class="ansi-red-fg"># different attributes, but not for the cases where</span>
-
-<span class="ansi-red-fg">KeyError</span>: &#39;label&#39;
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-&lt;tock.graphs.Graph at 0x108b17d00&gt;
-</pre></div></div>
+<img alt="../_images/tutorial_DFAs_28_0.svg" src="../_images/tutorial_DFAs_28_0.svg" /></div>
 </div>
 <p>Each node says what state the machine is at a time step, and on the right is the input string, with the next symbol marked with square brackets. The run ends with a double node, indicating that at the end of the input string, the machine was in a final state, so it accepted the string.</p>
 <p>Let’s try a different string:</p>
@@ -1532,50 +1484,15 @@ q3,1 → q2
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">run</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;1 0 0 0&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">run</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s1">&#39;1 0 0 0&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
+<div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">KeyError</span>                                  Traceback (most recent call last)
-<span class="ansi-green-fg">/nix/store/c2nsl18bwhqbrnvr0ld035yl3vzr45k0-python3-3.8.12-env/lib/python3.8/site-packages/IPython/core/formatters.py</span> in <span class="ansi-cyan-fg">__call__</span><span class="ansi-blue-fg">(self, obj)</span>
-<span class="ansi-green-intense-fg ansi-bold">    916</span>             method <span class="ansi-blue-fg">=</span> get_real_method<span class="ansi-blue-fg">(</span>obj<span class="ansi-blue-fg">,</span> self<span class="ansi-blue-fg">.</span>print_method<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    917</span>             <span class="ansi-green-fg">if</span> method <span class="ansi-green-fg">is</span> <span class="ansi-green-fg">not</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-fg">--&gt; 918</span><span class="ansi-red-fg">                 </span>method<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    919</span>                 <span class="ansi-green-fg">return</span> <span class="ansi-green-fg">True</span>
-<span class="ansi-green-intense-fg ansi-bold">    920</span>
-
-<span class="ansi-green-fg">~/Work/Teaching/Theory/tock/tock/graphs.py</span> in <span class="ansi-cyan-fg">_ipython_display_</span><span class="ansi-blue-fg">(self)</span>
-<span class="ansi-green-intense-fg ansi-bold">    242</span>         <span class="ansi-green-fg">from</span> IPython<span class="ansi-blue-fg">.</span>display <span class="ansi-green-fg">import</span> display <span class="ansi-red-fg"># type: ignore</span>
-<span class="ansi-green-intense-fg ansi-bold">    243</span>         <span class="ansi-green-fg">from</span> <span class="ansi-blue-fg">.</span>graphviz <span class="ansi-green-fg">import</span> run_dot
-<span class="ansi-green-fg">--&gt; 244</span><span class="ansi-red-fg">         </span>display<span class="ansi-blue-fg">(</span>run_dot<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>_repr_dot_<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    245</span>
-<span class="ansi-green-intense-fg ansi-bold">    246</span> <span class="ansi-green-fg">def</span> graph_to_json<span class="ansi-blue-fg">(</span>g<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-
-<span class="ansi-green-fg">~/Work/Teaching/Theory/tock/tock/graphs.py</span> in <span class="ansi-cyan-fg">_repr_dot_</span><span class="ansi-blue-fg">(self, merge_parallel, index)</span>
-<span class="ansi-green-intense-fg ansi-bold">    211</span>                     labels <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">]</span>
-<span class="ansi-green-intense-fg ansi-bold">    212</span>                     <span class="ansi-green-fg">for</span> e <span class="ansi-green-fg">in</span> edges<span class="ansi-blue-fg">:</span>
-<span class="ansi-green-fg">--&gt; 213</span><span class="ansi-red-fg">                         </span>labels<span class="ansi-blue-fg">.</span>append<span class="ansi-blue-fg">(</span>e<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">&#39;label&#39;</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    214</span>                         <span class="ansi-red-fg"># In principle it&#39;s possible for parallel edges to have</span>
-<span class="ansi-green-intense-fg ansi-bold">    215</span>                         <span class="ansi-red-fg"># different attributes, but not for the cases where</span>
-
-<span class="ansi-red-fg">KeyError</span>: &#39;label&#39;
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-&lt;tock.graphs.Graph at 0x108b1ffd0&gt;
-</pre></div></div>
+<img alt="../_images/tutorial_DFAs_30_0.svg" src="../_images/tutorial_DFAs_30_0.svg" /></div>
 </div>
 <p>This time, the fact that the run doesn’t end with a double node means that the string was rejected.</p>
 </section>
@@ -1602,7 +1519,6 @@ q3,1 → q2
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorial</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Deterministic finite automata</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Editing-DFAs-graphically">Editing DFAs graphically</a></li>
 <li class="toctree-l2"><a class="reference internal" href="NFAs.html">Nondeterministic finite automata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Regexps.html">Regular expressions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="CFGs.html">Context-free grammars</a></li>
@@ -1651,7 +1567,7 @@ q3,1 → q2
       &copy;2022, David Chiang.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

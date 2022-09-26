@@ -210,7 +210,8 @@ class Graph:
                     attrs = {}
                     labels = []
                     for e in edges:
-                        labels.append(e['label'])
+                        if 'label' in e:
+                            labels.append(e['label'])
                         # In principle it's possible for parallel edges to have
                         # different attributes, but not for the cases where
                         # we currently use attributes.

@@ -390,9 +390,9 @@ class Path:
             html.append('</tr>\n')
         html.append('</table>\n')
         if self.accept:
-            html.append('<p>accept</p')
+            html.append('<p>accept</p>')
         else:
-            html.append('<p>reject</p')
+            html.append('<p>reject</p>')
         return ''.join(html)
 
 def layout(g):

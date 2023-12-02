@@ -38,6 +38,11 @@
    - Help
 */
 
+function boxContainsPoint(box, x, y) {
+    return (x >= box[0]-hitTargetPadding && x <= box[2]+hitTargetPadding &&
+            y >= box[1]-hitTargetPadding && y <= box[3]+hitTargetPadding);
+}
+
 function StartLink(node, start) {
     this.node = node;
     this.deltaX = 0;
@@ -197,16 +202,18 @@ Link.prototype.draw = function(c) {
         var textAngle = (startAngle + endAngle) / 2 + stuff.isReversed * Math.PI;
         var textX = stuff.circleX + stuff.circleRadius * Math.cos(textAngle);
         var textY = stuff.circleY + stuff.circleRadius * Math.sin(textAngle);
-        drawText(c, this.text, textX, textY, textAngle, selectedObject == this);
+        this.textBox = drawText(c, this.text, textX, textY, textAngle, selectedObject == this);
     } else {
         var textX = (stuff.startX + stuff.endX) / 2;
         var textY = (stuff.startY + stuff.endY) / 2;
         var textAngle = Math.atan2(stuff.endX - stuff.startX, stuff.startY - stuff.endY);
-        drawText(c, this.text, textX, textY, textAngle + this.lineAngleAdjust, selectedObject == this);
+        this.textBox = drawText(c, this.text, textX, textY, textAngle + this.lineAngleAdjust, selectedObject == this);
     }
 };
 
 Link.prototype.containsPoint = function(x, y) {
+    if (boxContainsPoint(this.textBox, x, y))
+        return true;
     var stuff = this.getEndPointsAndCircle();
     if(stuff.hasCircle) {
         var dx = x - stuff.circleX;
@@ -268,7 +275,7 @@ Node.prototype.draw = function(c) {
     c.stroke();
 
     // draw the text
-    drawText(c, this.text, this.x, this.y, null, selectedObject == this, nodeRadius*1.6);
+    this.textBox = drawText(c, this.text, this.x, this.y, null, selectedObject == this, nodeRadius*1.6);
 
     // draw a double circle for an accept state
     if(this.isAcceptState) {
@@ -350,12 +357,14 @@ SelfLink.prototype.draw = function(c) {
     // draw the text on the loop farthest from the node
     var textX = stuff.circleX + stuff.circleRadius * Math.cos(this.anchorAngle);
     var textY = stuff.circleY + stuff.circleRadius * Math.sin(this.anchorAngle);
-    drawText(c, this.text, textX, textY, this.anchorAngle, selectedObject == this);
+    this.textBox = drawText(c, this.text, textX, textY, this.anchorAngle, selectedObject == this);
     // draw the head of the arrow
     drawArrow(c, stuff.endX, stuff.endY, stuff.endAngle + Math.PI * 0.4);
 };
 
 SelfLink.prototype.containsPoint = function(x, y) {
+    if (boxContainsPoint(this.textBox, x, y))
+        return true;
     var stuff = this.getEndPointsAndCircle();
     var dx = x - stuff.circleX;
     var dy = y - stuff.circleY;
@@ -459,6 +468,8 @@ function drawText(c, originalText, x, y, angleOrNull, isSelected, maxWidth) {
         c.stroke();
     }
     c.restore();
+
+    return [x, y-tmpFontSize/2, x+width, y+tmpFontSize/2];
 }
 
 var caretTimer;

@@ -781,7 +781,7 @@ function crossBrowserElementPos(e) {
     }
     // Add up scroll positions
     obj = e.target || e.srcElement;
-    while (obj) {
+    while (obj.offsetParent) {
         x -= obj.scrollLeft;
         y -= obj.scrollTop;
         obj = obj.parentElement;

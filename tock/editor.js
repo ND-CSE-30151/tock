@@ -591,6 +591,7 @@ function main(ei) {
     element.append(message_bar);
 
     canvas.onmousedown = function(e) {
+        if (e.button !== 0) return true;
         var mouse = crossBrowserRelativeMousePos(e);
         selectedObject = selectObject(mouse.x, mouse.y);
         movingObject = false;

@@ -571,13 +571,18 @@ function message(s) {
 }
 
 function main(ei) {
+    var container = document.createElement("div");
+    container.setAttribute("class", "editor");
+    container.setAttribute("id", "editor"+ei);
+    element.append(container);
+    
     canvas = document.createElement("canvas");
-    canvas.setAttribute("style", "outline: 1px solid black; width: 600px; height: 600px;");
+    canvas.setAttribute("style", "outline: 1px solid gray; margin: 1px; width: 600px; height: 600px;");
     canvas.setAttribute("tabindex", -1); // make canvas focusable
     canvas_dpr = window.devicePixelRatio || 1;
     canvas.width = 600 * canvas_dpr;
     canvas.height = 600 * canvas_dpr;
-    element.append(canvas);
+    container.append(canvas);
     
     nodeRadius *= canvas_dpr; arrowSize *= canvas_dpr;
     lineWidth *= canvas_dpr; fontSize *= canvas_dpr;
@@ -586,20 +591,21 @@ function main(ei) {
     load(ei); // bug: if there is an error later in the notebook, this doesn't work
     //draw();
 
-    element.append(document.createElement("br"));
+    var controls = document.createElement("div");
+    container.append(controls);
 
     function make_button(label, callback) {
         var button = document.createElement("button");
-        button.setAttribute("style", "margin: 0 10px 0 0;");
-        button.innerHTML = label;
+        button.setAttribute("style", "margin: 5px;");
+        button.textContent = label;
         button.onclick = callback;
-        element.append(button);
+        controls.append(button);
     }
     make_button('Load', function() { load(ei); });
     make_button('Save', function() { save(ei); });
 
     message_bar = document.createElement("span");
-    element.append(message_bar);
+    controls.append(message_bar);
 
     canvas.onmousedown = function(e) {
         if (e.button !== 0) return true;

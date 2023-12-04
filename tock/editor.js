@@ -483,6 +483,7 @@ function drawText(c, originalText, x, y, angleOrNull, isSelected, maxWidth) {
     return [x, y-tmpFontSize/2, x+width, y+tmpFontSize/2];
 }
 
+// The insertion point for text labels
 var caretTimer;
 var caretVisible = true;
 
@@ -507,11 +508,12 @@ var snapToPadding = 6; // pixels
 var hitTargetPadding = 6; // pixels
 
 var selectedObject = null; // the Link or Node currently selected
-var currentLink = null; // the Link currently being drawn
 var movingObject = false; // whether selectedObject is currently being moved
-var originalClick; // start of currentLink if not an object
+var currentLink = null; // the Link currently being drawn
+var originalClick; // Node or point that currentLink starts at (or ends at if it's a StartLink)
 
-function drawUsing(c) {
+function draw() {
+    var c = canvas.getContext('2d');
     c.clearRect(0, 0, canvas.width, canvas.height);
     c.save();
     c.translate(0.5, 0.5);
@@ -543,10 +545,6 @@ function drawUsing(c) {
     }
 
     c.restore();
-}
-
-function draw() {
-    drawUsing(canvas.getContext('2d'));
 }
 
 function selectObject(x, y) {
@@ -609,24 +607,27 @@ function main(ei) {
     canvas.onmousedown = function(e) {
         if (e.button !== 0) return true;
         var mouse = crossBrowserRelativeMousePos(e);
-        selectedObject = selectObject(mouse.x, mouse.y); // even if Shift key is down
-        movingObject = false;
-        originalClick = mouse;
+        var mousedObject = selectObject(mouse.x, mouse.y);
+        selectedObject = null;
 
-        if(selectedObject != null) {
+        if(mousedObject != null) {
+            originalClick = mousedObject;
             // begin creating Link/SelfLink
-            if(shift && selectedObject instanceof Node) {
-                currentLink = new SelfLink(selectedObject, mouse);
+            if(shift && mousedObject instanceof Node) {
+                movingObject = false;
+                currentLink = new SelfLink(mousedObject, mouse);
             } else {
-                // move Node
+                // move Node or Link/StartLink/SelfLink
+                selectedObject = mousedObject;
                 movingObject = true;
-                if(selectedObject.setMouseStart) {
-                    selectedObject.setMouseStart(mouse.x, mouse.y);
-                }
+                if(mousedObject.setMouseStart)
+                    mousedObject.setMouseStart(mouse.x, mouse.y);
             }
             resetCaret();
         } else if(shift) {
             // begin creating StartLink
+            originalClick = mouse;
+            movingObject = false;
             currentLink = new TemporaryLink(mouse, mouse);
         }
 
@@ -671,7 +672,7 @@ function main(ei) {
                 targetNode = null;
             }
 
-            if(selectedObject == null) {
+            if(!(originalClick instanceof Node)) {
                 // source is a point
                 if(targetNode != null) {
                     currentLink = new StartLink(targetNode, originalClick);
@@ -679,20 +680,20 @@ function main(ei) {
                     currentLink = new TemporaryLink(originalClick, mouse);
                 }
             } else {
-                // selectedObject is the source Node
-                if(targetNode == selectedObject) {
-                    currentLink = new SelfLink(selectedObject, mouse);
+                // originalClick is the source Node
+                if(targetNode == originalClick) {
+                    currentLink = new SelfLink(originalClick, mouse);
                 } else if(targetNode != null) {
-                    currentLink = new Link(selectedObject, targetNode);
+                    currentLink = new Link(originalClick, targetNode);
                 } else {
-                    currentLink = new TemporaryLink(selectedObject.closestPointOnCircle(mouse.x, mouse.y), mouse);
+                    currentLink = new TemporaryLink(originalClick.closestPointOnCircle(mouse.x, mouse.y), mouse);
                 }
             }
             draw();
         }
 
         if(movingObject) {
-            selectedObject.setAnchorPoint(mouse.x, mouse.y);
+            originalClick.setAnchorPoint(mouse.x, mouse.y);
             draw();
         }
     };
@@ -718,7 +719,7 @@ function main(ei) {
     };
 }
 
-var shift = false;
+var shift = false; // whether the Shift key is down
 
 document.onkeydown = function(e) {
     var key = crossBrowserKey(e);

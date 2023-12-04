@@ -1,6 +1,6 @@
 with import <nixpkgs> {};
 let 
-  myPython = python38.withPackages (ps: with ps; [
+  myPython = python310.withPackages (ps: with ps; [
           pip setuptools twine
           mypy
           sphinx nbsphinx

@@ -33,8 +33,9 @@
 
    To do:
    - Change keybinding for delete node/edge
-   - Change edge's endpoint
+   - Drag to change an edge's endpoint
    - Map > and @ to start/accept state?
+   - StartLink fixed length
    - Help
 */
 
@@ -45,7 +46,7 @@ function boxContainsPoint(box, x, y) {
 
 function StartLink(node, start) {
     this.node = node;
-    this.deltaX = 0;
+    this.deltaX = 0; // source of link, relative to node center
     this.deltaY = 0;
 
     if(start) {
@@ -102,8 +103,8 @@ StartLink.prototype.containsPoint = function(x, y) {
 };
 
 function Link(a, b) {
-    this.nodeA = a;
-    this.nodeB = b;
+    this.nodeA = a; // source node
+    this.nodeB = b; // target node
     this.text = '';
     this.lineAngleAdjust = 0; // value to add to textAngle when link is straight line
 
@@ -250,9 +251,9 @@ Link.prototype.containsPoint = function(x, y) {
 };
 
 function Node(x, y) {
-    this.x = x;
+    this.x = x; // center of node
     this.y = y;
-    this.mouseOffsetX = 0;
+    this.mouseOffsetX = 0; // when node is being moved, center relative to mouse
     this.mouseOffsetY = 0;
     this.isAcceptState = false;
     this.text = '';
@@ -266,6 +267,16 @@ Node.prototype.setMouseStart = function(x, y) {
 Node.prototype.setAnchorPoint = function(x, y) {
     this.x = x + this.mouseOffsetX;
     this.y = y + this.mouseOffsetY;
+
+    // Snap to horizontal/vertical alignment with other nodes
+    for(var i = 0; i < nodes.length; i++) {
+        if(nodes[i] == this) continue;
+
+        if(Math.abs(this.x - nodes[i].x) < snapToPadding)
+            this.x = nodes[i].x;
+        if(Math.abs(this.y - nodes[i].y) < snapToPadding)
+            this.y = nodes[i].y;
+    }
 };
 
 Node.prototype.draw = function(c) {
@@ -300,9 +311,9 @@ Node.prototype.containsPoint = function(x, y) {
 };
 
 function SelfLink(node, mouse) {
-    this.node = node;
-    this.anchorAngle = 0;
-    this.mouseOffsetAngle = 0;
+    this.node = node; // source/target node
+    this.anchorAngle = 0; // angle of midpoint (radius is fixed)
+    this.mouseOffsetAngle = 0; // when link is being moved, angle of anchor relative to angle of mouse
     this.text = '';
 
     if(mouse) {
@@ -373,8 +384,8 @@ SelfLink.prototype.containsPoint = function(x, y) {
 };
 
 function TemporaryLink(from, to) {
-    this.from = from;
-    this.to = to;
+    this.from = from; // source point
+    this.to = to; // target point
 }
 
 TemporaryLink.prototype.draw = function(c) {
@@ -488,16 +499,17 @@ var arrowSize = 4;
 var lineWidth = 1;
 var fontSize = 16;
 var selectColor = '#00823e';
+
 var nodes = [];
 var links = [];
 
-var cursorVisible = true;
 var snapToPadding = 6; // pixels
 var hitTargetPadding = 6; // pixels
-var selectedObject = null; // either a Link or a Node
-var currentLink = null; // a Link
-var movingObject = false;
-var originalClick;
+
+var selectedObject = null; // the Link or Node currently selected
+var currentLink = null; // the Link currently being drawn
+var movingObject = false; // whether selectedObject is currently being moved
+var originalClick; // start of currentLink if not an object
 
 function drawUsing(c) {
     c.clearRect(0, 0, canvas.width, canvas.height);
@@ -551,20 +563,6 @@ function selectObject(x, y) {
     return null;
 }
 
-function snapNode(node) {
-    for(var i = 0; i < nodes.length; i++) {
-        if(nodes[i] == node) continue;
-
-        if(Math.abs(node.x - nodes[i].x) < snapToPadding) {
-            node.x = nodes[i].x;
-        }
-
-        if(Math.abs(node.y - nodes[i].y) < snapToPadding) {
-            node.y = nodes[i].y;
-        }
-    }
-}
-
 var message_bar;
 function message(s) {
     message_bar.innerHTML = s;
@@ -605,19 +603,22 @@ function main(ei) {
     make_button('Save', function() { save(ei); });
 
     message_bar = document.createElement("span");
+    message_bar.setAttribute("style", "margin: 5px;");
     controls.append(message_bar);
 
     canvas.onmousedown = function(e) {
         if (e.button !== 0) return true;
         var mouse = crossBrowserRelativeMousePos(e);
-        selectedObject = selectObject(mouse.x, mouse.y);
+        selectedObject = selectObject(mouse.x, mouse.y); // even if Shift key is down
         movingObject = false;
         originalClick = mouse;
 
         if(selectedObject != null) {
+            // begin creating Link/SelfLink
             if(shift && selectedObject instanceof Node) {
                 currentLink = new SelfLink(selectedObject, mouse);
             } else {
+                // move Node
                 movingObject = true;
                 if(selectedObject.setMouseStart) {
                     selectedObject.setMouseStart(mouse.x, mouse.y);
@@ -625,6 +626,7 @@ function main(ei) {
             }
             resetCaret();
         } else if(shift) {
+            // begin creating StartLink
             currentLink = new TemporaryLink(mouse, mouse);
         }
 
@@ -647,12 +649,14 @@ function main(ei) {
         selectedObject = selectObject(mouse.x, mouse.y);
 
         if(selectedObject == null) {
+            // create new Node
             selectedObject = new Node(mouse.x, mouse.y);
             if(typeof Jupyter !== 'undefined') Jupyter.keyboard_manager.disable();
             nodes.push(selectedObject);
             resetCaret();
             draw();
         } else if(selectedObject instanceof Node) {
+            // toggle accept state
             selectedObject.isAcceptState = !selectedObject.isAcceptState;
             draw();
         }
@@ -668,12 +672,14 @@ function main(ei) {
             }
 
             if(selectedObject == null) {
+                // source is a point
                 if(targetNode != null) {
                     currentLink = new StartLink(targetNode, originalClick);
                 } else {
                     currentLink = new TemporaryLink(originalClick, mouse);
                 }
             } else {
+                // selectedObject is the source Node
                 if(targetNode == selectedObject) {
                     currentLink = new SelfLink(selectedObject, mouse);
                 } else if(targetNode != null) {
@@ -687,9 +693,6 @@ function main(ei) {
 
         if(movingObject) {
             selectedObject.setAnchorPoint(mouse.x, mouse.y);
-            if(selectedObject instanceof Node) {
-                snapNode(selectedObject);
-            }
             draw();
         }
     };

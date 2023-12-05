@@ -30,7 +30,6 @@
    Bugs:
    - In Jupyter, if the canvas is too wide, a horizontal scrollbar appears,
    which makes the output too high, so a vertical scrollbar appears too.
-   - mouseup outside canvas doesn't end drag
 
    To do:
    - Change keybinding for delete node/edge
@@ -710,7 +709,7 @@ function main(ei) {
         }
     };
 
-    canvas.onmouseup = function(e) {
+    document.onmouseup = function(e) {
         movingObject = false;
 
         if(currentLink != null) {

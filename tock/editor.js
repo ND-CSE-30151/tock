@@ -44,6 +44,11 @@ function boxContainsPoint(box, x, y) {
             y >= box[1]-hitTargetPadding && y <= box[3]+hitTargetPadding);
 }
 
+// Which side of a->b does c fall on? 1 = right, -1 = left, 0 = on
+function sideOfLine(ax, ay, bx, by, cx, cy) {
+    return Math.sign((bx-ax)*(cy-ay)-(by-ay)*(cx-ax));
+}
+
 function StartLink(node, start) {
     this.node = node;
     this.deltaX = 0; // source of link, relative to node center
@@ -107,10 +112,7 @@ function Link(a, b) {
     this.nodeB = b; // target node
     this.text = '';
     this.lineAngleAdjust = 0; // value to add to textAngle when link is straight line
-
-    // make anchor point relative to the locations of nodeA and nodeB
-    this.parallelPart = 0.5; // percentage from nodeA to nodeB
-    this.perpendicularPart = 0; // pixels from line between nodeA and nodeB
+    this.perpendicularPart = 0; // pixels from line between nodeA and nodeB; positive is clockwise
 }
 
 Link.prototype.getAnchorPoint = function() {
@@ -118,19 +120,25 @@ Link.prototype.getAnchorPoint = function() {
     var dy = this.nodeB.y - this.nodeA.y;
     var scale = Math.sqrt(dx * dx + dy * dy);
     return {
-        'x': this.nodeA.x + dx * this.parallelPart - dy * this.perpendicularPart / scale,
-        'y': this.nodeA.y + dy * this.parallelPart + dx * this.perpendicularPart / scale
+        'x': this.nodeA.x + dx / 2 - dy * this.perpendicularPart / scale,
+        'y': this.nodeA.y + dy / 2 + dx * this.perpendicularPart / scale
     };
 };
 
 Link.prototype.setAnchorPoint = function(x, y) {
-    var dx = this.nodeB.x - this.nodeA.x;
-    var dy = this.nodeB.y - this.nodeA.y;
-    var scale = Math.sqrt(dx * dx + dy * dy);
-    this.parallelPart = (dx * (x - this.nodeA.x) + dy * (y - this.nodeA.y)) / (scale * scale);
-    this.perpendicularPart = (dx * (y - this.nodeA.y) - dy * (x - this.nodeA.x)) / scale;
+    var circle = circleFromThreePoints(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, x, y);
+    if (circle.radius === Infinity) {
+        // leave this.perpendicularPart as it was
+        return;
+    }
+    var r = circle.radius * sideOfLine(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, x, y);
+    var midX = (this.nodeA.x + this.nodeB.x)/2 - circle.x;
+    var midY = (this.nodeA.y + this.nodeB.y)/2 - circle.y;
+    var c = Math.sqrt(midX*midX + midY*midY); // distance from center to midpoint
+    c *= sideOfLine(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, circle.x, circle.y);
+    this.perpendicularPart = r + c;
     // snap to a straight line
-    if(this.parallelPart > 0 && this.parallelPart < 1 && Math.abs(this.perpendicularPart) < snapToPadding) {
+    if(Math.abs(this.perpendicularPart) < snapToPadding) {
         this.lineAngleAdjust = (this.perpendicularPart < 0) * Math.PI;
         this.perpendicularPart = 0;
     }
@@ -168,11 +176,11 @@ Link.prototype.getEndPointsAndCircle = function() {
         'endY': endY,
         'startAngle': startAngle,
         'endAngle': endAngle,
-        'circleX': circle.x,
+        'circleX': circle.x, // center of arc
         'circleY': circle.y,
         'circleRadius': circle.radius,
-        'reverseScale': reverseScale,
-        'isReversed': isReversed,
+        'reverseScale': reverseScale, // 1 = counterclockwise, -1 = clockwise
+        'isReversed': isReversed, // true = counterclockwise, false = clockwise
     };
 };
 
@@ -404,6 +412,12 @@ function det(a, b, c, d, e, f, g, h, i) {
 }
 
 function circleFromThreePoints(x1, y1, x2, y2, x3, y3) {
+    /*
+      Solve for x, y, and z = r²-x²-y² using Cramer's Rule:
+        (x1-x)² + (y1-y)² = r²
+        (x2-x)² + (y2-y)² = r² 
+        (x3-x)² + (y3-y)² = r²
+     */
     var a = det(x1, y1, 1, x2, y2, 1, x3, y3, 1);
     var bx = -det(x1*x1 + y1*y1, y1, 1, x2*x2 + y2*y2, y2, 1, x3*x3 + y3*y3, y3, 1);
     var by = det(x1*x1 + y1*y1, x1, 1, x2*x2 + y2*y2, x2, 1, x3*x3 + y3*y3, x3, 1);
@@ -510,7 +524,7 @@ var hitTargetPadding = 6; // pixels
 var selectedObject = null; // the Link or Node currently selected
 var movingObject = false; // whether selectedObject is currently being moved
 var currentLink = null; // the Link currently being drawn
-var originalClick; // Node or point that currentLink starts at (or ends at if it's a StartLink)
+var originalClick; // Node or point that currentLink starts at
 
 function draw() {
     var c = canvas.getContext('2d');
@@ -611,11 +625,11 @@ function main(ei) {
         selectedObject = null;
 
         if(mousedObject != null) {
-            originalClick = mousedObject;
             // begin creating Link/SelfLink
             if(shift && mousedObject instanceof Node) {
                 movingObject = false;
                 currentLink = new SelfLink(mousedObject, mouse);
+                originalClick = mousedObject;
             } else {
                 // move Node or Link/StartLink/SelfLink
                 selectedObject = mousedObject;
@@ -626,9 +640,9 @@ function main(ei) {
             resetCaret();
         } else if(shift) {
             // begin creating StartLink
-            originalClick = mouse;
             movingObject = false;
             currentLink = new TemporaryLink(mouse, mouse);
+            originalClick = mouse;
         }
 
         draw();
@@ -673,7 +687,7 @@ function main(ei) {
             }
 
             if(!(originalClick instanceof Node)) {
-                // source is a point
+                // originalClick is the source point
                 if(targetNode != null) {
                     currentLink = new StartLink(targetNode, originalClick);
                 } else {
@@ -693,7 +707,7 @@ function main(ei) {
         }
 
         if(movingObject) {
-            originalClick.setAnchorPoint(mouse.x, mouse.y);
+            selectedObject.setAnchorPoint(mouse.x, mouse.y);
             draw();
         }
     };

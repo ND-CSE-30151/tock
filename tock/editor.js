@@ -29,13 +29,13 @@
 /* 
    Bugs:
    - In Jupyter, if the canvas is too wide, a horizontal scrollbar appears,
-     which makes the output too high, so a vertical scrollbar appears too.
+   which makes the output too high, so a vertical scrollbar appears too.
+   - mouseup outside canvas doesn't end drag
 
    To do:
    - Change keybinding for delete node/edge
    - Drag to change an edge's endpoint
    - Map > and @ to start/accept state?
-   - StartLink fixed length
    - Help
 */
 
@@ -49,32 +49,33 @@ function sideOfLine(ax, ay, bx, by, cx, cy) {
     return Math.sign((bx-ax)*(cy-ay)-(by-ay)*(cx-ax));
 }
 
-function StartLink(node, start) {
-    this.node = node;
-    this.deltaX = 0; // source of link, relative to node center
-    this.deltaY = 0;
+function snapAngle(angle, r) {
+    // snap to 90 degrees
+    var snap = Math.round(angle / (Math.PI / 2)) * (Math.PI / 2);
+    if(Math.abs(angle - snap) * r <= snapToPadding) angle = snap;
+    // keep in the range -pi to pi
+    if(angle < -Math.PI) angle += 2 * Math.PI;
+    if(angle > Math.PI) angle -= 2 * Math.PI;
+    return angle;
+}
 
-    if(start) {
+function StartLink(start, node) {
+    this.node = node;
+    this.anchorAngle = 0;
+    this.anchorRadius = nodeRadius * startRatio;
+    if(start)
         this.setAnchorPoint(start.x, start.y);
-    }
 }
 
 StartLink.prototype.setAnchorPoint = function(x, y) {
-    this.deltaX = x - this.node.x;
-    this.deltaY = y - this.node.y;
-
-    if(Math.abs(this.deltaX) < snapToPadding) {
-        this.deltaX = 0;
-    }
-
-    if(Math.abs(this.deltaY) < snapToPadding) {
-        this.deltaY = 0;
-    }
+    var dx = x - this.node.x;
+    var dy = y - this.node.y;
+    this.anchorAngle = snapAngle(Math.atan2(dy, dx), this.anchorRadius);
 };
 
 StartLink.prototype.getEndPoints = function() {
-    var startX = this.node.x + this.deltaX;
-    var startY = this.node.y + this.deltaY;
+    var startX = this.node.x + this.anchorRadius * Math.cos(this.anchorAngle);
+    var startY = this.node.y + this.anchorRadius * Math.sin(this.anchorAngle);
     var end = this.node.closestPointOnCircle(startX, startY);
     return {
         'startX': startX,
@@ -94,7 +95,7 @@ StartLink.prototype.draw = function(c) {
     c.stroke();
 
     // draw the head of the arrow
-    drawArrow(c, stuff.endX, stuff.endY, Math.atan2(-this.deltaY, -this.deltaX));
+    drawArrow(c, stuff.endX, stuff.endY, this.anchorAngle+Math.PI);
 };
 
 StartLink.prototype.containsPoint = function(x, y) {
@@ -299,7 +300,7 @@ Node.prototype.draw = function(c) {
     // draw a double circle for an accept state
     if(this.isAcceptState) {
         c.beginPath();
-        c.arc(this.x, this.y, nodeRadius * 0.8, 0, 2 * Math.PI, false);
+        c.arc(this.x, this.y, nodeRadius * acceptRatio, 0, 2 * Math.PI, false);
         c.stroke();
     }
 };
@@ -335,12 +336,7 @@ SelfLink.prototype.setMouseStart = function(x, y) {
 
 SelfLink.prototype.setAnchorPoint = function(x, y) {
     this.anchorAngle = Math.atan2(y - this.node.y, x - this.node.x) + this.mouseOffsetAngle;
-    // snap to 90 degrees
-    var snap = Math.round(this.anchorAngle / (Math.PI / 2)) * (Math.PI / 2);
-    if(Math.abs(this.anchorAngle - snap) < 0.1) this.anchorAngle = snap;
-    // keep in the range -pi to pi so our containsPoint() function always works
-    if(this.anchorAngle < -Math.PI) this.anchorAngle += 2 * Math.PI;
-    if(this.anchorAngle > Math.PI) this.anchorAngle -= 2 * Math.PI;
+    this.anchorAngle = snapAngle(this.anchorAngle, (1.5+0.75)*nodeRadius);
 };
 
 SelfLink.prototype.getEndPointsAndCircle = function() {
@@ -514,6 +510,8 @@ var arrowSize = 4;
 var lineWidth = 1;
 var fontSize = 16;
 var selectColor = '#00823e';
+var startRatio = 2; // relative to nodeRadius
+var acceptRatio = 0.8; // relative to nodeRadius
 
 var nodes = [];
 var links = [];
@@ -689,7 +687,7 @@ function main(ei) {
             if(!(originalClick instanceof Node)) {
                 // originalClick is the source point
                 if(targetNode != null) {
-                    currentLink = new StartLink(targetNode, originalClick);
+                    currentLink = new StartLink(originalClick, targetNode);
                 } else {
                     currentLink = new TemporaryLink(originalClick, mouse);
                 }
@@ -930,8 +928,9 @@ function from_json(g) {
             newnode = new Node(0, 0); // will move later
         var label = v;
         if (g.nodes[v].start)
-            links.push(new StartLink(newnode, {'x': tx(g.nodes[v].startx),
-                                               'y': ty(g.nodes[v].starty)}));
+            links.push(new StartLink({'x': tx(g.nodes[v].startx),
+                                      'y': ty(g.nodes[v].starty)},
+                                     newnode));
         if (g.nodes[v].accept)
             newnode.isAcceptState = true;
         newnode.text = label;

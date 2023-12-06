@@ -616,7 +616,7 @@ function main(ei) {
     controls.append(message_bar);
 
     canvas.onmousedown = function(e) {
-        if (e.button !== 0) return true;
+        if (e.button !== 0 || control) return true;
         var mouse = crossBrowserRelativeMousePos(e);
         var mousedObject = selectObject(mouse.x, mouse.y);
         selectedObject = null;
@@ -731,12 +731,15 @@ function main(ei) {
 }
 
 var shift = false; // whether the Shift key is down
+var control = false; // whether the Ctrl key is down
 
 document.onkeydown = function(e) {
     var key = crossBrowserKey(e);
 
-    if(key == 16) {
+    if (key == 16) {
         shift = true;
+    } else if (key == 17) {
+        control = true;
     } else if(!canvasHasFocus()) {
         // don't read keystrokes when other things have focus
         return true;
@@ -772,8 +775,10 @@ document.onkeydown = function(e) {
 document.onkeyup = function(e) {
     var key = crossBrowserKey(e);
 
-    if(key == 16) {
+    if (key == 16) {
         shift = false;
+    } else if (key == 17) {
+        control = false;
     }
 };
 

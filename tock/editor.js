@@ -33,7 +33,6 @@
 
    To do:
    - Change keybinding for delete node/edge
-   - Drag to change an edge's endpoint
    - Map > and @ to start/accept state?
    - Help
 */
@@ -58,10 +57,94 @@ function snapAngle(angle, r) {
     return angle;
 }
 
+function Node(x, y) {
+    this.x = x; // center of node
+    this.y = y;
+    this.radius = nodeRadius;
+    this.mouseOffsetX = 0; // when node is being moved, center relative to mouse
+    this.mouseOffsetY = 0;
+    this.isAcceptState = false;
+    this.text = '';
+}
+
+Node.prototype.setMouseStart = function(x, y) {
+    this.mouseOffsetX = this.x - x;
+    this.mouseOffsetY = this.y - y;
+};
+
+Node.prototype.setAnchorPoint = function(x, y) {
+    this.x = x + this.mouseOffsetX;
+    this.y = y + this.mouseOffsetY;
+
+    // Snap to horizontal/vertical alignment with other nodes
+    for(var i = 0; i < nodes.length; i++) {
+        if(nodes[i] == this) continue;
+
+        if(Math.abs(this.x - nodes[i].x) < snapToPadding)
+            this.x = nodes[i].x;
+        if(Math.abs(this.y - nodes[i].y) < snapToPadding)
+            this.y = nodes[i].y;
+    }
+};
+
+Node.prototype.draw = function(c) {
+    // draw the circle
+    c.beginPath();
+    c.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
+    c.stroke();
+
+    // draw the text
+    this.textBox = drawText(c, this.text, this.x, this.y, null, selectedObject == this, this.radius*2*acceptRatio);
+
+    // draw a double circle for an accept state
+    if(this.isAcceptState) {
+        c.beginPath();
+        c.arc(this.x, this.y, this.radius * acceptRatio, 0, 2 * Math.PI, false);
+        c.stroke();
+    }
+};
+
+Node.prototype.closestPointOnCircle = function(x, y) {
+    var dx = x - this.x;
+    var dy = y - this.y;
+    var scale = Math.sqrt(dx * dx + dy * dy);
+    return {
+        'x': this.x + dx * this.radius / scale,
+        'y': this.y + dy * this.radius / scale,
+    };
+};
+
+Node.prototype.containsPoint = function(x, y) {
+    if (boxContainsPoint(this.textBox, x, y))
+        return 'label';
+    else if (Math.hypot(x - this.x, y - this.y) <= this.radius)
+        return 'node';
+    else
+        return null;
+};
+
+function PointNode(x, y) {
+    this.x = x; // center of node
+    this.y = y;
+    this.radius = 0;
+}
+
+PointNode.prototype.setAnchorPoint = function(x, y) {
+    this.x = x;
+    this.y = y;
+}
+
+PointNode.prototype.draw = function(c) {
+}
+
+PointNode.prototype.closestPointOnCircle = function(x, y) {
+    return { 'x': this.x, 'y': this.y }
+}
+
 function StartLink(start, node) {
     this.node = node;
     this.anchorAngle = 0;
-    this.anchorRadius = nodeRadius * startRatio;
+    this.anchorRadius = node.radius * startRatio;
     if(start)
         this.setAnchorPoint(start.x, start.y);
 }
@@ -102,9 +185,12 @@ StartLink.prototype.containsPoint = function(x, y) {
     var dx = stuff.endX - stuff.startX;
     var dy = stuff.endY - stuff.startY;
     var length = Math.sqrt(dx*dx + dy*dy);
-    var percent = (dx * (x - stuff.startX) + dy * (y - stuff.startY)) / (length * length);
+    var percent = (dx * (x - stuff.startX) + dy * (y - stuff.startY)) / length;
     var distance = (dx * (y - stuff.startY) - dy * (x - stuff.startX)) / length;
-    return (percent > 0 && percent < 1 && Math.abs(distance) < hitTargetPadding);
+    if (percent >= 0 && percent <= length && Math.abs(distance) <= hitTargetPadding)
+        return 'edge';
+    else
+        return null;
 };
 
 function Link(a, b) {
@@ -162,8 +248,8 @@ Link.prototype.getEndPointsAndCircle = function() {
     var circle = circleFromThreePoints(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, anchor.x, anchor.y);
     var isReversed = (this.perpendicularPart > 0);
     var reverseScale = isReversed ? 1 : -1;
-    var startAngle = Math.atan2(this.nodeA.y - circle.y, this.nodeA.x - circle.x) - reverseScale * nodeRadius / circle.radius;
-    var endAngle = Math.atan2(this.nodeB.y - circle.y, this.nodeB.x - circle.x) + reverseScale * nodeRadius / circle.radius;
+    var startAngle = Math.atan2(this.nodeA.y - circle.y, this.nodeA.x - circle.x) - reverseScale * this.nodeA.radius / circle.radius;
+    var endAngle = Math.atan2(this.nodeB.y - circle.y, this.nodeB.x - circle.x) + reverseScale * this.nodeB.radius / circle.radius;
     var startX = circle.x + circle.radius * Math.cos(startAngle);
     var startY = circle.y + circle.radius * Math.sin(startAngle);
     var endX = circle.x + circle.radius * Math.cos(endAngle);
@@ -222,13 +308,13 @@ Link.prototype.draw = function(c) {
 
 Link.prototype.containsPoint = function(x, y) {
     if (boxContainsPoint(this.textBox, x, y))
-        return true;
+        return 'label';
     var stuff = this.getEndPointsAndCircle();
     if(stuff.hasCircle) {
         var dx = x - stuff.circleX;
         var dy = y - stuff.circleY;
         var distance = Math.sqrt(dx*dx + dy*dy) - stuff.circleRadius;
-        if(Math.abs(distance) < hitTargetPadding) {
+        if(Math.abs(distance) <= hitTargetPadding) {
             var angle = Math.atan2(dy, dx);
             var startAngle = stuff.startAngle;
             var endAngle = stuff.endAngle;
@@ -245,77 +331,33 @@ Link.prototype.containsPoint = function(x, y) {
             } else if(angle > endAngle) {
                 angle -= Math.PI * 2;
             }
-            return (angle > startAngle && angle < endAngle);
+            if (angle >= startAngle && angle <= endAngle) {
+                if (angle <= startAngle + hitTargetPadding / stuff.circleRadius)
+                    return stuff.isReversed ? 'target' : 'source';
+                else if (angle >= endAngle - (hitTargetPadding+2*arrowSize) / stuff.circleRadius)
+                    return stuff.isReversed ? 'source' : 'target';
+                else
+                    return 'edge';
+            } else
+                return null;
         }
     } else {
         var dx = stuff.endX - stuff.startX;
         var dy = stuff.endY - stuff.startY;
         var length = Math.sqrt(dx*dx + dy*dy);
-        var percent = (dx * (x - stuff.startX) + dy * (y - stuff.startY)) / (length * length);
+        var percent = (dx * (x - stuff.startX) + dy * (y - stuff.startY)) / length;
         var distance = (dx * (y - stuff.startY) - dy * (x - stuff.startX)) / length;
-        return (percent > 0 && percent < 1 && Math.abs(distance) < hitTargetPadding);
+        if (percent >= 0 && percent <= length && Math.abs(distance) <= hitTargetPadding) {
+            if (percent <= hitTargetPadding)
+                return 'source';
+            else if (percent >= length-(hitTargetPadding+2*arrowSize))
+                return 'target';
+            else
+                return 'edge';
+        } else
+            return null;
     }
-    return false;
-};
-
-function Node(x, y) {
-    this.x = x; // center of node
-    this.y = y;
-    this.mouseOffsetX = 0; // when node is being moved, center relative to mouse
-    this.mouseOffsetY = 0;
-    this.isAcceptState = false;
-    this.text = '';
-}
-
-Node.prototype.setMouseStart = function(x, y) {
-    this.mouseOffsetX = this.x - x;
-    this.mouseOffsetY = this.y - y;
-};
-
-Node.prototype.setAnchorPoint = function(x, y) {
-    this.x = x + this.mouseOffsetX;
-    this.y = y + this.mouseOffsetY;
-
-    // Snap to horizontal/vertical alignment with other nodes
-    for(var i = 0; i < nodes.length; i++) {
-        if(nodes[i] == this) continue;
-
-        if(Math.abs(this.x - nodes[i].x) < snapToPadding)
-            this.x = nodes[i].x;
-        if(Math.abs(this.y - nodes[i].y) < snapToPadding)
-            this.y = nodes[i].y;
-    }
-};
-
-Node.prototype.draw = function(c) {
-    // draw the circle
-    c.beginPath();
-    c.arc(this.x, this.y, nodeRadius, 0, 2 * Math.PI, false);
-    c.stroke();
-
-    // draw the text
-    this.textBox = drawText(c, this.text, this.x, this.y, null, selectedObject == this, nodeRadius*1.6);
-
-    // draw a double circle for an accept state
-    if(this.isAcceptState) {
-        c.beginPath();
-        c.arc(this.x, this.y, nodeRadius * acceptRatio, 0, 2 * Math.PI, false);
-        c.stroke();
-    }
-};
-
-Node.prototype.closestPointOnCircle = function(x, y) {
-    var dx = x - this.x;
-    var dy = y - this.y;
-    var scale = Math.sqrt(dx * dx + dy * dy);
-    return {
-        'x': this.x + dx * nodeRadius / scale,
-        'y': this.y + dy * nodeRadius / scale,
-    };
-};
-
-Node.prototype.containsPoint = function(x, y) {
-    return (x - this.x)*(x - this.x) + (y - this.y)*(y - this.y) < nodeRadius*nodeRadius;
+    return null;
 };
 
 function SelfLink(node, mouse) {
@@ -335,13 +377,13 @@ SelfLink.prototype.setMouseStart = function(x, y) {
 
 SelfLink.prototype.setAnchorPoint = function(x, y) {
     this.anchorAngle = Math.atan2(y - this.node.y, x - this.node.x) + this.mouseOffsetAngle;
-    this.anchorAngle = snapAngle(this.anchorAngle, (1.5+0.75)*nodeRadius);
+    this.anchorAngle = snapAngle(this.anchorAngle, (1.5+0.75)*this.node.radius);
 };
 
 SelfLink.prototype.getEndPointsAndCircle = function() {
-    var circleX = this.node.x + 1.5 * nodeRadius * Math.cos(this.anchorAngle);
-    var circleY = this.node.y + 1.5 * nodeRadius * Math.sin(this.anchorAngle);
-    var circleRadius = 0.75 * nodeRadius;
+    var circleX = this.node.x + 1.5 * this.node.radius * Math.cos(this.anchorAngle);
+    var circleY = this.node.y + 1.5 * this.node.radius * Math.sin(this.anchorAngle);
+    var circleRadius = 0.75 * this.node.radius;
     var startAngle = this.anchorAngle - Math.PI * 0.8;
     var endAngle = this.anchorAngle + Math.PI * 0.8;
     var startX = circleX + circleRadius * Math.cos(startAngle);
@@ -378,28 +420,31 @@ SelfLink.prototype.draw = function(c) {
 
 SelfLink.prototype.containsPoint = function(x, y) {
     if (boxContainsPoint(this.textBox, x, y))
-        return true;
+        return 'label';
     var stuff = this.getEndPointsAndCircle();
     var dx = x - stuff.circleX;
     var dy = y - stuff.circleY;
     var distance = Math.sqrt(dx*dx + dy*dy) - stuff.circleRadius;
-    return (Math.abs(distance) < hitTargetPadding);
-};
-
-function TemporaryLink(from, to) {
-    this.from = from; // source point
-    this.to = to; // target point
-}
-
-TemporaryLink.prototype.draw = function(c) {
-    // draw the line
-    c.beginPath();
-    c.moveTo(this.to.x, this.to.y);
-    c.lineTo(this.from.x, this.from.y);
-    c.stroke();
-
-    // draw the head of the arrow
-    drawArrow(c, this.to.x, this.to.y, Math.atan2(this.to.y - this.from.y, this.to.x - this.from.x));
+    if (Math.abs(distance) <= hitTargetPadding) {
+        var angle = Math.atan2(dy, dx);
+        var startAngle = stuff.startAngle;
+        var endAngle = stuff.endAngle;
+        if(angle < startAngle) {
+            angle += Math.PI * 2;
+        } else if(angle > endAngle) {
+            angle -= Math.PI * 2;
+        }
+        if (angle >= startAngle && angle <= endAngle) {
+            if (angle <= startAngle + hitTargetPadding / stuff.circleRadius)
+                return 'source';
+            else if (angle >= endAngle - (hitTargetPadding+2*arrowSize) / stuff.circleRadius)
+                return 'target';
+            else
+                return 'edge';
+        } else
+            return null;
+    } else
+        return null;
 };
 
 function det(a, b, c, d, e, f, g, h, i) {
@@ -512,16 +557,18 @@ var selectColor = '#00823e';
 var startRatio = 2; // relative to nodeRadius
 var acceptRatio = 0.8; // relative to nodeRadius
 
-var nodes = [];
-var links = [];
-
 var snapToPadding = 6; // pixels
 var hitTargetPadding = 6; // pixels
+
+var nodes = [];
+var links = [];
 
 var selectedObject = null; // the Link or Node currently selected
 var movingObject = false; // whether selectedObject is currently being moved
 var currentLink = null; // the Link currently being drawn
-var originalClick; // Node or point that currentLink starts at
+var currentLinkSource, currentLinkTarget;
+var currentLinkPart; // which part of currentLink is being moved
+var originalLink; // the Link being reattached
 
 function draw() {
     var c = canvas.getContext('2d');
@@ -560,16 +607,18 @@ function draw() {
 
 function selectObject(x, y) {
     for(var i = 0; i < nodes.length; i++) {
-        if(nodes[i].containsPoint(x, y)) {
-            return nodes[i];
+        var part = nodes[i].containsPoint(x, y);
+        if (part !== null) {
+            return {'object': nodes[i], 'part': part};
         }
     }
     for(var i = 0; i < links.length; i++) {
-        if(links[i].containsPoint(x, y)) {
-            return links[i];
+        var part = links[i].containsPoint(x, y);
+        if (part !== null) {
+            return {'object': links[i], 'part': part};
         }
     }
-    return null;
+    return {'object': null};
 }
 
 var message_bar;
@@ -618,28 +667,47 @@ function main(ei) {
     canvas.onmousedown = function(e) {
         if (e.button !== 0 || control) return true;
         var mouse = crossBrowserRelativeMousePos(e);
-        var mousedObject = selectObject(mouse.x, mouse.y);
+        var moused = selectObject(mouse.x, mouse.y);
         selectedObject = null;
 
-        if(mousedObject != null) {
-            // begin creating Link/SelfLink
-            if(shift && mousedObject instanceof Node) {
+        if (moused.object != null) {
+            if (shift && moused.object instanceof Node) {
+                // begin creating Link/SelfLink
                 movingObject = false;
-                currentLink = new SelfLink(mousedObject, mouse);
-                originalClick = mousedObject;
+                originalLink = null;
+                currentLink = new SelfLink(moused.object, mouse);
+                currentLinkSource = currentLinkTarget = moused.object;
+                currentLinkPart = 'target';
+            } else if (moused.part === 'source' || moused.part === 'target') {
+                // detach Link
+                movingObject = false;
+                originalLink = currentLink = moused.object;
+                for (var i=0; i<links.length; i++)
+                    if (links[i] === currentLink)
+                        links.splice(i--, 1);
+                if (currentLink instanceof Link) {
+                    currentLinkSource = currentLink.nodeA;
+                    currentLinkTarget = currentLink.nodeB;
+                } else if (currentLink instanceof SelfLink) {
+                    currentLinkSource = currentLinkTarget = currentLink.node;
+                }
+                currentLinkPart = moused.part;
             } else {
                 // move Node or Link/StartLink/SelfLink
-                selectedObject = mousedObject;
+                selectedObject = moused.object;
                 movingObject = true;
-                if(mousedObject.setMouseStart)
-                    mousedObject.setMouseStart(mouse.x, mouse.y);
+                if(moused.object.setMouseStart)
+                    moused.object.setMouseStart(mouse.x, mouse.y);
             }
             resetCaret();
-        } else if(shift) {
+        } else if (shift) {
             // begin creating StartLink
             movingObject = false;
-            currentLink = new TemporaryLink(mouse, mouse);
-            originalClick = mouse;
+            originalLink = null;
+            currentLink = new Link(new PointNode(mouse.x, mouse.y), new PointNode(mouse.x, mouse.y));
+            currentLinkSource = currentLink.nodeA;
+            currentLinkTarget = currentLink.nodeB;
+            currentLinkPart = 'target';
         }
 
         draw();
@@ -658,7 +726,7 @@ function main(ei) {
 
     canvas.ondblclick = function(e) {
         var mouse = crossBrowserRelativeMousePos(e);
-        selectedObject = selectObject(mouse.x, mouse.y);
+        selectedObject = selectObject(mouse.x, mouse.y).object;
 
         if(selectedObject == null) {
             // create new Node
@@ -678,27 +746,25 @@ function main(ei) {
         var mouse = crossBrowserRelativeMousePos(e);
 
         if(currentLink != null) {
-            var targetNode = selectObject(mouse.x, mouse.y);
-            if(!(targetNode instanceof Node)) {
-                targetNode = null;
-            }
-
-            if(!(originalClick instanceof Node)) {
-                // originalClick is the source point
-                if(targetNode != null) {
-                    currentLink = new StartLink(originalClick, targetNode);
-                } else {
-                    currentLink = new TemporaryLink(originalClick, mouse);
-                }
-            } else {
-                // originalClick is the source Node
-                if(targetNode == originalClick) {
-                    currentLink = new SelfLink(originalClick, mouse);
-                } else if(targetNode != null) {
-                    currentLink = new Link(originalClick, targetNode);
-                } else {
-                    currentLink = new TemporaryLink(originalClick.closestPointOnCircle(mouse.x, mouse.y), mouse);
-                }
+            var mousedObject = selectObject(mouse.x, mouse.y).object;
+            if (!(mousedObject instanceof Node))
+                mousedObject = new PointNode(mouse.x, mouse.y);
+            if (currentLinkPart === 'source')
+                currentLinkSource = mousedObject;
+            else if (currentLinkPart === 'target')
+                currentLinkTarget = mousedObject;
+            if (!originalLink && currentLinkSource instanceof PointNode && currentLinkTarget instanceof Node)
+                currentLink = new StartLink(currentLinkSource, currentLinkTarget);
+            else if (currentLinkSource instanceof Node && currentLinkTarget === currentLinkSource)
+                currentLink = new SelfLink(currentLinkSource, mouse);
+            else 
+                currentLink = new Link(currentLinkSource, currentLinkTarget);
+            if (originalLink) {
+                currentLink.text = originalLink.text;
+                if (originalLink instanceof Link && currentLink instanceof Link)
+                    currentLink.perpendicularPart = originalLink.perpendicularPart;
+                if (originalLink instanceof SelfLink && currentLink instanceof Link)
+                    currentLink.perpendicularPart = -2*originalLink.node.radius;
             }
             draw();
         }
@@ -713,7 +779,9 @@ function main(ei) {
         movingObject = false;
 
         if(currentLink != null) {
-            if(!(currentLink instanceof TemporaryLink)) {
+            if (currentLink instanceof StartLink ||
+                currentLink instanceof SelfLink ||
+                currentLink instanceof Link && currentLink.nodeA instanceof Node && currentLink.nodeB instanceof Node) {
                 selectedObject = currentLink;
                 if (currentLink instanceof StartLink) {
                     for(var i=0; i<links.length; i++) {

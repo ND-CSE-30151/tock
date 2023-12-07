@@ -202,7 +202,7 @@ function Link(a, b) {
     this.nodeB = b; // target node
     this.text = '';
     this.lineAngleAdjust = 0; // value to add to textAngle when link is straight line
-    this.perpendicularPart = 0; // pixels from line between nodeA and nodeB; positive is clockwise
+    this.perpendicularPart = 0; // pixels from line between nodeA and nodeB; positive is counterclockwise
 }
 
 Link.prototype.getAnchorPoint = function() {
@@ -219,7 +219,6 @@ Link.prototype.setAnchorPoint = function(x, y) {
     var circle = circleFromThreePoints(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, x, y);
     const big = 1e6;
     if (circle.radius >= big) {
-        console.log(circle.radius);
         var t = transformToLine(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, x, y);
         if (t.cx >= 0 && t.cx <= t.bx)
             this.perpendicularPart = 0;
@@ -331,10 +330,10 @@ Link.prototype.containsPoint = function(x, y) {
             var angle = Math.atan2(dy, dx);
             var startAngle = stuff.startAngle;
             var endAngle = stuff.endAngle;
-            if(stuff.isReversed) {
-                var temp = startAngle;
-                startAngle = endAngle;
-                endAngle = temp;
+            if (stuff.isReversed) {
+                angle *= -1;
+                startAngle *= -1;
+                endAngle *= -1;
             }
             if(endAngle < startAngle) {
                 endAngle += Math.PI * 2;
@@ -346,9 +345,9 @@ Link.prototype.containsPoint = function(x, y) {
             }
             if (angle >= startAngle && angle <= endAngle) {
                 if (angle <= startAngle + hitTargetPadding / stuff.circleRadius)
-                    return stuff.isReversed ? 'target' : 'source';
+                    return 'source';
                 else if (angle >= endAngle - (hitTargetPadding+2*arrowSize) / stuff.circleRadius)
-                    return stuff.isReversed ? 'source' : 'target';
+                    return 'target';
                 else
                     return 'edge';
             } else

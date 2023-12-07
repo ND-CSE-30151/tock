@@ -216,6 +216,7 @@ Link.prototype.getAnchorPoint = function() {
 
 Link.prototype.setAnchorPoint = function(x, y) {
     var circle = circleFromThreePoints(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, x, y);
+    console.log(this, x, y, circle);
     if (circle.radius === Infinity) {
         // leave this.perpendicularPart as it was
         return;

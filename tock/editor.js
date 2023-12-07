@@ -32,8 +32,6 @@
    which makes the output too high, so a vertical scrollbar appears too.
 
    To do:
-   - Change keybinding for delete node/edge
-   - Map > and @ to start/accept state?
    - Help
 */
 
@@ -117,10 +115,15 @@ Node.prototype.closestPointOnCircle = function(x, y) {
 Node.prototype.containsPoint = function(x, y) {
     if (boxContainsPoint(this.textBox, x, y))
         return 'label';
-    else if (Math.hypot(x - this.x, y - this.y) <= this.radius)
-        return 'node';
-    else
-        return null;
+    else {
+        var distance = Math.hypot(x - this.x, y - this.y);
+        if (distance >= this.radius - hitTargetPadding && distance <= this.radius + hitTargetPadding)
+            return 'circle';
+        else if (distance <= this.radius)
+            return 'node';
+        else
+            return null;
+    }
 };
 
 function PointNode(x, y) {
@@ -569,6 +572,24 @@ var currentLink = null; // the Link currently being drawn
 var currentLinkSource, currentLinkTarget;
 var currentLinkPart; // which part of currentLink is being moved
 var originalLink; // the Link being reattached
+var trash;
+
+function deleteObject() {
+    var trash = [];
+    for(var i = 0; i < nodes.length; i++) {
+        if(nodes[i] == selectedObject) {
+            trash.push(nodes[i]);
+            nodes.splice(i--, 1);
+        }
+    }
+    for (var i=0; i<links.length; i++) {
+        if(links[i] == selectedObject || links[i].node == selectedObject || links[i].nodeA == selectedObject || links[i].nodeB == selectedObject) {
+            trash.push(links[i]);
+            links.splice(i--, 1);
+        }
+    }
+    return trash;
+}
 
 function draw() {
     var c = canvas.getContext('2d');
@@ -606,16 +627,16 @@ function draw() {
 }
 
 function selectObject(x, y) {
-    for(var i = 0; i < nodes.length; i++) {
-        var part = nodes[i].containsPoint(x, y);
-        if (part !== null) {
-            return {'object': nodes[i], 'part': part};
-        }
-    }
     for(var i = 0; i < links.length; i++) {
         var part = links[i].containsPoint(x, y);
         if (part !== null) {
             return {'object': links[i], 'part': part};
+        }
+    }
+    for(var i = 0; i < nodes.length; i++) {
+        var part = nodes[i].containsPoint(x, y);
+        if (part !== null) {
+            return {'object': nodes[i], 'part': part};
         }
     }
     return {'object': null};
@@ -671,7 +692,7 @@ function main(ei) {
         selectedObject = null;
 
         if (moused.object != null) {
-            if (shift && moused.object instanceof Node) {
+            if (moused.object instanceof Node && moused.part === 'circle') {
                 // begin creating Link/SelfLink
                 movingObject = false;
                 originalLink = null;
@@ -699,8 +720,9 @@ function main(ei) {
                 if(moused.object.setMouseStart)
                     moused.object.setMouseStart(mouse.x, mouse.y);
             }
+            draw();
             resetCaret();
-        } else if (shift) {
+        } else {
             // begin creating StartLink
             movingObject = false;
             originalLink = null;
@@ -708,9 +730,8 @@ function main(ei) {
             currentLinkSource = currentLink.nodeA;
             currentLinkTarget = currentLink.nodeB;
             currentLinkPart = 'target';
+            // don't draw() right away, because there might be a double-click
         }
-
-        draw();
 
         // In Colab the canvas is inside an iframe, which seems to cause trouble
         // with this first case.
@@ -744,15 +765,15 @@ function main(ei) {
 
     canvas.onmousemove = function(e) {
         var mouse = crossBrowserRelativeMousePos(e);
-
+        var moused = selectObject(mouse.x, mouse.y);
+        
         if(currentLink != null) {
-            var mousedObject = selectObject(mouse.x, mouse.y).object;
-            if (!(mousedObject instanceof Node))
-                mousedObject = new PointNode(mouse.x, mouse.y);
+            if (!(moused.object instanceof Node))
+                moused.object = new PointNode(mouse.x, mouse.y);
             if (currentLinkPart === 'source')
-                currentLinkSource = mousedObject;
+                currentLinkSource = moused.object;
             else if (currentLinkPart === 'target')
-                currentLinkTarget = mousedObject;
+                currentLinkTarget = moused.object;
             if (!originalLink && currentLinkSource instanceof PointNode && currentLinkTarget instanceof Node)
                 currentLink = new StartLink(currentLinkSource, currentLinkTarget);
             else if (currentLinkSource instanceof Node && currentLinkTarget === currentLinkSource)
@@ -769,7 +790,7 @@ function main(ei) {
             draw();
         }
 
-        if(movingObject) {
+        if (movingObject) {
             selectedObject.setAnchorPoint(mouse.x, mouse.y);
             draw();
         }
@@ -796,6 +817,26 @@ function main(ei) {
             draw();
         }
     };
+    
+    canvas.onmouseleave = function(e) {
+        if (movingObject) {
+            trash = deleteObject(selectedObject);
+            draw();
+        }
+    }
+
+    canvas.onmouseenter = function(e) {
+        if (movingObject) {
+            for (var i=0; i<trash.length; i++) {
+                if (trash[i] instanceof Node)
+                    nodes.push(trash[i]);
+                else
+                    links.push(trash[i]);
+            }
+            draw();
+            resetCaret();
+        }
+    }
 }
 
 var shift = false; // whether the Shift key is down
@@ -812,28 +853,17 @@ document.onkeydown = function(e) {
         // don't read keystrokes when other things have focus
         return true;
     } else if(key == 8) { // backspace key
-        if (!shift) {
-            if(selectedObject != null && 'text' in selectedObject) {
-                selectedObject.text = selectedObject.text.substr(0, selectedObject.text.length - 1);
-                resetCaret();
-                draw();
-            }
-        } else {
-            if(selectedObject != null) {
-                for(var i = 0; i < nodes.length; i++) {
-                    if(nodes[i] == selectedObject) {
-                        nodes.splice(i--, 1);
-                    }
-                }
-                for(var i = 0; i < links.length; i++) {
-                    if(links[i] == selectedObject || links[i].node == selectedObject || links[i].nodeA == selectedObject || links[i].nodeB == selectedObject) {
-                        links.splice(i--, 1);
-                    }
-                }
-                selectedObject = null;
-                draw();
-            }
+        if(selectedObject != null && 'text' in selectedObject) {
+            selectedObject.text = selectedObject.text.substr(0, selectedObject.text.length - 1);
+            resetCaret();
+            draw();
         }
+
+        /*if(selectedObject != null) {
+            deleteObject(selectedObject);
+            selectedObject = null;
+            draw();
+        }*/
 
         // backspace is a shortcut for the back button, but do NOT want to change pages
         return false;

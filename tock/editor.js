@@ -1011,6 +1011,7 @@ function save(ei) {
 }
 
 function from_json(g) {
+    console.log(g);
     // Clear the current graph
     nodes = [];
     links = [];

@@ -40,9 +40,14 @@ function boxContainsPoint(box, x, y) {
             y >= box[1]-hitTargetPadding && y <= box[3]+hitTargetPadding);
 }
 
-// Which side of a->b does c fall on? 1 = right, -1 = left, 0 = on
-function sideOfLine(ax, ay, bx, by, cx, cy) {
-    return Math.sign((bx-ax)*(cy-ay)-(by-ay)*(cx-ax));
+// Transform c such that a is at origin and b is on positive x-axis
+function transformToLine(ax, ay, bx, by, cx, cy) {
+    var dx = bx - ax;
+    var dy = by - ay;
+    var length = Math.hypot(dx, dy);
+    return {'bx': length,
+            'cx': (dx * (cx - ax) + dy * (cy - ay)) / length,
+            'cy': (dx * (cy - ay) - dy * (cx - ax)) / length};
 }
 
 function snapAngle(angle, r) {
@@ -185,12 +190,8 @@ StartLink.prototype.draw = function(c) {
 
 StartLink.prototype.containsPoint = function(x, y) {
     var stuff = this.getEndPoints();
-    var dx = stuff.endX - stuff.startX;
-    var dy = stuff.endY - stuff.startY;
-    var length = Math.sqrt(dx*dx + dy*dy);
-    var percent = (dx * (x - stuff.startX) + dy * (y - stuff.startY)) / length;
-    var distance = (dx * (y - stuff.startY) - dy * (x - stuff.startX)) / length;
-    if (percent >= 0 && percent <= length && Math.abs(distance) <= hitTargetPadding)
+    var t = transformToLine(stuff.startX, stuff.startY, stuff.endX, stuff.endY, x, y);
+    if (t.cx >= 0 && t.cx <= t.bx && Math.abs(t.cy) <= hitTargetPadding)
         return 'edge';
     else
         return null;
@@ -216,20 +217,29 @@ Link.prototype.getAnchorPoint = function() {
 
 Link.prototype.setAnchorPoint = function(x, y) {
     var circle = circleFromThreePoints(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, x, y);
-    if (circle.radius === Infinity) {
-        // leave this.perpendicularPart as it was
-        return;
-    }
-    var r = circle.radius * sideOfLine(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, x, y);
-    var midX = (this.nodeA.x + this.nodeB.x)/2 - circle.x;
-    var midY = (this.nodeA.y + this.nodeB.y)/2 - circle.y;
-    var c = Math.sqrt(midX*midX + midY*midY); // distance from center to midpoint
-    c *= sideOfLine(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, circle.x, circle.y);
-    this.perpendicularPart = r + c;
-    // snap to a straight line
-    if(Math.abs(this.perpendicularPart) < snapToPadding) {
-        this.lineAngleAdjust = (this.perpendicularPart < 0) * Math.PI;
-        this.perpendicularPart = 0;
+    const big = 1e6;
+    if (circle.radius >= big) {
+        console.log(circle.radius);
+        var t = transformToLine(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, x, y);
+        if (t.cx >= 0 && t.cx <= t.bx)
+            this.perpendicularPart = 0;
+        else
+            this.perpendicularPart = big;
+        this.lineAngleAdjust = (t.cy < 0) * Math.PI;
+    } else {
+        var t = transformToLine(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, x, y);
+        var r = circle.radius * Math.sign(t.cy);
+        var midX = (this.nodeA.x + this.nodeB.x)/2 - circle.x;
+        var midY = (this.nodeA.y + this.nodeB.y)/2 - circle.y;
+        var c = Math.sqrt(midX*midX + midY*midY); // distance from center to midpoint
+        t = transformToLine(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, circle.x, circle.y);
+        c *= Math.sign(t.cy);
+        this.perpendicularPart = r + c;
+        // snap to a straight line
+        if(Math.abs(this.perpendicularPart) < snapToPadding) {
+            this.lineAngleAdjust = (this.perpendicularPart < 0) * Math.PI;
+            this.perpendicularPart = 0;
+        }
     }
 };
 
@@ -345,15 +355,11 @@ Link.prototype.containsPoint = function(x, y) {
                 return null;
         }
     } else {
-        var dx = stuff.endX - stuff.startX;
-        var dy = stuff.endY - stuff.startY;
-        var length = Math.sqrt(dx*dx + dy*dy);
-        var percent = (dx * (x - stuff.startX) + dy * (y - stuff.startY)) / length;
-        var distance = (dx * (y - stuff.startY) - dy * (x - stuff.startX)) / length;
-        if (percent >= 0 && percent <= length && Math.abs(distance) <= hitTargetPadding) {
-            if (percent <= hitTargetPadding)
+        var t = transformToLine(stuff.startX, stuff.startY, stuff.endX, stuff.endY, x, y);
+        if (t.cx >= 0 && t.cx <= t.bx && Math.abs(t.cy) <= hitTargetPadding) {
+            if (t.cx <= hitTargetPadding)
                 return 'source';
-            else if (percent >= length-(hitTargetPadding+2*arrowSize))
+            else if (t.cx >= t.bx-(hitTargetPadding+2*arrowSize))
                 return 'target';
             else
                 return 'edge';

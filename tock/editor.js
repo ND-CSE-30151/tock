@@ -559,7 +559,7 @@ function resetCaret() {
 var canvas;
 var canvas_dpr;
 var nodeRadius = 30;
-var arrowSize = 4;
+var arrowSize = 20;
 var lineWidth = 1;
 var fontSize = 16;
 var selectColor = '#00823e';

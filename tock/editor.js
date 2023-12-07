@@ -223,7 +223,7 @@ Link.prototype.setAnchorPoint = function(x, y) {
         if (t.cx >= 0 && t.cx <= t.bx)
             this.perpendicularPart = 0;
         else
-            this.perpendicularPart = big;
+            this.perpendicularPart = t.cy < 0 ? big : -big;
         this.lineAngleAdjust = (t.cy < 0) * Math.PI;
     } else {
         var t = transformToLine(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, x, y);
@@ -259,9 +259,9 @@ Link.prototype.getEndPointsAndCircle = function() {
     var anchor = this.getAnchorPoint();
     var circle = circleFromThreePoints(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, anchor.x, anchor.y);
     var isReversed = (this.perpendicularPart < 0);
-    var reverseScale = isReversed ? 1 : -1;
-    var startAngle = Math.atan2(this.nodeA.y - circle.y, this.nodeA.x - circle.x) - reverseScale * this.nodeA.radius / circle.radius;
-    var endAngle = Math.atan2(this.nodeB.y - circle.y, this.nodeB.x - circle.x) + reverseScale * this.nodeB.radius / circle.radius;
+    var reverseScale = isReversed ? -1 : 1;
+    var startAngle = Math.atan2(this.nodeA.y - circle.y, this.nodeA.x - circle.x) + reverseScale * this.nodeA.radius / circle.radius;
+    var endAngle = Math.atan2(this.nodeB.y - circle.y, this.nodeB.x - circle.x) - reverseScale * this.nodeB.radius / circle.radius;
     var startX = circle.x + circle.radius * Math.cos(startAngle);
     var startY = circle.y + circle.radius * Math.sin(startAngle);
     var endX = circle.x + circle.radius * Math.cos(endAngle);
@@ -277,7 +277,6 @@ Link.prototype.getEndPointsAndCircle = function() {
         'circleX': circle.x, // center of arc
         'circleY': circle.y,
         'circleRadius': circle.radius,
-        'reverseScale': reverseScale, // 1 = counterclockwise, -1 = clockwise
         'isReversed': isReversed, // true = counterclockwise, false = clockwise
     };
 };
@@ -295,7 +294,7 @@ Link.prototype.draw = function(c) {
     c.stroke();
     // draw the head of the arrow
     if(stuff.hasCircle) {
-        drawArrow(c, stuff.endX, stuff.endY, stuff.endAngle - stuff.reverseScale * (Math.PI / 2));
+        drawArrow(c, stuff.endX, stuff.endY, stuff.endAngle + (stuff.isReversed?-1:1) * (Math.PI / 2));
     } else {
         drawArrow(c, stuff.endX, stuff.endY, Math.atan2(stuff.endY - stuff.startY, stuff.endX - stuff.startX));
     }

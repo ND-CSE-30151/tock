@@ -202,7 +202,7 @@ function Link(a, b) {
     this.nodeB = b; // target node
     this.text = '';
     this.lineAngleAdjust = 0; // value to add to textAngle when link is straight line
-    this.perpendicularPart = 0; // pixels from line between nodeA and nodeB; positive is counterclockwise
+    this.perpendicularPart = 0; // pixels from line between nodeA and nodeB; positive is clockwise
 }
 
 Link.prototype.getAnchorPoint = function() {
@@ -210,8 +210,8 @@ Link.prototype.getAnchorPoint = function() {
     var dy = this.nodeB.y - this.nodeA.y;
     var scale = Math.sqrt(dx * dx + dy * dy);
     return {
-        'x': this.nodeA.x + dx / 2 - dy * this.perpendicularPart / scale,
-        'y': this.nodeA.y + dy / 2 + dx * this.perpendicularPart / scale
+        'x': this.nodeA.x + dx / 2 + dy * this.perpendicularPart / scale,
+        'y': this.nodeA.y + dy / 2 - dx * this.perpendicularPart / scale
     };
 };
 
@@ -227,16 +227,16 @@ Link.prototype.setAnchorPoint = function(x, y) {
         this.lineAngleAdjust = (t.cy < 0) * Math.PI;
     } else {
         var t = transformToLine(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, x, y);
-        var r = circle.radius * Math.sign(t.cy);
+        var r = circle.radius * -Math.sign(t.cy);
         var midX = (this.nodeA.x + this.nodeB.x)/2 - circle.x;
         var midY = (this.nodeA.y + this.nodeB.y)/2 - circle.y;
         var c = Math.sqrt(midX*midX + midY*midY); // distance from center to midpoint
         t = transformToLine(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, circle.x, circle.y);
-        c *= Math.sign(t.cy);
+        c *= -Math.sign(t.cy);
         this.perpendicularPart = r + c;
         // snap to a straight line
         if(Math.abs(this.perpendicularPart) < snapToPadding) {
-            this.lineAngleAdjust = (this.perpendicularPart < 0) * Math.PI;
+            this.lineAngleAdjust = (this.perpendicularPart > 0) * Math.PI;
             this.perpendicularPart = 0;
         }
     }
@@ -258,7 +258,7 @@ Link.prototype.getEndPointsAndCircle = function() {
     }
     var anchor = this.getAnchorPoint();
     var circle = circleFromThreePoints(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, anchor.x, anchor.y);
-    var isReversed = (this.perpendicularPart > 0);
+    var isReversed = (this.perpendicularPart < 0);
     var reverseScale = isReversed ? 1 : -1;
     var startAngle = Math.atan2(this.nodeA.y - circle.y, this.nodeA.x - circle.x) - reverseScale * this.nodeA.radius / circle.radius;
     var endAngle = Math.atan2(this.nodeB.y - circle.y, this.nodeB.x - circle.x) + reverseScale * this.nodeB.radius / circle.radius;
@@ -790,7 +790,7 @@ function main(ei) {
                 if (originalLink instanceof Link && currentLink instanceof Link)
                     currentLink.perpendicularPart = originalLink.perpendicularPart;
                 if (originalLink instanceof SelfLink && currentLink instanceof Link)
-                    currentLink.perpendicularPart = -2*originalLink.node.radius;
+                    currentLink.perpendicularPart = 2*originalLink.node.radius;
             }
             draw();
         }

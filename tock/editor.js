@@ -479,7 +479,7 @@ function circleFromThreePoints(x1, y1, x2, y2, x3, y3) {
 var mappings = {'&': 'ε', '|-': '⊢', '-|': '⊣', '_': '␣', '->': '→'}
 function convertShortcuts(text) {
     for (var s in mappings)
-        text = text.replace(s, mappings[s]);
+        text = text.replaceAll(s, mappings[s]);
     return text;
 }
 

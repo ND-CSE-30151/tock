@@ -13,5 +13,5 @@ typecheck:
 	mypy tock
 
 upload:
-	python setup.py sdist
+	$(PYTHON) setup.py sdist
 	twine upload dist/*

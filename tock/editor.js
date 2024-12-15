@@ -30,9 +30,6 @@
    Bugs:
    - In Jupyter, if the canvas is too wide, a horizontal scrollbar appears,
    which makes the output too high, so a vertical scrollbar appears too.
-
-   To do:
-   - Help
 */
 
 function boxContainsPoint(box, x, y) {
@@ -651,12 +648,18 @@ function message(s) {
     message_bar.innerHTML = s;
 }
 
+var help_div;
+
 function main(ei) {
     var container = document.createElement("div");
     container.setAttribute("class", "editor");
     container.setAttribute("id", "editor"+ei);
+    container.style.width="650px";
+    container.style.position = "relative";
+    container.style.left = 0;
+    container.style.top = 0;
     element.append(container);
-    
+
     canvas = document.createElement("canvas");
     canvas.setAttribute("style", "outline: 1px solid gray; margin: 1px; width: 600px; height: 600px;");
     canvas.setAttribute("tabindex", -1); // make canvas focusable
@@ -682,13 +685,34 @@ function main(ei) {
         button.onclick = callback;
         controls.append(button);
     }
-    make_button('Load', function() { load(ei); });
-    make_button('Save', function() { save(ei); });
+    make_button('Load', () => { load(ei); });
+    make_button('Save', () => { save(ei); });
+    make_button('Help', () => { help_div.style.display = "block"; });
 
     message_bar = document.createElement("span");
     message_bar.setAttribute("style", "margin: 5px;");
     controls.append(message_bar);
 
+    help_div = document.createElement("div");
+    help_div.innerHTML = "<table>" +
+        "<tr><td>New state</td><td>double-click canvas</td></tr>" +
+        "<tr><td>Start state</td><td>drag from canvas to state</td></tr>" +
+        "<tr><td>Accept state</td><td>double-click state</td></tr>" +
+        "<tr><td>Delete state</td><td>drag state outside canvas</td></tr>" +
+        "<tr><td>New transition</td><td>drag from state boundary to state</td></tr>" +
+        "<tr><td>Delete transition</td><td>drag transition outside canvas</td></tr>" +
+        "</table>";
+    help_div.style.display = "none";
+    help_div.style.position = "absolute";
+    help_div.style.left = 0;
+    help_div.style.top = 0;
+    help_div.style.width = "100%";
+    help_div.style.height = "100%";
+    help_div.style.background = "#ffffffc0";
+    help_div.style.padding = "10px";
+    help_div.addEventListener("click", () => { help_div.style.display = "none"; });
+    container.append(help_div);
+    
     canvas.onmousedown = function(e) {
         if (e.button !== 0 || control) return true;
         var mouse = crossBrowserRelativeMousePos(e);
@@ -1086,3 +1110,4 @@ function load(ei) {
         var result = google.colab.kernel.invokeFunction('notebook.editor_load', [ei]).then(success, message);
     }
 }
+

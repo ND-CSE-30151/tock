@@ -695,13 +695,17 @@ function main(ei) {
 
     help_div = document.createElement("div");
     help_div.innerHTML = "<table>" +
+        "<p>This is the visual editor for <code>tock.Machine</code>, based on FSM Designer by Evan Wallace.</p>" +
         "<tr><td>New state</td><td>double-click canvas</td></tr>" +
         "<tr><td>Start state</td><td>drag from canvas to state</td></tr>" +
         "<tr><td>Accept state</td><td>double-click state</td></tr>" +
+        "<tr><td>Rename state</td><td>click on center of state</td></tr>" +
         "<tr><td>Delete state</td><td>drag state outside canvas</td></tr>" +
-        "<tr><td>New transition</td><td>drag from state boundary to state</td></tr>" +
+        "<tr><td>New transition</td><td>drag from boundary of state to another state</td></tr>" +
+        "<tr><td>Rename transition</td><td>click on transition</td></tr>" +
         "<tr><td>Delete transition</td><td>drag transition outside canvas</td></tr>" +
-        "</table>";
+        "</table>" +
+        "<p>Click anywhere on this help message to dismiss it.</p>";
     help_div.style.display = "none";
     help_div.style.position = "absolute";
     help_div.style.left = 0;

@@ -212,4 +212,3 @@ def write_csv(m, filename):
             if i < t.num_header_rows:
                 assert row[0] == ''
             writer.writerow(row)
-        

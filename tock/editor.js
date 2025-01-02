@@ -1028,7 +1028,6 @@ function save(ei) {
     var g = to_json();
     if (g === null) return;
     if (typeof Jupyter !== 'undefined') {
-        console.log('Jupyter');
         function handle (r) {
             if (r.content.status == "ok") {
                 message('Save successful');
@@ -1040,7 +1039,6 @@ function save(ei) {
         var cmd = 'import tock, json; tock.graphs.editor_save(' + ei + ', json.loads("""' + JSON.stringify(g) + '"""))';
         Jupyter.notebook.kernel.execute(cmd, {"shell": {"reply": handle}});
     } else if (typeof google !== 'undefined') {
-        console.log('google');
         var result = google.colab.kernel.invokeFunction('notebook.editor_save', [ei, g])
             .then(() => message('Save successful'), message);
     }

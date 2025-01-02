@@ -1040,7 +1040,7 @@ function save(ei) {
     } else if (typeof google !== 'undefined') {
         var result = google.colab.kernel.invokeFunction('notebook.editor_save', [ei, g])
             .then(() => message('Save successful'),
-                  (s) => message(s.replace(/^(Error: )*/, '')));
+                  (s) => message('error: ' + s));
     }
 }
 

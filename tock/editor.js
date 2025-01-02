@@ -645,6 +645,7 @@ function selectObject(x, y) {
 
 var message_bar;
 function message(s) {
+    s = s.replace(/(Error:\s*)*/, ''); // Colab generates two of these
     message_bar.innerHTML = s;
 }
 
@@ -1039,8 +1040,7 @@ function save(ei) {
         Jupyter.notebook.kernel.execute(cmd, {"shell": {"reply": handle}});
     } else if (typeof google !== 'undefined') {
         var result = google.colab.kernel.invokeFunction('notebook.editor_save', [ei, g])
-            .then(() => message('Save successful'),
-                  (s) => message('error: ' + s));
+            .then(() => message('Save successful'), message);
     }
 }
 

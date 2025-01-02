@@ -500,7 +500,7 @@ class Editor:
                     try:
                         self.m.add_transition(lhs, rhs)
                     except Exception as e:
-                        raise ValueError(f"Error in transition from {q} on {t} to {r} ({e})") from None # work around bug in IPython?
+                        raise ValueError(f"In transition from {q} on {t} to {r}: {e}") from None # work around bug in IPython?
         
         start_state = None
         accept_states = set()

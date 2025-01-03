@@ -353,8 +353,11 @@ def to_graph(m):
     """Converts a `Machine` to a `Graph`."""
     g = Graph()
     g.attrs['rankdir'] = 'LR'
-    q = m.get_start_state()
-    g.add_node(q, {'start': True})
+    try:
+        q = m.get_start_state()
+        g.add_node(q, {'start': True})
+    except ValueError:
+        pass
     for q in m.get_accept_states():
         g.add_node(q, {'accept': True})
     for t in m.get_transitions():

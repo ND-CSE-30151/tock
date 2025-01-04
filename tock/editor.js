@@ -529,11 +529,10 @@ function drawText(c, originalText, x, y, angleOrNull, isSelected, maxWidth) {
     c.textBaseline = "middle";
     c.fillText(text, x, y);
     if(isSelected && caretVisible && canvasHasFocus() && document.hasFocus()) {
-        x += width;
         c.lineWidth = lineWidth;
         c.beginPath();
-        c.moveTo(x, y - fontSize/2);
-        c.lineTo(x, y + fontSize/2);
+        c.moveTo(x + width, y - fontSize/2);
+        c.lineTo(x + width, y + fontSize/2);
         c.stroke();
     }
     c.restore();

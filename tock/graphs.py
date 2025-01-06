@@ -412,8 +412,14 @@ def layout(g):
     dot = g._repr_dot_(index=node_index, merge_parallel=False)
     dot = run_dot(dot, format="dot")
     dot = pydot.graph_from_dot_data(dot)[0]
-    
-    bbox = parse_string(dot.get_bb()).split(',')
+
+    bb_string = dot.get_bb()
+    if bb_string is None:
+        # dot -Tdot relocates bb="..." into graph[bb="..."] (a bug?)
+        for attrs in dot.get_graph_defaults():
+            if 'bb' in attrs:
+                bb_string = attrs['bb']
+    bbox = parse_string(bb_string).split(',')
     g.attrs['xmin'] = bbox[0]
     g.attrs['ymin'] = bbox[1]
     g.attrs['xmax'] = bbox[2]

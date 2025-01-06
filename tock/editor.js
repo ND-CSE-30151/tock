@@ -543,79 +543,75 @@ SelfLink.prototype.setAnchorPoint = function(x, y) {
     this.anchorAngle = snapAngle(this.anchorAngle, Math.sqrt((x-this.node.x)**2+(y-this.node.y)**2));
 };
 
-SelfLink.prototype.getEndPointsAndCircle = function() {
-    var p = this.node.closestPointOnCircle(
+SelfLink.prototype.getEndPoints = function() {
+    const r = 15; // half the distance between endpoints. Should be less than nodeHeight.
+    const h = 2.5; // controls height of loop
+    const w = 1; // controls width of loop
+    var center = this.node.closestPointOnCircle(
         this.node.x + Math.cos(this.anchorAngle), 
         this.node.y + Math.sin(this.anchorAngle));
-    var circleX = p.x;
-    var circleY = p.y;
-    var circleRadius = selfLinkRadius;
-    var startAngle = principalAngle(this.anchorAngle - 0.99*Math.PI);
-    var endAngle = principalAngle(this.anchorAngle + 0.99*Math.PI);
-    
-    var p = this.node.intersectArc(circleX, circleY, circleRadius, startAngle, endAngle, false);
-    if (p !== null) startAngle = Math.atan2(p.y-circleY, p.x-circleX);
-    var p = this.node.intersectArc(circleX, circleY, circleRadius, endAngle, startAngle, true);
-    if (p !== null) endAngle = Math.atan2(p.y-circleY, p.x-circleX);
-    if (endAngle < startAngle) endAngle += 2*Math.PI;
-    
-    var startX = circleX + circleRadius * Math.cos(startAngle);
-    var startY = circleY + circleRadius * Math.sin(startAngle);
-    var endX = circleX + circleRadius * Math.cos(endAngle);
-    var endY = circleY + circleRadius * Math.sin(endAngle);
-    return {
-        'hasCircle': true,
-        'startX': startX,
-        'startY': startY,
-        'endX': endX,
-        'endY': endY,
-        'startAngle': startAngle,
-        'endAngle': endAngle,
-        'circleX': circleX,
-        'circleY': circleY,
-        'circleRadius': circleRadius
+    // the start and end are a little to the left and right of center
+    var start = this.node.intersectArc(center.x, center.y, r, this.anchorAngle-0.99*Math.PI, this.anchorAngle+0.99*Math.PI);
+    var end = this.node.intersectArc(center.x, center.y, r, this.anchorAngle+0.99*Math.PI, this.anchorAngle-0.99*Math.PI, true);
+    var side = {'x': end.x-start.x, 'y': end.y-start.y};
+    var normal = {'x': end.y-start.y, 'y': start.x-end.x};
+    var control1 = {
+        'x': start.x + h*normal.x - w*side.x,
+        'y': start.y + h*normal.y - w*side.y
     };
-};
+    var control2 = {
+        'x': end.x + h*normal.x + w*side.x,
+        'y': end.y + h*normal.y + w*side.y
+    };
+    return {
+        'start': start,
+        'control1': control1,
+        'control2': control2,
+        'end': end
+    };
+}
 
 SelfLink.prototype.draw = function(ctx) {
-    var stuff = this.getEndPointsAndCircle();
+    var stuff = this.getEndPoints();
     // draw arc
-    ctx.beginPath();
-    ctx.arc(stuff.circleX, stuff.circleY, stuff.circleRadius, stuff.startAngle, stuff.endAngle, false);
-    ctx.stroke();
-    // draw the text on the loop farthest from the node
-    var textX = stuff.circleX + stuff.circleRadius * Math.cos(this.anchorAngle);
-    var textY = stuff.circleY + stuff.circleRadius * Math.sin(this.anchorAngle);
-    this.textBox = drawText(ctx, this.text, textX, textY, linkFontSize, this.anchorAngle, selectedObject == this);
+    var path = new Path2D();
+    path.moveTo(stuff.start.x, stuff.start.y);
+    path.bezierCurveTo(stuff.control1.x, stuff.control1.y, 
+                       stuff.control2.x, stuff.control2.y, 
+                       stuff.end.x, stuff.end.y);
+    ctx.stroke(path);
+
+    this.isPointInStroke = function(x, y) {
+        ctx.save();
+        ctx.lineWidth = hitTargetPadding*2;
+        var ans = ctx.isPointInStroke(path, x, y);
+        ctx.restore();
+        return ans;
+    }
+    
+    // draw the text at midpoint of path
+    var textX = stuff.start.x/8 + stuff.control1.x*3/8 + stuff.control2.x*3/8 + stuff.end.x/8;
+    var textY = stuff.start.y/8 + stuff.control1.y*3/8 + stuff.control2.y*3/8 + stuff.end.y/8;
+    var textAngle = Math.atan2(stuff.end.y-stuff.start.y,
+                               stuff.end.x-stuff.start.x) - Math.PI/2;
+    var arrowAngle = Math.atan2(stuff.control2.y-stuff.end.y,
+                                stuff.control2.x-stuff.end.x) + Math.PI;
+    this.textBox = drawText(ctx, this.text, textX, textY, linkFontSize, textAngle, selectedObject == this);
     // draw the head of the arrow
-    drawArrow(ctx, stuff.endX, stuff.endY, stuff.endAngle + Math.PI * 0.4, selectedObject == this);
+    drawArrow(ctx, stuff.end.x, stuff.end.y, arrowAngle, selectedObject == this);
 };
 
 SelfLink.prototype.containsPoint = function(x, y) {
     if (boxContainsPoint(this.textBox, x, y))
         return 'label';
-    var stuff = this.getEndPointsAndCircle();
-    var dx = x - stuff.circleX;
-    var dy = y - stuff.circleY;
-    var distance = Math.sqrt(dx*dx + dy*dy) - stuff.circleRadius;
-    if (Math.abs(distance) <= hitTargetPadding) {
-        var angle = Math.atan2(dy, dx);
-        var startAngle = stuff.startAngle;
-        var endAngle = stuff.endAngle;
-        if(angle < startAngle) {
-            angle += Math.PI * 2;
-        } else if(angle > endAngle) {
-            angle -= Math.PI * 2;
-        }
-        if (angle >= startAngle && angle <= endAngle) {
-            if (angle <= startAngle + hitTargetPadding / stuff.circleRadius)
-                return 'source';
-            else if (angle >= endAngle - (hitTargetPadding+2*arrowSize) / stuff.circleRadius)
-                return 'target';
-            else
-                return 'edge';
-        } else
-            return null;
+    else if (this.isPointInStroke(x, y)) {
+        var stuff = this.getEndPoints();
+        if (Math.sqrt((x-stuff.start.x)**2 + (y-stuff.start.y)**2) <= hitTargetPadding)
+            return 'source';
+        else if (Math.sqrt((x-stuff.end.x)**2 + (y-stuff.end.y)**2) <= hitTargetPadding+2*arrowSize)
+            return 'target';
+        else
+            return 'circle';
     } else
         return null;
 };
@@ -699,9 +695,9 @@ var nodeHeight = 25;
 var nodeCornerRadius = 8;
 var nodeMargin = 6;
 var acceptDistance = 6;
-var startLength = 30;
+var startLength = 40;
 var selfLinkRadius = 10;
-var arrowSize = 3;
+var arrowSize = 3.5;
 var lineWidth = 1.5;
 var nodeFontSize = 10 / 72 * 96; // 10pt
 var linkFontSize = 9 / 72 * 96; // 9pt

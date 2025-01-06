@@ -1209,9 +1209,17 @@ function from_json(g) {
     selectedObject = null;
 
     // Transform from graphviz coordinates to ours
-    var eps = Math.min(canvas.width, canvas.height)*0.03; 
-    function tx(x) { return (x-g.xmin+eps) / (g.xmax-g.xmin+2*eps) * canvas.width; }
-    function ty(y) { return (g.ymax-y+eps) / (g.ymax-g.ymin+2*eps) * canvas.height; }
+    var eps = Math.min(canvas.width, canvas.height)*0.03; // canvas margin
+    
+    // I thought the scale factor should be 96/72 but it needs to be more
+    var scale = Math.min(1.5*canvas_dpr,
+                         canvas.width/(g.xmax-g.xmin+2*eps),
+                         canvas.height/(g.ymax-g.ymin+2*eps));
+    var shift = {'x': canvas.width/2 - (g.xmax+g.xmin)*scale/2,
+                 'y': canvas.height/2 - (g.ymax+g.ymin)*scale/2};
+    
+    function tx(x) { return x*scale+shift.x; }
+    function ty(y) { return y*scale+shift.y; }
 
     var node_index = {}
     for (var v in g.nodes) {

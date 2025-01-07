@@ -198,6 +198,7 @@ Node.prototype.closestPointOnCircle = function(x, y) {
             if (p.x >= 0 && p.y >= 0)
                 return {'x': this.x+Math.sign(dx)*p.x, 'y': this.y+Math.sign(dy)*p.y};
     }
+    return {'x': null, 'y': null};
 };
 
 Node.prototype.containsPoint = function(x, y) {

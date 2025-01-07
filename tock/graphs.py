@@ -420,10 +420,10 @@ def layout(g):
             if 'bb' in attrs:
                 bb_string = attrs['bb']
     bbox = parse_string(bb_string).split(',')
-    g.attrs['xmin'] = bbox[0]
-    g.attrs['ymin'] = bbox[1]
-    g.attrs['xmax'] = bbox[2]
-    g.attrs['ymax'] = bbox[3]
+    g.attrs['xmin'] = float(bbox[0])
+    g.attrs['ymin'] = float(bbox[1])
+    g.attrs['xmax'] = float(bbox[2])
+    g.attrs['ymax'] = float(bbox[3])
 
     for v in g.nodes:
         vid = node_index[v]

@@ -643,40 +643,58 @@ function convertShortcuts(text) {
 
 function drawText(ctx, originalText, x, y, fontSize, angleOrNull, isSelected, maxWidth) {
     var text = convertShortcuts(originalText);
+    var lines = [];
+    for (var line of text.split('\n')) {
+        line = line.trim();
+        if (line.length === 0) continue;
+        lines.push(line);
+    }
+    
     ctx.save();
-
     ctx.font = fontSize+'px monospace';
-    var width = ctx.measureText(text).width;
+    const lineHeight = fontSize*1.2;
+    var width = 0;
+    var height = 0;
+    var offsets = []; // relative to top center of box
+    for (var line of lines) {
+        var dims = ctx.measureText(line);
+        width = Math.max(width, dims.width);
+        offsets.push([-dims.width/2, height]);
+        height += lineHeight;
+    }
 
     // center the text
-    x -= width / 2;
+    y -= height/2;
 
     // position the text intelligently if given an angle
     if(angleOrNull != null) {
         var cos = Math.cos(angleOrNull);
         var sin = Math.sin(angleOrNull);
-        var cornerPointX = (width / 2 + fontSize/4) * (cos > 0 ? 1 : -1);
-        var cornerPointY = (fontSize/2 + 5) * (sin > 0 ? 1 : -1);
-        var slide = sin * Math.pow(Math.abs(sin), 40) * cornerPointX - cos * Math.pow(Math.abs(cos), 10) * cornerPointY;
+        var cornerPointX = (width/2 + fontSize/4) * (cos > 0 ? 1 : -1);
+        var cornerPointY = (height/2 + fontSize/4) * (sin > 0 ? 1 : -1);
+        var slide = sin * Math.pow(Math.abs(sin), 10) * cornerPointX - cos * Math.pow(Math.abs(cos), 10) * cornerPointY;
         x += cornerPointX - sin * slide;
         y += cornerPointY + cos * slide;
     }
+    // Now (x,y) is where the top center of the box should appear
 
     // draw text and caret (round the coordinates so the caret falls on a pixel)
     x = Math.round(x);
     y = Math.round(y);
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, x, y);
+    ctx.textBaseline = "top";
+    for (var i=0; i<lines.length; i++)
+        ctx.fillText(lines[i], x+offsets[i][0], y+offsets[i][1]);
+    /*
     if(isSelected && caretVisible && canvasHasFocus() && document.hasFocus()) {
         ctx.lineWidth = lineWidth;
         ctx.beginPath();
-        ctx.moveTo(x + width, y - fontSize/2);
-        ctx.lineTo(x + width, y + fontSize/2);
+        ctx.moveTo(x + width, y - height/2);
+        ctx.lineTo(x + width, y + height/2);
         ctx.stroke();
-    }
+    }*/
     ctx.restore();
 
-    return [x, y-fontSize/2, x+width, y+fontSize/2];
+    return [x, y-height/2, x+width, y+height/2];
 }
 
 // The insertion point for text labels
@@ -1077,6 +1095,11 @@ document.onkeypress = function(e) {
         draw();
 
         // don't let keys do their actions (like space scrolls down the page)
+        return false;
+    } else if (key == 13 && !e.metaKey && !e.altKey && !e.ctrlKey && (selectedObject instanceof Link || selectedObject instanceof SelfLink)) {
+        selectedObject.text += '\n';
+        resetCaret();
+        draw();
         return false;
     } else if(key == 8) {
         // backspace is a shortcut for the back button, but do NOT want to change pages

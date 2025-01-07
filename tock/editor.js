@@ -163,8 +163,8 @@ Node.prototype.setAnchorPoint = function(x, y) {
 
 Node.prototype.draw = function(ctx) {
     // draw the text
-    this.textBox = drawText(ctx, this.text, this.x, this.y, nodeFontSize, null, selectedObject == this);
-    this.width = Math.max(this.textBox[2]-this.textBox[0] + 2*nodeMargin, nodeHeight);
+    drawText(ctx, this.text, this.x, this.y, nodeFontSize, null, selectedObject == this);
+    this.width = Math.max(this.text.box[2]-this.text.box[0] + 2*nodeMargin, nodeHeight);
 
     // draw the border
     ctx.beginPath();
@@ -465,17 +465,17 @@ Link.prototype.draw = function(ctx) {
         var textAngle = (startAngle + endAngle) / 2 + stuff.isReversed * Math.PI;
         var textX = stuff.circleX + stuff.circleRadius * Math.cos(textAngle);
         var textY = stuff.circleY + stuff.circleRadius * Math.sin(textAngle);
-        this.textBox = drawText(ctx, this.text, textX, textY, linkFontSize, textAngle, selectedObject == this);
+        drawText(ctx, this.text, textX, textY, linkFontSize, textAngle, selectedObject == this);
     } else {
         var textX = (stuff.startX + stuff.endX) / 2;
         var textY = (stuff.startY + stuff.endY) / 2;
         var textAngle = Math.atan2(stuff.endX - stuff.startX, stuff.startY - stuff.endY);
-        this.textBox = drawText(ctx, this.text, textX, textY, linkFontSize, textAngle + this.lineAngleAdjust, selectedObject == this);
+        drawText(ctx, this.text, textX, textY, linkFontSize, textAngle + this.lineAngleAdjust, selectedObject == this);
     }
 };
 
 Link.prototype.containsPoint = function(x, y) {
-    if (boxContainsPoint(this.textBox, x, y))
+    if (boxContainsPoint(this.text.box, x, y))
         return 'label';
     var stuff = this.getEndPointsAndCircle();
     if(stuff.hasCircle) {
@@ -597,13 +597,13 @@ SelfLink.prototype.draw = function(ctx) {
                                stuff.end.x-stuff.start.x) - Math.PI/2;
     var arrowAngle = Math.atan2(stuff.control2.y-stuff.end.y,
                                 stuff.control2.x-stuff.end.x) + Math.PI;
-    this.textBox = drawText(ctx, this.text, textX, textY, linkFontSize, textAngle, selectedObject == this);
+    drawText(ctx, this.text, textX, textY, linkFontSize, textAngle, selectedObject == this);
     // draw the head of the arrow
     drawArrow(ctx, stuff.end.x, stuff.end.y, arrowAngle, selectedObject == this);
 };
 
 SelfLink.prototype.containsPoint = function(x, y) {
-    if (boxContainsPoint(this.textBox, x, y))
+    if (boxContainsPoint(this.text.box, x, y))
         return 'label';
     else if (this.isPointInStroke(x, y)) {
         var stuff = this.getEndPoints();
@@ -621,23 +621,32 @@ function Text(s) {
     if (s === undefined) s = '';
     this.lines = [s]; // array of strings
     this.box = null;
+    this.caretLine = 0;
+    this.caretChar = 0;
 }
 
 Text.prototype.backspace = function() {
-    var last = this.lines.length-1;
-    if (this.lines[last].length > 0)
-        this.lines[last] = this.lines[last].substr(0, this.lines[last].length - 1);
-    else if (last > 0)
-        this.lines.pop();
+    if (this.caretChar > 0) {
+        this.lines[this.caretLine] = this.lines[this.caretLine].slice(0, this.caretChar-1) + this.lines[this.caretLine].slice(this.caretChar);
+        this.caretChar--;
+    } else if (this.caretLine > 0) {
+        this.lines.splice(this.caretLine-1, 2, this.lines[this.caretLine-1] + this.lines[this.caretLine]);
+        this.caretLine--;
+        this.caretChar = this.lines[this.caretLine].length;
+    }
 };
 
 Text.prototype.newline = function() {
-    this.lines.push('');
+    this.lines.splice(this.caretLine, 1,
+                      this.lines[this.caretLine].slice(0, this.caretChar),
+                      this.lines[this.caretLine].slice(this.caretChar));
+    this.caretLine++;
+    this.caretChar = 0;
 };
 
-Text.prototype.append = function(c) {
-    var last = this.lines.length-1;
-    this.lines[last] = this.lines[last] + c;
+Text.prototype.insert = function(c) {
+    this.lines[this.caretLine] = this.lines[this.caretLine].slice(0, this.caretChar) + c + this.lines[this.caretLine].slice(this.caretChar);
+    this.caretChar++;
 };
 
 Text.prototype.str = function() {
@@ -650,6 +659,39 @@ Text.prototype.empty = function() {
     for (var line of this.lines)
         n += line.trim().length;
     return n === 0;
+};
+
+Text.prototype.handleKey = function(key) {
+    switch (key) {
+    case 37: // left
+        if (this.caretChar > 0)
+            this.caretChar--;
+        else if (this.caretLine > 0) {
+            this.caretLine--;
+            this.caretChar = this.lines[this.caretLine].length;
+        }
+        break;
+    case 39: // right
+        if (this.caretChar < this.lines[this.caretLine].length)
+            this.caretChar++;
+        else if (this.caretLine < this.lines.length-1) {
+            this.caretLine++;
+            this.caretChar = 0;
+        }
+        break;
+    case 38: // up
+        if (this.caretLine > 0) {
+            this.caretLine--;
+            this.caretChar = Math.min(this.caretChar, this.lines[this.caretLine].length);
+        }
+        break;
+    case 40: // down
+        if (this.caretLine < this.lines.length-1) {
+            this.caretLine++;
+            this.caretChar = Math.min(this.caretChar, this.lines[this.caretLine].length);
+        }
+        break;
+    }
 };
 
 /* Drawing */
@@ -678,25 +720,22 @@ function convertShortcuts(s) {
 }
 
 function drawText(ctx, text, x, y, fontSize, angleOrNull, isSelected, maxWidth) {
-    var trimlines = [];
-    for (var i=0; i<text.lines.length; i++) {
-        var line = convertShortcuts(text.lines[i]).trim();
-        if (line.length === 0 && (!isSelected || i < text.lines.length-1))
-            continue;
-        trimlines.push(line);
-    }
-    lines = trimlines;
-    
     ctx.save();
     ctx.font = fontSize+'px monospace';
     const lineHeight = fontSize*1.2;
     var width = 0;
     var height = 0;
     var offsets = []; // relative to top center of box
-    for (var line of lines) {
+    var caret;
+    for (var i=0; i<text.lines.length; i++) {
+        var line = text.lines[i];
         var dims = ctx.measureText(line);
         width = Math.max(width, dims.width);
         offsets.push([-dims.width/2, height]);
+        if (i === text.caretLine) {
+            var cdims = ctx.measureText(line.slice(0, text.caretChar));
+            caret = [-dims.width/2+cdims.width, height];
+        }
         height += lineHeight;
     }
 
@@ -719,19 +758,18 @@ function drawText(ctx, text, x, y, fontSize, angleOrNull, isSelected, maxWidth) 
     x = Math.round(x);
     y = Math.round(y);
     ctx.textBaseline = "top";
-    for (var i=0; i<lines.length; i++)
-        ctx.fillText(lines[i], x+offsets[i][0], y+offsets[i][1]);
-    if(isSelected && caretVisible && canvasHasFocus() && document.hasFocus()) {
+    for (var i=0; i<text.lines.length; i++)
+        ctx.fillText(text.lines[i], x+offsets[i][0], y+offsets[i][1]);
+    if (isSelected && caretVisible && canvasHasFocus() && document.hasFocus()) {
         ctx.lineWidth = lineWidth;
         ctx.beginPath();
-        var n = lines.length-1;
-        ctx.moveTo(x-offsets[n][0], y+offsets[n][1]);
-        ctx.lineTo(x-offsets[n][0], y+offsets[n][1]+lineHeight);
+        ctx.moveTo(x+caret[0], y+caret[1]);
+        ctx.lineTo(x+caret[0], y+caret[1]+lineHeight);
         ctx.stroke();
     }
     ctx.restore();
 
-    return [x, y-height/2, x+width, y+height/2];
+    text.box = [x, y-height/2, x+width, y+height/2];
 }
 
 // The insertion point for text labels
@@ -1091,6 +1129,11 @@ document.onkeydown = function(e) {
     } else if (!canvasHasFocus()) {
         // don't read keystrokes when other things have focus
         return true;
+    } else if (key >= 37 && key <= 40 && selectedObject != null && 'text' in selectedObject) { // arrows
+        selectedObject.text.handleKey(key);
+        resetCaret();
+        draw();
+        return false;
     }
 };
 
@@ -1110,8 +1153,8 @@ document.onkeypress = function(e) {
     if(!canvasHasFocus()) {
         // don't read keystrokes when other things have focus
         return true;
-    } else if(key >= 0x20 && key <= 0x7E && !e.metaKey && !e.altKey && !e.ctrlKey && selectedObject != null && 'text' in selectedObject) {
-        selectedObject.text.append(String.fromCharCode(key));
+    } else if (key >= 0x20 && key <= 0x7E && !e.metaKey && !e.altKey && !e.ctrlKey && selectedObject != null && 'text' in selectedObject) {
+        selectedObject.text.insert(String.fromCharCode(key));
         resetCaret();
         draw();
         return false;
@@ -1120,8 +1163,8 @@ document.onkeypress = function(e) {
         resetCaret();
         draw();
         return false;
-    } else if(key == 8) {
-        if(selectedObject != null && 'text' in selectedObject) {
+    } else if (key == 8) {
+        if (selectedObject != null && 'text' in selectedObject) {
             selectedObject.text.backspace();
             resetCaret();
             draw();

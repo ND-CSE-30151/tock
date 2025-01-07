@@ -647,7 +647,7 @@ function drawText(ctx, text, x, y, fontSize, angleOrNull, isSelected, maxWidth) 
     var trimlines = [];
     for (var i=0; i<lines.length; i++) {
         var line = lines[i].trim();
-        if (line.length === 0 && i < lines.length-1)
+        if (line.length === 0 && (!isSelected || i < lines.length-1))
             continue;
         trimlines.push(line);
     }

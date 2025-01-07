@@ -650,6 +650,8 @@ function drawText(ctx, originalText, x, y, fontSize, angleOrNull, isSelected, ma
         if (line.length === 0) continue;
         lines.push(line);
     }
+    if (lines.length === 0)
+        lines.push('');
     
     ctx.save();
     ctx.font = fontSize+'px monospace';
@@ -685,14 +687,14 @@ function drawText(ctx, originalText, x, y, fontSize, angleOrNull, isSelected, ma
     ctx.textBaseline = "top";
     for (var i=0; i<lines.length; i++)
         ctx.fillText(lines[i], x+offsets[i][0], y+offsets[i][1]);
-    /*
     if(isSelected && caretVisible && canvasHasFocus() && document.hasFocus()) {
         ctx.lineWidth = lineWidth;
         ctx.beginPath();
-        ctx.moveTo(x + width, y - height/2);
-        ctx.lineTo(x + width, y + height/2);
+        var n = lines.length-1;
+        ctx.moveTo(x-offsets[n][0], y+offsets[n][1]);
+        ctx.lineTo(x-offsets[n][0], y+offsets[n][1]+lineHeight);
         ctx.stroke();
-    }*/
+    }
     ctx.restore();
 
     return [x, y-height/2, x+width, y+height/2];
@@ -842,9 +844,6 @@ function main(ei) {
     linkFontSize *= canvas_dpr;
     snapToPadding *= canvas_dpr; hitTargetPadding *= canvas_dpr;
 
-    load(ei); // bug: if there is an error later in the notebook, this doesn't work
-    //draw();
-
     var controls = document.createElement("div");
     container.append(controls);
 
@@ -887,6 +886,8 @@ function main(ei) {
     help_div.addEventListener("click", () => { help_div.style.display = "none"; });
     container.append(help_div);
     
+    load(ei); // bug: if there is an error later in the notebook, this doesn't work
+
     canvas.onmousedown = function(e) {
         if (e.button !== 0 || control) return true;
         var mouse = crossBrowserRelativeMousePos(e);
@@ -1180,12 +1181,18 @@ function to_json() {
             var v = links[i].nodeB.text;
             if (!(u in g.edges)) g.edges[u] = {};
             if (!(v in g.edges[u])) g.edges[u][v] = [];
-            g.edges[u][v].push({ 'label': links[i].text });
+            for (var line of links[i].text.split('\n')) {
+                line = line.trim(); if (line.length === 0) continue;
+                g.edges[u][v].push({ 'label': line });
+            }
         } else if(links[i] instanceof SelfLink) {
             var v = links[i].node.text;
             if (!(v in g.edges)) g.edges[v] = {};
             if (!(v in g.edges[v])) g.edges[v][v] = [];
-            g.edges[v][v].push({ 'label': links[i].text });
+            for (var line of links[i].text.split('\n')) {
+                line = line.trim(); if (line.length === 0) continue;
+                g.edges[v][v].push({ 'label': line });
+            }
         }
     }
     return g;
@@ -1219,6 +1226,9 @@ function save(ei) {
     } else if (typeof google !== 'undefined') {
         var result = google.colab.kernel.invokeFunction('notebook.editor_save', [ei, g])
             .then(() => message('Save successful'), message);
+    } else {
+        message('Save requires Colab or Jupyter NbClassic.');
+        console.log(g);
     }
 }
 
@@ -1300,5 +1310,7 @@ function load(ei) {
             draw();
         }
         var result = google.colab.kernel.invokeFunction('notebook.editor_load', [ei]).then(success, message);
+    } else {
+        message('Load requires Colab or Jupyter NbClassic.');
     }
 }

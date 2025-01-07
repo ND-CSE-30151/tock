@@ -1215,7 +1215,7 @@ function from_json(g) {
                  'y': canvas.height/2 - (g.ymax+g.ymin)*scale/2};
     
     function tx(x) { return x*scale+shift.x; }
-    function ty(y) { return y*scale+shift.y; }
+    function ty(y) { return -y*scale+shift.y; }
 
     var node_index = {}
     for (var v in g.nodes) {

@@ -411,6 +411,7 @@ def layout(g):
     node_index = {}
     dot = g._repr_dot_(index=node_index, merge_parallel=False)
     dot = run_dot(dot, format="dot")
+    dot = dot.replace('#', '&#35;') # workaround for https://github.com/pydot/pydot/issues/235
     dot = pydot.graph_from_dot_data(dot)[0]
 
     bb_string = dot.get_bb()

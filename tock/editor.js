@@ -1212,7 +1212,7 @@ function from_json(g) {
                          canvas.width/(g.xmax-g.xmin+2*eps),
                          canvas.height/(g.ymax-g.ymin+2*eps));
     var shift = {'x': canvas.width/2 - (g.xmax+g.xmin)*scale/2,
-                 'y': canvas.height/2 - (g.ymax+g.ymin)*scale/2};
+                 'y': canvas.height/2 + (g.ymax+g.ymin)*scale/2};
     
     function tx(x) { return x*scale+shift.x; }
     function ty(y) { return -y*scale+shift.y; }

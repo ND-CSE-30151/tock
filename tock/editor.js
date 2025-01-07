@@ -137,7 +137,7 @@ function Node(x, y) {
     this.mouseOffsetX = 0; // when node is being moved, center relative to mouse
     this.mouseOffsetY = 0;
     this.isAcceptState = false;
-    this.text = '';
+    this.text = new Text();
     this.width = Math.max(2*nodeMargin, nodeHeight);
 }
 
@@ -348,7 +348,7 @@ StartLink.prototype.containsPoint = function(x, y) {
 function Link(a, b) {
     this.nodeA = a; // source node
     this.nodeB = b; // target node
-    this.text = '';
+    this.text = new Text();
     this.lineAngleAdjust = 0; // value to add to textAngle when link is straight line
     this.perpendicularPart = 0; // pixels from line between nodeA and nodeB; positive is clockwise
 }
@@ -528,7 +528,7 @@ function SelfLink(node, mouse) {
     this.node = node; // source/target node
     this.anchorAngle = 0; // angle of midpoint (radius is fixed)
     this.mouseOffsetAngle = 0; // when link is being moved, angle of anchor relative to angle of mouse
-    this.text = '';
+    this.text = new Text();
 
     if(mouse) {
         this.setAnchorPoint(mouse.x, mouse.y);
@@ -617,6 +617,41 @@ SelfLink.prototype.containsPoint = function(x, y) {
         return null;
 };
 
+function Text(s) {
+    if (s === undefined) s = '';
+    this.lines = [s]; // array of strings
+    this.box = null;
+}
+
+Text.prototype.backspace = function() {
+    var last = this.lines.length-1;
+    if (this.lines[last].length > 0)
+        this.lines[last] = this.lines[last].substr(0, this.lines[last].length - 1);
+    else if (last > 0)
+        this.lines.pop();
+};
+
+Text.prototype.newline = function() {
+    this.lines.push('');
+};
+
+Text.prototype.append = function(c) {
+    var last = this.lines.length-1;
+    this.lines[last] = this.lines[last] + c;
+};
+
+Text.prototype.str = function() {
+    console.assert(this.lines.length === 1);
+    return this.lines[0];
+};
+
+Text.prototype.empty = function() {
+    var n = 0;
+    for (var line of this.lines)
+        n += line.trim().length;
+    return n === 0;
+};
+
 /* Drawing */
 
 function drawArrow(ctx, x, y, angle, isSelected) {
@@ -635,19 +670,18 @@ function canvasHasFocus() {
     return document.activeElement == canvas;
 }
 
-var mappings = {'&': 'ε', '|-': '⊢', '-|': '⊣', '_': '␣', '->': '→'}
-function convertShortcuts(text) {
-    for (var s in mappings)
-        text = text.replaceAll(s, mappings[s]);
-    return text;
+var mappings = {'&': 'ε', '|-': '⊢', '-|': '⊣', '_': '␣', '->': '→'};
+function convertShortcuts(s) {
+    for (var a in mappings)
+        s = s.replaceAll(a, mappings[a]);
+    return s;
 }
 
 function drawText(ctx, text, x, y, fontSize, angleOrNull, isSelected, maxWidth) {
-    var lines = convertShortcuts(text).split('\n');
     var trimlines = [];
-    for (var i=0; i<lines.length; i++) {
-        var line = lines[i].trim();
-        if (line.length === 0 && (!isSelected || i < lines.length-1))
+    for (var i=0; i<text.lines.length; i++) {
+        var line = convertShortcuts(text.lines[i]).trim();
+        if (line.length === 0 && (!isSelected || i < text.lines.length-1))
             continue;
         trimlines.push(line);
     }
@@ -1054,24 +1088,9 @@ document.onkeydown = function(e) {
         shift = true;
     } else if (key == 17) {
         control = true;
-    } else if(!canvasHasFocus()) {
+    } else if (!canvasHasFocus()) {
         // don't read keystrokes when other things have focus
         return true;
-    } else if(key == 8) { // backspace key
-        if(selectedObject != null && 'text' in selectedObject) {
-            selectedObject.text = selectedObject.text.substr(0, selectedObject.text.length - 1);
-            resetCaret();
-            draw();
-        }
-
-        /*if(selectedObject != null) {
-            deleteObject(selectedObject);
-            selectedObject = null;
-            draw();
-        }*/
-
-        // backspace is a shortcut for the back button, but do NOT want to change pages
-        return false;
     }
 };
 
@@ -1092,19 +1111,21 @@ document.onkeypress = function(e) {
         // don't read keystrokes when other things have focus
         return true;
     } else if(key >= 0x20 && key <= 0x7E && !e.metaKey && !e.altKey && !e.ctrlKey && selectedObject != null && 'text' in selectedObject) {
-        selectedObject.text += String.fromCharCode(key);
+        selectedObject.text.append(String.fromCharCode(key));
         resetCaret();
         draw();
-
-        // don't let keys do their actions (like space scrolls down the page)
         return false;
     } else if (key == 13 && !e.metaKey && !e.altKey && !e.ctrlKey && (selectedObject instanceof Link || selectedObject instanceof SelfLink)) {
-        selectedObject.text += '\n';
+        selectedObject.text.newline();
         resetCaret();
         draw();
         return false;
     } else if(key == 8) {
-        // backspace is a shortcut for the back button, but do NOT want to change pages
+        if(selectedObject != null && 'text' in selectedObject) {
+            selectedObject.text.backspace();
+            resetCaret();
+            draw();
+        }
         return false;
     }
 };
@@ -1166,7 +1187,7 @@ function to_json() {
             start = getNodeId(links[i].node);
     }
     for (var i = 0; i < nodes.length; i++) {
-        g.nodes[nodes[i].text] = {
+        g.nodes[nodes[i].text.str()] = {
             'start': i == start,
             'accept': nodes[i].isAcceptState
         };
@@ -1177,11 +1198,11 @@ function to_json() {
     }
     for(var i = 0; i < links.length; i++) {
         if(links[i] instanceof Link) {
-            var u = links[i].nodeA.text;
-            var v = links[i].nodeB.text;
+            var u = links[i].nodeA.text.str();
+            var v = links[i].nodeB.text.str();
             if (!(u in g.edges)) g.edges[u] = {};
             if (!(v in g.edges[u])) g.edges[u][v] = [];
-            for (var line of links[i].text.split('\n')) {
+            for (var line of links[i].text.lines) {
                 line = line.trim(); if (line.length === 0) continue;
                 g.edges[u][v].push({ 'label': line });
             }
@@ -1189,7 +1210,7 @@ function to_json() {
             var v = links[i].node.text;
             if (!(v in g.edges)) g.edges[v] = {};
             if (!(v in g.edges[v])) g.edges[v][v] = [];
-            for (var line of links[i].text.split('\n')) {
+            for (var line of links[i].text.lines) {
                 line = line.trim(); if (line.length === 0) continue;
                 g.edges[v][v].push({ 'label': line });
             }
@@ -1200,12 +1221,12 @@ function to_json() {
 
 function save(ei) {
     for (var vi=0; vi<nodes.length; vi++)
-        if (nodes[vi].text === "") {
+        if (nodes[vi].text.empty()) {
             message('Every state must have a nonempty name.');
             return;
         }
     for (var li=0; li<links.length; li++)
-        if ((links[li] instanceof Link || links[li] instanceof SelfLink) && links[li].text === "") {
+        if ((links[li] instanceof Link || links[li] instanceof SelfLink) && links[li].text.empty()) {
             message('Every transition must have a nonempty label.');
             return;
         }
@@ -1265,7 +1286,7 @@ function from_json(g) {
                                      newnode));
         if (g.nodes[v].accept)
             newnode.isAcceptState = true;
-        newnode.text = label;
+        newnode.text = new Text(label);
         nodes.push(newnode);
         node_index[v] = newnode;
     }
@@ -1282,7 +1303,7 @@ function from_json(g) {
                     newlink = new Link(unode, vnode);
                 newlink.setAnchorPoint(tx(g.edges[u][v][i].anchorx),
                                        ty(g.edges[u][v][i].anchory));
-                newlink.text = g.edges[u][v][i].label;
+                newlink.text = new Text(g.edges[u][v][i].label);
                 links.push(newlink);
             }
         }

@@ -642,16 +642,16 @@ function convertShortcuts(text) {
     return text;
 }
 
-function drawText(ctx, originalText, x, y, fontSize, angleOrNull, isSelected, maxWidth) {
-    var text = convertShortcuts(originalText);
-    var lines = [];
-    for (var line of text.split('\n')) {
-        line = line.trim();
-        if (line.length === 0) continue;
-        lines.push(line);
+function drawText(ctx, text, x, y, fontSize, angleOrNull, isSelected, maxWidth) {
+    var lines = convertShortcuts(text).split('\n');
+    var trimlines = [];
+    for (var i=0; i<lines.length; i++) {
+        var line = lines[i].trim();
+        if (line.length === 0 && i < lines.length-1)
+            continue;
+        trimlines.push(line);
     }
-    if (lines.length === 0)
-        lines.push('');
+    lines = trimlines;
     
     ctx.save();
     ctx.font = fontSize+'px monospace';

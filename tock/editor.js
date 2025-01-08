@@ -926,7 +926,7 @@ function main(ei) {
     element.append(container);
 
     canvas = document.createElement("canvas");
-    canvas.setAttribute("style", "outline: 1px solid gray; margin: 1px; width: 600px; height: 600px;");
+    canvas.setAttribute("style", "outline: 1px solid gray; background: white; margin: 1px; width: 600px; height: 600px;");
     canvas.setAttribute("tabindex", -1); // make canvas focusable
     canvas_dpr = window.devicePixelRatio || 1;
     canvas.width = 600 * canvas_dpr;

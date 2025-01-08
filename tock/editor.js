@@ -983,6 +983,7 @@ function main(ei) {
     help_div.style.width = "100%";
     help_div.style.height = "100%";
     help_div.style.background = "#ffffffc0";
+    help_div.style.color = "black";
     help_div.style.padding = "10px";
     help_div.addEventListener("click", () => { help_div.style.display = "none"; });
     container.append(help_div);

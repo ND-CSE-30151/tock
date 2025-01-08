@@ -1178,8 +1178,26 @@ document.onkeydown = function(e) {
         resetCaret();
         draw();
         return false;
-    }
-};
+    } else if (key == 32) { // on tablets, space pages down
+        if (selectedObject != null && 'text' in selectedObject) {
+            selectedObject.text.insert(String.fromCharCode(key));
+            resetCaret();
+            draw();
+        }
+        return false;
+    } else if (key == 13 && (selectedObject instanceof Link || selectedObject instanceof SelfLink)) {
+        selectedObject.text.newline();
+        resetCaret();
+        draw();
+        return false;
+    } else if (key == 8) {
+        if (selectedObject != null && 'text' in selectedObject) {
+            selectedObject.text.backspace();
+            resetCaret();
+            draw();
+        }
+        return false;
+    }};
 
 document.onkeyup = function(e) {
     var key = crossBrowserKey(e);
@@ -1194,25 +1212,13 @@ document.onkeyup = function(e) {
 document.onkeypress = function(e) {
     // don't read keystrokes when other things have focus
     var key = crossBrowserKey(e);
-    if(!canvasHasFocus()) {
+    if (!canvasHasFocus()) {
         // don't read keystrokes when other things have focus
         return true;
     } else if (key >= 0x20 && key <= 0x7E && !e.metaKey && !e.altKey && !e.ctrlKey && selectedObject != null && 'text' in selectedObject) {
         selectedObject.text.insert(String.fromCharCode(key));
         resetCaret();
         draw();
-        return false;
-    } else if (key == 13 && !e.metaKey && !e.altKey && !e.ctrlKey && (selectedObject instanceof Link || selectedObject instanceof SelfLink)) {
-        selectedObject.text.newline();
-        resetCaret();
-        draw();
-        return false;
-    } else if (key == 8) {
-        if (selectedObject != null && 'text' in selectedObject) {
-            selectedObject.text.backspace();
-            resetCaret();
-            draw();
-        }
         return false;
     }
 };

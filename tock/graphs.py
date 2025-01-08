@@ -118,7 +118,7 @@ class Graph:
     def __getitem__(self, u):
         return self.edges[u]
 
-    def _repr_dot_(self, merge_parallel=True, index=None):
+    def _repr_dot_(self, index=None):
         def repr_html(x):
             if hasattr(x, '_repr_html_'):
                 return x._repr_html_()
@@ -206,24 +206,19 @@ class Graph:
                             attrs[key] = val
                     edges.append(attrs)
 
-                if merge_parallel:
-                    attrs = {}
-                    labels = []
-                    for e in edges:
-                        if 'label' in e:
-                            labels.append(e['label'])
-                        # In principle it's possible for parallel edges to have
-                        # different attributes, but not for the cases where
-                        # we currently use attributes.
-                        attrs.update(e)
-                    if labels:
-                        labels = [f'<tr><td>{label}</td></tr>' for label in labels]
-                        attrs['label'] = '<<table border="0" cellpadding="1">{}</table>>'.format(''.join(labels))
-                    edges = [attrs]
-                        
-                else:
-                    for attrs in edges:
-                        attrs['label'] = f"<{attrs['label']}>"
+                attrs = {}
+                labels = []
+                for e in edges:
+                    if 'label' in e:
+                        labels.append(e['label'])
+                    # In principle it's possible for parallel edges to have
+                    # different attributes, but not for the cases where
+                    # we currently use attributes.
+                    attrs.update(e)
+                if labels:
+                    labels = [f'<tr><td>{label}</td></tr>' for label in labels]
+                    attrs['label'] = '<<table border="0" cellpadding="1">{}</table>>'.format(''.join(labels))
+                edges = [attrs]
 
                 for attrs in edges:
                     # Within-rank edges don't constrain position of v if v's position is already determined
@@ -409,7 +404,7 @@ def layout(g):
         return s
     
     node_index = {}
-    dot = g._repr_dot_(index=node_index, merge_parallel=False)
+    dot = g._repr_dot_(index=node_index)
     dot = run_dot(dot, format="dot")
     dot = dot.replace('#', '&#35;') # workaround for https://github.com/pydot/pydot/issues/235
     dot = pydot.graph_from_dot_data(dot)[0]
@@ -444,26 +439,27 @@ def layout(g):
         uid = node_index[u]
         for v in g.edges[u]:
             vid = node_index[v]
-            edots = dot.get_edge(str(uid), str(vid))
-            for e, edot in zip(g.edges[u][v], edots):
-                pos = parse_string(edot.get_attributes()['pos'])
-                points = []
-                start = end = None
-                for pstr in pos.split():
-                    fields = pstr.split(',')
-                    if fields[0] not in ['s', 'e']:
-                        points.append(tuple(map(float, fields)))
-                if len(points) % 2 == 1:
-                    # Every third point is actually on the curve.
-                    # Choose the middle one.
-                    e['anchorx'] = points[len(points)//2][0]
-                    e['anchory'] = points[len(points)//2][1]
-                else:
-                    # Find the middle of the middle spline
-                    i = len(points)//2-2
-                    e['anchorx'] = (points[i][0] + points[i+1][0]*3 + points[i+2][0]*3 + points[i+3][0])/8
-                    e['anchory'] = (points[i][1] + points[i+1][1]*3 + points[i+2][1]*3 + points[i+3][1])/8
-                                    
+            [edot] = dot.get_edge(str(uid), str(vid)) # we merged parallel edges, so there must be exactly one
+            
+            pos = parse_string(edot.get_attributes()['pos'])
+            points = []
+            start = end = None
+            for pstr in pos.split():
+                fields = pstr.split(',')
+                if fields[0] not in ['s', 'e']:
+                    points.append(tuple(map(float, fields)))
+            if len(points) % 2 == 1:
+                # Every third point is actually on the curve.
+                # Choose the middle one.
+                anchor = (points[len(points)//2][0],
+                          points[len(points)//2][1])
+            else:
+                # Find the middle of the middle spline
+                i = len(points)//2-2
+                anchor = ((points[i][0] + points[i+1][0]*3 + points[i+2][0]*3 + points[i+3][0])/8,
+                          (points[i][1] + points[i+1][1]*3 + points[i+2][1]*3 + points[i+3][1])/8)
+            for e in g.edges[u][v]:
+                e['anchorx'], e['anchory'] = anchor
     return g
 
 class Editor:

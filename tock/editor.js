@@ -345,12 +345,25 @@ StartLink.prototype.containsPoint = function(x, y) {
         return null;
 };
 
+StartLink.prototype.parallels = function(other) { return false; }
+
 function Link(a, b) {
     this.nodeA = a; // source node
     this.nodeB = b; // target node
     this.text = new Text();
     this.lineAngleAdjust = 0; // value to add to textAngle when link is straight line
     this.perpendicularPart = 0; // pixels from line between nodeA and nodeB; positive is clockwise
+}
+
+Link.prototype.setMouseStart = function(x, y) {
+    if (boxContainsPoint(this.text.box, x, y)) {
+        var anchor = this.getAnchorPoint();
+        this.mouseOffsetX = anchor.x - x;
+        this.mouseOffsetY = anchor.y - y;
+    } else {
+        this.mouseOffsetX = 0;
+        this.mouseOffsetY = 0;
+    }
 }
 
 Link.prototype.getAnchorPoint = function() {
@@ -364,6 +377,8 @@ Link.prototype.getAnchorPoint = function() {
 };
 
 Link.prototype.setAnchorPoint = function(x, y) {
+    x += this.mouseOffsetX;
+    y += this.mouseOffsetY;
     var circle = circleFromThreePoints(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, x, y);
     const big = 1e6;
     if (circle.radius >= big) {
@@ -524,6 +539,12 @@ Link.prototype.containsPoint = function(x, y) {
     return null;
 };
 
+Link.prototype.parallels = function(other) {
+    return (other instanceof Link &&
+            this.nodeA === other.nodeA && this.nodeB === other.nodeB &&
+            Math.abs(this.perpendicularPart - other.perpendicularPart) < 1);
+}
+
 function SelfLink(node, mouse) {
     this.node = node; // source/target node
     this.anchorAngle = 0; // angle of midpoint (radius is fixed)
@@ -616,6 +637,12 @@ SelfLink.prototype.containsPoint = function(x, y) {
     } else
         return null;
 };
+
+SelfLink.prototype.parallels = function(other) {
+    return (other instanceof SelfLink &&
+            this.node === other.node &&
+            Math.abs(this.anchorAngle - other.anchorAngle) < 0.01);
+}
 
 function Text(s) {
     if (s === undefined) s = '';
@@ -769,7 +796,7 @@ function drawText(ctx, text, x, y, fontSize, angleOrNull, isSelected, maxWidth) 
     }
     ctx.restore();
 
-    text.box = [x, y-height/2, x+width, y+height/2];
+    text.box = [x-width/2, y, x+width/2, y+height];
 }
 
 // The insertion point for text labels
@@ -1225,8 +1252,8 @@ function getNodeId(node) {
 function to_json() {
     var g = {'nodes': {}, 'edges': {}};
     var start;
-    for(var i = 0; i < links.length; i++) {
-        if(links[i] instanceof StartLink)
+    for (var i = 0; i < links.length; i++) {
+        if (links[i] instanceof StartLink)
             start = getNodeId(links[i].node);
     }
     for (var i = 0; i < nodes.length; i++) {
@@ -1239,8 +1266,8 @@ function to_json() {
         message("Every state must have a unique name.");
         return null;
     }
-    for(var i = 0; i < links.length; i++) {
-        if(links[i] instanceof Link) {
+    for (var i = 0; i < links.length; i++) {
+        if (links[i] instanceof Link) {
             var u = links[i].nodeA.text.str();
             var v = links[i].nodeB.text.str();
             if (!(u in g.edges)) g.edges[u] = {};
@@ -1249,7 +1276,7 @@ function to_json() {
                 line = line.trim(); if (line.length === 0) continue;
                 g.edges[u][v].push({ 'label': line });
             }
-        } else if(links[i] instanceof SelfLink) {
+        } else if (links[i] instanceof SelfLink) {
             var v = links[i].node.text;
             if (!(v in g.edges)) g.edges[v] = {};
             if (!(v in g.edges[v])) g.edges[v][v] = [];
@@ -1347,7 +1374,12 @@ function from_json(g) {
                 newlink.setAnchorPoint(tx(g.edges[u][v][i].anchorx),
                                        ty(g.edges[u][v][i].anchory));
                 newlink.text = new Text(g.edges[u][v][i].label);
-                links.push(newlink);
+                // Coalesce parallel links
+                console.log(links, newlink);
+                if (links.length > 0 && links[links.length-1].parallels(newlink))
+                    links[links.length-1].text.lines.push(...newlink.text.lines);
+                else
+                    links.push(newlink);
             }
         }
     }

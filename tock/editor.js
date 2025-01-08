@@ -990,66 +990,14 @@ function main(ei) {
     
     load(ei); // bug: if there is an error later in the notebook, this doesn't work
 
-    canvas.onmousedown = function(e) {
-        if (e.button !== 0 || control) return true;
-        var mouse = crossBrowserRelativeMousePos(e);
-        var moused = selectObject(mouse.x, mouse.y);
-        selectedObject = null;
-
-        if (moused.object != null) {
-            if (moused.object instanceof Node && moused.part === 'circle') {
-                // begin creating Link/SelfLink
-                movingObject = false;
-                originalLink = null;
-                currentLink = new SelfLink(moused.object, mouse);
-                currentLinkSource = currentLinkTarget = moused.object;
-                currentLinkPart = 'target';
-            } else if (moused.part === 'source' || moused.part === 'target') {
-                // detach Link
-                movingObject = false;
-                originalLink = currentLink = moused.object;
-                for (var i=0; i<links.length; i++)
-                    if (links[i] === currentLink)
-                        links.splice(i--, 1);
-                if (currentLink instanceof Link) {
-                    currentLinkSource = currentLink.nodeA;
-                    currentLinkTarget = currentLink.nodeB;
-                } else if (currentLink instanceof SelfLink) {
-                    currentLinkSource = currentLinkTarget = currentLink.node;
-                }
-                currentLinkPart = moused.part;
-            } else {
-                // move Node or Link/StartLink/SelfLink
-                selectedObject = moused.object;
-                movingObject = true;
-                if(moused.object.setMouseStart)
-                    moused.object.setMouseStart(mouse.x, mouse.y);
-            }
-            draw();
-            resetCaret();
-        } else {
-            // begin creating StartLink
-            movingObject = false;
-            originalLink = null;
-            currentLink = new Link(new PointNode(mouse.x, mouse.y), new PointNode(mouse.x, mouse.y));
-            currentLinkSource = currentLink.nodeA;
-            currentLinkTarget = currentLink.nodeB;
-            currentLinkPart = 'target';
-            // don't draw() right away, because there might be a double-click
-        }
-
-        // In Colab the canvas is inside an iframe, which seems to cause trouble
-        // with this first case.
-        if(0 && canvasHasFocus()) {
-            // disable drag-and-drop only if the canvas is already focused
-            return false;
-        } else {
-            // otherwise, let the browser switch the focus away from wherever it was
-            resetCaret();
-            return true;
-        }
+    canvas.ontouchstart = function(e) {
+        onmousedown(crossBrowserRelativeMousePos(e));
     };
-
+    canvas.onmousedown = function (e) {
+        if (e.button !== 0 || control) return true;
+        onmousedown(crossBrowserRelativeMousePos(e));
+    };
+        
     canvas.ondblclick = function(e) {
         var mouse = crossBrowserRelativeMousePos(e);
         selectedObject = selectObject(mouse.x, mouse.y).object;
@@ -1068,40 +1016,15 @@ function main(ei) {
         }
     };
 
-    canvas.onmousemove = function(e) {
-        var mouse = crossBrowserRelativeMousePos(e);
-        var moused = selectObject(mouse.x, mouse.y);
-        
-        if (currentLink != null) {
-            if (!(moused.object instanceof Node))
-                moused.object = new PointNode(mouse.x, mouse.y);
-            if (currentLinkPart === 'source')
-                currentLinkSource = moused.object;
-            else if (currentLinkPart === 'target')
-                currentLinkTarget = moused.object;
-            if (!originalLink && currentLinkSource instanceof PointNode && currentLinkTarget instanceof Node)
-                currentLink = new StartLink(currentLinkSource, currentLinkTarget);
-            else if (currentLinkSource instanceof Node && currentLinkTarget === currentLinkSource)
-                currentLink = new SelfLink(currentLinkSource, mouse);
-            else 
-                currentLink = new Link(currentLinkSource, currentLinkTarget);
-            if (originalLink) {
-                currentLink.text = originalLink.text;
-                if (originalLink instanceof Link && currentLink instanceof Link)
-                    currentLink.perpendicularPart = originalLink.perpendicularPart;
-                if (originalLink instanceof SelfLink && currentLink instanceof Link)
-                    currentLink.perpendicularPart = selfLinkRadius;
-            }
-            draw();
-        }
-
-        if (movingObject) {
-            selectedObject.setAnchorPoint(mouse.x, mouse.y);
-            draw();
-        }
+    canvas.onmousemove = function (e) {
+        onmousemove(crossBrowserRelativeMousePos(e));
     };
+    canvas.addEventListener('touchmove', function(e) {
+        onmousemove(crossBrowserRelativeMousePos(e));
+        e.preventDefault();
+    }, { passive: false });
 
-    document.onmouseup = function(e) {
+    document.onmouseup = document.ontouchend = function(e) {
         movingObject = false;
 
         if(currentLink != null) {
@@ -1148,6 +1071,96 @@ function main(ei) {
 
 var shift = false; // whether the Shift key is down
 var control = false; // whether the Ctrl key is down
+
+function onmousedown(mouse) {
+    var moused = selectObject(mouse.x, mouse.y);
+    selectedObject = null;
+    
+    if (moused.object != null) {
+        if (moused.object instanceof Node && moused.part === 'circle') {
+            // begin creating Link/SelfLink
+            movingObject = false;
+            originalLink = null;
+            currentLink = new SelfLink(moused.object, mouse);
+            currentLinkSource = currentLinkTarget = moused.object;
+            currentLinkPart = 'target';
+        } else if (moused.part === 'source' || moused.part === 'target') {
+            // detach Link
+            movingObject = false;
+            originalLink = currentLink = moused.object;
+            for (var i=0; i<links.length; i++)
+                if (links[i] === currentLink)
+                    links.splice(i--, 1);
+            if (currentLink instanceof Link) {
+                currentLinkSource = currentLink.nodeA;
+                currentLinkTarget = currentLink.nodeB;
+            } else if (currentLink instanceof SelfLink) {
+                currentLinkSource = currentLinkTarget = currentLink.node;
+            }
+            currentLinkPart = moused.part;
+        } else {
+            // move Node or Link/StartLink/SelfLink
+            selectedObject = moused.object;
+            movingObject = true;
+            if(moused.object.setMouseStart)
+                moused.object.setMouseStart(mouse.x, mouse.y);
+        }
+        draw();
+        resetCaret();
+    } else {
+        // begin creating StartLink
+        movingObject = false;
+        originalLink = null;
+        currentLink = new Link(new PointNode(mouse.x, mouse.y), new PointNode(mouse.x, mouse.y));
+        currentLinkSource = currentLink.nodeA;
+        currentLinkTarget = currentLink.nodeB;
+        currentLinkPart = 'target';
+        // don't draw() right away, because there might be a double-click
+    }
+
+    // In Colab the canvas is inside an iframe, which seems to cause trouble
+    // with this first case.
+    if(0 && canvasHasFocus()) {
+        // disable drag-and-drop only if the canvas is already focused
+        return false;
+    } else {
+        // otherwise, let the browser switch the focus away from wherever it was
+        resetCaret();
+        return true;
+    }
+};
+
+function onmousemove(mouse) {
+    var moused = selectObject(mouse.x, mouse.y);
+    
+    if (currentLink != null) {
+        if (!(moused.object instanceof Node))
+            moused.object = new PointNode(mouse.x, mouse.y);
+        if (currentLinkPart === 'source')
+            currentLinkSource = moused.object;
+        else if (currentLinkPart === 'target')
+            currentLinkTarget = moused.object;
+        if (!originalLink && currentLinkSource instanceof PointNode && currentLinkTarget instanceof Node)
+            currentLink = new StartLink(currentLinkSource, currentLinkTarget);
+        else if (currentLinkSource instanceof Node && currentLinkTarget === currentLinkSource)
+            currentLink = new SelfLink(currentLinkSource, mouse);
+        else 
+            currentLink = new Link(currentLinkSource, currentLinkTarget);
+        if (originalLink) {
+            currentLink.text = originalLink.text;
+            if (originalLink instanceof Link && currentLink instanceof Link)
+                currentLink.perpendicularPart = originalLink.perpendicularPart;
+            if (originalLink instanceof SelfLink && currentLink instanceof Link)
+                currentLink.perpendicularPart = selfLinkRadius;
+        }
+        draw();
+    }
+
+    if (movingObject) {
+        selectedObject.setAnchorPoint(mouse.x, mouse.y);
+        draw();
+    }
+};
 
 document.onkeydown = function(e) {
     var key = crossBrowserKey(e);

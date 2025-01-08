@@ -353,6 +353,8 @@ function Link(a, b) {
     this.text = new Text();
     this.lineAngleAdjust = 0; // value to add to textAngle when link is straight line
     this.perpendicularPart = 0; // pixels from line between nodeA and nodeB; positive is clockwise
+    this.mouseOffsetX = 0;
+    this.mouseOffsetY = 0;
 }
 
 Link.prototype.setMouseStart = function(x, y) {
@@ -1374,8 +1376,9 @@ function from_json(g) {
                 newlink.setAnchorPoint(tx(g.edges[u][v][i].anchorx),
                                        ty(g.edges[u][v][i].anchory));
                 newlink.text = new Text(g.edges[u][v][i].label);
+                console.log(g.edges[u][v]);
+                console.log(newlink);
                 // Coalesce parallel links
-                console.log(links, newlink);
                 if (links.length > 0 && links[links.length-1].parallels(newlink))
                     links[links.length-1].text.lines.push(...newlink.text.lines);
                 else

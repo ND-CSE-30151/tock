@@ -654,6 +654,7 @@ function Text(s) {
     this.box = null;
     this.caretLine = 0;
     this.caretChar = 0;
+    this.offsets = [];
 }
 
 Text.prototype.backspace = function() {
@@ -726,6 +727,21 @@ Text.prototype.handleKey = function(key) {
         }
         break;
     }
+};
+
+Text.prototype.moveCaret = function(x, y) {
+    // Top center of box
+    var bx = (this.box[0] + this.box[2])/2;
+    var by = this.box[1];
+    // Find line
+    for (var i=0; i<this.offsets.length; i++)
+        if (by+this.offsets[i][1] > y) break;
+    i--;
+    this.caretLine = i;
+    // Estimate char
+    this.caretChar = Math.round((x - (bx+this.offsets[i][0])) / (-this.offsets[i][0]*2) * this.lines[i].length);
+    resetCaret();
+    draw();
 };
 
 /* Drawing */
@@ -1109,8 +1125,10 @@ function onmousedown(mouse) {
             // move Node or Link/StartLink/SelfLink
             selectedObject = moused.object;
             movingObject = true;
-            if(moused.object.setMouseStart)
+            if (moused.object.setMouseStart)
                 moused.object.setMouseStart(mouse.x, mouse.y);
+            if ('text' in moused.object)
+                moused.object.text.moveCaret(mouse.x, mouse.y);
         }
         draw();
         resetCaret();

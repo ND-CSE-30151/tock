@@ -913,6 +913,15 @@ function draw() {
     }
 
     ctx.restore();
+
+    // On mobile, make keyboard appear or disappear
+    if (selectedObject != null && 'text' in selectedObject) {
+        canvas.setAttribute('contenteditable', true);
+        canvas.focus();
+    } else {
+        canvas.setAttribute('contenteditable', false);
+        canvas.blur();
+    }
 }
 
 function selectObject(x, y) {
@@ -959,7 +968,6 @@ function main(ei) {
     canvas.style.aspectRatio = canvasWidth + " / " + canvasHeight;
     canvas.style.cursor = "default"; // don't change cursor to 'text' on desktop
     canvas.setAttribute("tabindex", -1); // make canvas focusable
-    canvas.setAttribute("contenteditable", true); // make keyboard appear on tablets
     canvas_dpr = window.devicePixelRatio || 1;
     canvas.width = canvasWidth * canvas_dpr;
     canvas.height = canvasHeight * canvas_dpr;

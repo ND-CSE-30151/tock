@@ -834,6 +834,8 @@ function resetCaret() {
 
 var canvas;
 var canvas_dpr;
+var canvasWidth = 600;
+var canvasHeight = 600;
 var nodeHeight = 25;
 var nodeCornerRadius = 8;
 var nodeMargin = 6;
@@ -940,20 +942,26 @@ function main(ei) {
     var container = document.createElement("div");
     container.setAttribute("class", "editor");
     container.setAttribute("id", "editor"+ei);
-    container.style.width="650px";
+    container.style.maxWidth = canvasWidth + "px";
     container.style.position = "relative";
     container.style.left = 0;
     container.style.top = 0;
     element.append(container);
 
     canvas = document.createElement("canvas");
-    canvas.setAttribute("style", "outline: 1px solid gray; background: white; margin: 1px; width: 600px; height: 600px;");
+    canvas.style.border = "1px solid gray";
+    canvas.style.outline = "0px"; // no focus ring
+    canvas.style.background = "white";
+    canvas.style.boxSizing = "border-box";
+    canvas.style.width = "100%";
+    canvas.style.maxWidth = canvasWidth + "px";
+    canvas.style.aspectRatio = canvasWidth + " / " + canvasHeight;
+    canvas.style.cursor = "default"; // don't change cursor to 'text' on desktop
     canvas.setAttribute("tabindex", -1); // make canvas focusable
     canvas.setAttribute("contenteditable", true); // make keyboard appear on tablets
-    canvas.style.cursor = "default"; // don't change cursor to 'text' on desktop
     canvas_dpr = window.devicePixelRatio || 1;
-    canvas.width = 600 * canvas_dpr;
-    canvas.height = 600 * canvas_dpr;
+    canvas.width = canvasWidth * canvas_dpr;
+    canvas.height = canvasHeight * canvas_dpr;
     container.append(canvas);
 
     nodeHeight *= canvas_dpr;
@@ -1003,11 +1011,12 @@ function main(ei) {
     help_div.style.position = "absolute";
     help_div.style.left = 0;
     help_div.style.top = 0;
+    help_div.style.boxSizing = "border-box";
     help_div.style.width = "100%";
     help_div.style.height = "100%";
+    help_div.style.padding = "16px 32px";
     help_div.style.background = "#ffffffc0";
     help_div.style.color = "black";
-    help_div.style.padding = "10px";
     help_div.addEventListener("click", () => { help_div.style.display = "none"; });
     container.append(help_div);
     
@@ -1277,7 +1286,7 @@ function crossBrowserMousePos(e) {
     e = e || window.event;
     var x = e.pageX || e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
     var y = e.pageY || e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-    return { 'x': x * canvas_dpr, 'y': y * canvas_dpr };
+    return { 'x': x * canvasWidth * canvas_dpr / canvas.offsetWidth, 'y': y * canvasHeight * canvas_dpr / canvas.offsetHeight };
 }
 
 function crossBrowserRelativeMousePos(e) {

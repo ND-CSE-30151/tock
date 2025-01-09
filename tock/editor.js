@@ -215,10 +215,12 @@ Node.prototype.containsPoint = function(x, y) {
         else if (dy <= h-r) // left or right
             distance = Math.abs(dx - w);
         else {
-            distance = Math.abs(Math.sqrt((dx-w+r)*(dx-w+r) + (dy-h+r)*(dy-h+r)) - r);
+            distance = Math.abs(Math.sqrt((dx-w+r)**2 + (dy-h+r)**2) - r);
         }
         if (distance <= hitTargetPadding)
             return 'circle';
+        else if (boxContainsPoint(this.text.box, x, y))
+            return 'text';
         else
             return 'node';
     }
@@ -493,7 +495,7 @@ Link.prototype.draw = function(ctx) {
 
 Link.prototype.containsPoint = function(x, y) {
     if (boxContainsPoint(this.text.box, x, y))
-        return 'label';
+        return 'text';
     var stuff = this.getEndPointsAndCircle();
     if(stuff.hasCircle) {
         var dx = x - stuff.circleX;
@@ -627,7 +629,7 @@ SelfLink.prototype.draw = function(ctx) {
 
 SelfLink.prototype.containsPoint = function(x, y) {
     if (boxContainsPoint(this.text.box, x, y))
-        return 'label';
+        return 'text';
     else if (this.isPointInStroke(x, y)) {
         var stuff = this.getEndPoints();
         if (Math.sqrt((x-stuff.start.x)**2 + (y-stuff.start.y)**2) <= hitTargetPadding)
@@ -674,8 +676,11 @@ Text.prototype.newline = function() {
 };
 
 Text.prototype.insert = function(c) {
-    this.lines[this.caretLine] = this.lines[this.caretLine].slice(0, this.caretChar) + c + this.lines[this.caretLine].slice(this.caretChar);
-    this.caretChar++;
+    var l = this.caretLine;
+    var toEnd = this.lines[l].length - this.caretChar;
+    this.lines[l] = this.lines[l].slice(0, this.caretChar) + c + this.lines[l].slice(this.caretChar);
+    this.lines[l] = convertShortcuts(this.lines[l]);
+    this.caretChar = this.lines[l].length - toEnd;
 };
 
 Text.prototype.str = function() {
@@ -754,13 +759,13 @@ function drawText(ctx, text, x, y, fontSize, angleOrNull, isSelected, maxWidth) 
     const lineHeight = fontSize*1.2;
     var width = 0;
     var height = 0;
-    var offsets = []; // relative to top center of box
+    text.offsets = []; // relative to top center of box
     var caret;
     for (var i=0; i<text.lines.length; i++) {
         var line = text.lines[i];
         var dims = ctx.measureText(line);
         width = Math.max(width, dims.width);
-        offsets.push([-dims.width/2, height]);
+        text.offsets.push([-dims.width/2, height]);
         if (i === text.caretLine) {
             var cdims = ctx.measureText(line.slice(0, text.caretChar));
             caret = [-dims.width/2+cdims.width, height];
@@ -788,7 +793,7 @@ function drawText(ctx, text, x, y, fontSize, angleOrNull, isSelected, maxWidth) 
     y = Math.round(y);
     ctx.textBaseline = "top";
     for (var i=0; i<text.lines.length; i++)
-        ctx.fillText(text.lines[i], x+offsets[i][0], y+offsets[i][1]);
+        ctx.fillText(text.lines[i], x+text.offsets[i][0], y+text.offsets[i][1]);
     if (isSelected && caretVisible && canvasHasFocus() && document.hasFocus()) {
         ctx.lineWidth = lineWidth;
         ctx.beginPath();
@@ -1398,8 +1403,6 @@ function from_json(g) {
                 newlink.setAnchorPoint(tx(g.edges[u][v][i].anchorx),
                                        ty(g.edges[u][v][i].anchory));
                 newlink.text = new Text(g.edges[u][v][i].label);
-                console.log(g.edges[u][v]);
-                console.log(newlink);
                 // Coalesce parallel links
                 if (links.length > 0 && links[links.length-1].parallels(newlink))
                     links[links.length-1].text.lines.push(...newlink.text.lines);

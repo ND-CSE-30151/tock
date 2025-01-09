@@ -1037,6 +1037,7 @@ function main(ei) {
             selectedObject.isAcceptState = !selectedObject.isAcceptState;
             draw();
         }
+        return false;
     };
 
     canvas.onmousemove = function (e) {

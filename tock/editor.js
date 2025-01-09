@@ -1286,15 +1286,15 @@ function crossBrowserMousePos(e) {
     e = e || window.event;
     var x = e.pageX || e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
     var y = e.pageY || e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-    return { 'x': x * canvasWidth * canvas_dpr / canvas.offsetWidth, 'y': y * canvasHeight * canvas_dpr / canvas.offsetHeight };
+    return { 'x': x * canvas_dpr, 'y': y * canvas_dpr };
 }
 
 function crossBrowserRelativeMousePos(e) {
     var element = crossBrowserElementPos(e);
     var mouse = crossBrowserMousePos(e);
     return {
-        'x': mouse.x - element.x,
-        'y': mouse.y - element.y
+        'x': (mouse.x - element.x) * canvasWidth / canvas.offsetWidth,
+        'y': (mouse.y - element.y) * canvasHeight / canvas.offsetHeight
     };
 }
 

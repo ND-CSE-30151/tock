@@ -163,21 +163,34 @@ Node.prototype.setAnchorPoint = function(x, y) {
 
 Node.prototype.draw = function(ctx) {
     // draw the text
-    this.text.draw(ctx, this.x, this.y, nodeFontSize, null, selectedObject == this);
+    var text = this.text;
+    text.draw(ctx, this.x, this.y, nodeFontSize, null, selectedObject == this);
     this.width = Math.max(this.text.width + 2*nodeMargin, nodeHeight);
 
     // draw the border
-    ctx.beginPath();
-    ctx.roundRect(this.x-this.width/2,this.y-nodeHeight/2,
-                  this.width, nodeHeight, nodeCornerRadius);
-    ctx.stroke();
+    var border = new Path2D();
+    border.roundRect(this.x-this.width/2,this.y-nodeHeight/2,
+                     this.width, nodeHeight, nodeCornerRadius);
+    ctx.stroke(border);
     
     // draw a double border for an accept state
     if (this.isAcceptState) {
-        ctx.beginPath();
-        ctx.roundRect(this.x-this.width/2-acceptDistance,this.y-nodeHeight/2-acceptDistance,
-                      this.width+2*acceptDistance, nodeHeight+2*acceptDistance, nodeCornerRadius+acceptDistance);
-        ctx.stroke();
+        border = new Path2D();
+        border.roundRect(this.x-this.width/2-acceptDistance,this.y-nodeHeight/2-acceptDistance,
+                         this.width+2*acceptDistance, nodeHeight+2*acceptDistance,
+                         nodeCornerRadius+acceptDistance);
+        ctx.stroke(border);
+    }
+    
+    this.containsPoint = function (x, y) {
+        ctx.save();
+        ctx.lineWidth = hitTargetPadding*2;
+        var part = null;
+        if (ctx.isPointInStroke(border, x, y)) part = "circle";
+        else if (text.containsPoint(x, y)) part = "text";
+        else if (ctx.isPointInPath(border, x, y)) part = "node";
+        ctx.restore();
+        return part;
     }
 };
 
@@ -199,32 +212,6 @@ Node.prototype.closestPointOnCircle = function(x, y) {
                 return {'x': this.x+Math.sign(dx)*p.x, 'y': this.y+Math.sign(dy)*p.y};
     }
     return {'x': null, 'y': null};
-};
-
-Node.prototype.containsPoint = function(x, y) {
-    var w = this.width/2 + (this.isAcceptState ? acceptDistance : 0);
-    var h = nodeHeight/2 + (this.isAcceptState ? acceptDistance : 0);
-    var r = nodeCornerRadius + (this.isAcceptState ? acceptDistance : 0);
-    var dx = Math.abs(x-this.x);
-    var dy = Math.abs(y-this.y);
-    if (boxContainsPoint(this.x-w, this.y-h, this.x+w, this.y+h, x, y)) {
-        // calculate distance to border
-        var distance;
-        if (dx <= w-r) // top or bottom
-            distance = Math.abs(dy - h);
-        else if (dy <= h-r) // left or right
-            distance = Math.abs(dx - w);
-        else {
-            distance = Math.abs(Math.sqrt((dx-w+r)**2 + (dy-h+r)**2) - r);
-        }
-        if (distance <= hitTargetPadding)
-            return 'circle';
-        else if (this.text.containsPoint(x, y))
-            return 'text';
-        else
-            return 'node';
-    }
-    return null;
 };
 
 Node.prototype.intersectArc = function(ax, ay, ar, astart, aend, ccw) {
@@ -277,7 +264,7 @@ Node.prototype.intersectArc = function(ax, ay, ar, astart, aend, ccw) {
 }
 
 function PointNode(x, y) {
-    this.x = x; // center of node
+    this.x = x;
     this.y = y;
 }
 
@@ -313,38 +300,28 @@ StartLink.prototype.setAnchorPoint = function(x, y) {
     this.anchorAngle = snapAngle(Math.atan2(dy, dx), this.anchorRadius);
 };
 
-StartLink.prototype.getEndPoints = function() {
+StartLink.prototype.draw = function(ctx) {
     var startX = this.node.x + this.anchorRadius * Math.cos(this.anchorAngle);
     var startY = this.node.y + this.anchorRadius * Math.sin(this.anchorAngle);
     var end = this.node.closestPointOnCircle(startX, startY);
-    return {
-        'startX': startX,
-        'startY': startY,
-        'endX': end.x,
-        'endY': end.y,
-    };
-};
-
-StartLink.prototype.draw = function(ctx) {
-    var stuff = this.getEndPoints();
 
     // draw the line
-    ctx.beginPath();
-    ctx.moveTo(stuff.startX, stuff.startY);
-    ctx.lineTo(stuff.endX, stuff.endY);
-    ctx.stroke();
+    var edge = new Path2D();
+    edge.moveTo(startX, startY);
+    edge.lineTo(end.x, end.y);
+    ctx.stroke(edge);
+
+    this.containsPoint = function(x, y) {
+        ctx.save();
+        ctx.lineWidth = hitTargetPadding*2;
+        var part = null;
+        if (ctx.isPointInStroke(edge, x, y)) part = "edge";
+        ctx.restore();
+        return part;
+    }
 
     // draw the head of the arrow
-    drawArrow(ctx, stuff.endX, stuff.endY, this.anchorAngle+Math.PI, selectedObject == this);
-};
-
-StartLink.prototype.containsPoint = function(x, y) {
-    var stuff = this.getEndPoints();
-    var t = transformToLine(stuff.startX, stuff.startY, stuff.endX, stuff.endY, x, y);
-    if (t.cx >= 0 && t.cx <= t.bx && Math.abs(t.cy) <= hitTargetPadding)
-        return 'edge';
-    else
-        return null;
+    drawArrow(ctx, end.x, end.y, this.anchorAngle+Math.PI, selectedObject == this);
 };
 
 StartLink.prototype.parallels = function(other) { return false; }
@@ -459,22 +436,26 @@ Link.prototype.getEndPointsAndCircle = function() {
 
 Link.prototype.draw = function(ctx) {
     var stuff = this.getEndPointsAndCircle();
+    
     // draw arc
-    ctx.beginPath();
+    var edge = new Path2D();
     if (stuff.hasCircle) {
-        ctx.arc(stuff.circleX, stuff.circleY, stuff.circleRadius, stuff.startAngle, stuff.endAngle, stuff.isReversed);
+        edge.arc(stuff.circleX, stuff.circleY, stuff.circleRadius, stuff.startAngle, stuff.endAngle, stuff.isReversed);
     } else {
-        ctx.moveTo(stuff.startX, stuff.startY);
-        ctx.lineTo(stuff.endX, stuff.endY);
+        edge.moveTo(stuff.startX, stuff.startY);
+        edge.lineTo(stuff.endX, stuff.endY);
     }
-    ctx.stroke();
+    ctx.stroke(edge);
+    
     // draw the head of the arrow
     if(stuff.hasCircle) {
         drawArrow(ctx, stuff.endX, stuff.endY, stuff.endAngle + (stuff.isReversed?-1:1) * (Math.PI / 2), selectedObject == this);
     } else {
         drawArrow(ctx, stuff.endX, stuff.endY, Math.atan2(stuff.endY - stuff.startY, stuff.endX - stuff.startX), selectedObject == this);
     }
+    
     // draw the text
+    var text = this.text;
     if (stuff.hasCircle) {
         var startAngle = stuff.startAngle;
         var endAngle = stuff.endAngle;
@@ -484,63 +465,23 @@ Link.prototype.draw = function(ctx) {
         var textAngle = (startAngle + endAngle) / 2 + stuff.isReversed * Math.PI;
         var textX = stuff.circleX + stuff.circleRadius * Math.cos(textAngle);
         var textY = stuff.circleY + stuff.circleRadius * Math.sin(textAngle);
-        this.text.draw(ctx, textX, textY, linkFontSize, textAngle, selectedObject == this);
+        text.draw(ctx, textX, textY, linkFontSize, textAngle, selectedObject == this);
     } else {
         var textX = (stuff.startX + stuff.endX) / 2;
         var textY = (stuff.startY + stuff.endY) / 2;
         var textAngle = Math.atan2(stuff.endX - stuff.startX, stuff.startY - stuff.endY);
-        this.text.draw(ctx, textX, textY, linkFontSize, textAngle + this.lineAngleAdjust, selectedObject == this);
+        text.draw(ctx, textX, textY, linkFontSize, textAngle + this.lineAngleAdjust, selectedObject == this);
     }
-};
 
-Link.prototype.containsPoint = function(x, y) {
-    if (this.text.containsPoint(x, y))
-        return 'text';
-    var stuff = this.getEndPointsAndCircle();
-    if(stuff.hasCircle) {
-        var dx = x - stuff.circleX;
-        var dy = y - stuff.circleY;
-        var distance = Math.sqrt(dx*dx + dy*dy) - stuff.circleRadius;
-        if(Math.abs(distance) <= hitTargetPadding) {
-            var angle = Math.atan2(dy, dx);
-            var startAngle = stuff.startAngle;
-            var endAngle = stuff.endAngle;
-            if (stuff.isReversed) {
-                angle *= -1;
-                startAngle *= -1;
-                endAngle *= -1;
-            }
-            if(endAngle < startAngle) {
-                endAngle += Math.PI * 2;
-            }
-            if(angle < startAngle) {
-                angle += Math.PI * 2;
-            } else if(angle > endAngle) {
-                angle -= Math.PI * 2;
-            }
-            if (angle >= startAngle && angle <= endAngle) {
-                if (angle <= startAngle + hitTargetPadding / stuff.circleRadius)
-                    return 'source';
-                else if (angle >= endAngle - (hitTargetPadding+2*arrowSize) / stuff.circleRadius)
-                    return 'target';
-                else
-                    return 'edge';
-            } else
-                return null;
-        }
-    } else {
-        var t = transformToLine(stuff.startX, stuff.startY, stuff.endX, stuff.endY, x, y);
-        if (t.cx >= 0 && t.cx <= t.bx && Math.abs(t.cy) <= hitTargetPadding) {
-            if (t.cx <= hitTargetPadding)
-                return 'source';
-            else if (t.cx >= t.bx-(hitTargetPadding+2*arrowSize))
-                return 'target';
-            else
-                return 'edge';
-        } else
-            return null;
-    }
-    return null;
+    this.containsPoint = function(x, y) {
+        ctx.save();
+        ctx.lineWidth = hitTargetPadding*2;
+        var part = null;
+        if (ctx.isPointInStroke(edge, x, y)) part = "edge";
+        else if (text.containsPoint(x, y)) part = "text";
+        ctx.restore();
+        return part;
+    };
 };
 
 Link.prototype.parallels = function(other) {
@@ -569,7 +510,7 @@ SelfLink.prototype.setAnchorPoint = function(x, y) {
     this.anchorAngle = snapAngle(this.anchorAngle, Math.sqrt((x-this.node.x)**2+(y-this.node.y)**2));
 };
 
-SelfLink.prototype.getEndPoints = function() {
+SelfLink.prototype.draw = function(ctx) {
     const h = 2.5; // controls height of loop
     const w = 1; // controls width of loop
     var center = this.node.closestPointOnCircle(
@@ -580,65 +521,48 @@ SelfLink.prototype.getEndPoints = function() {
     var end = this.node.intersectArc(center.x, center.y, selfLinkRadius, this.anchorAngle+0.99*Math.PI, this.anchorAngle-0.99*Math.PI, true);
     var side = {'x': end.x-start.x, 'y': end.y-start.y};
     var normal = {'x': end.y-start.y, 'y': start.x-end.x};
-    var control1 = {
-        'x': start.x + h*normal.x - w*side.x,
-        'y': start.y + h*normal.y - w*side.y
-    };
-    var control2 = {
-        'x': end.x + h*normal.x + w*side.x,
-        'y': end.y + h*normal.y + w*side.y
-    };
-    return {
-        'start': start,
-        'control1': control1,
-        'control2': control2,
-        'end': end
-    };
-}
-
-SelfLink.prototype.draw = function(ctx) {
-    var stuff = this.getEndPoints();
+    var control1 = {'x': start.x + h*normal.x - w*side.x,
+                    'y': start.y + h*normal.y - w*side.y};
+    var control2 = {'x': end.x + h*normal.x + w*side.x,
+                    'y': end.y + h*normal.y + w*side.y};
+    
     // draw arc
-    var path = new Path2D();
-    path.moveTo(stuff.start.x, stuff.start.y);
-    path.bezierCurveTo(stuff.control1.x, stuff.control1.y, 
-                       stuff.control2.x, stuff.control2.y, 
-                       stuff.end.x, stuff.end.y);
-    ctx.stroke(path);
+    var edge = new Path2D();
+    edge.moveTo(start.x, start.y);
+    edge.bezierCurveTo(control1.x, control1.y,
+                       control2.x, control2.y,
+                       end.x, end.y);
+    ctx.stroke(edge);
 
-    this.isPointInStroke = function(x, y) {
+    // draw the text at midpoint of path
+    var text = this.text;
+    var textX = (start.x + control1.x*3 + control2.x*3 + end.x)/8;
+    var textY = (start.y + control1.y*3 + control2.y*3 + end.y)/8;
+    var textAngle = Math.atan2(end.y-start.y,
+                               end.x-start.x) - Math.PI/2;
+    text.draw(ctx, textX, textY, linkFontSize, textAngle, selectedObject == this);
+    
+    // draw the head of the arrow
+    var arrowAngle = Math.atan2(control2.y-end.y,
+                                control2.x-end.x) + Math.PI;
+    drawArrow(ctx, end.x, end.y, arrowAngle, selectedObject == this);
+    
+    this.containsPoint = function(x, y) {
         ctx.save();
         ctx.lineWidth = hitTargetPadding*2;
-        var ans = ctx.isPointInStroke(path, x, y);
+        var part = null;
+        if (ctx.isPointInStroke(edge, x, y)) {
+            if (Math.sqrt((x-start.x)**2 + (y-start.y)**2) <= hitTargetPadding)
+                part = 'source';
+            else if (Math.sqrt((x-end.x)**2 + (y-end.y)**2) <= hitTargetPadding+2*arrowSize)
+                part = 'target';
+            else
+                part = 'circle';
+        } else if (text.containsPoint(x, y))
+            part = 'text';
         ctx.restore();
-        return ans;
-    }
-    
-    // draw the text at midpoint of path
-    var textX = stuff.start.x/8 + stuff.control1.x*3/8 + stuff.control2.x*3/8 + stuff.end.x/8;
-    var textY = stuff.start.y/8 + stuff.control1.y*3/8 + stuff.control2.y*3/8 + stuff.end.y/8;
-    var textAngle = Math.atan2(stuff.end.y-stuff.start.y,
-                               stuff.end.x-stuff.start.x) - Math.PI/2;
-    var arrowAngle = Math.atan2(stuff.control2.y-stuff.end.y,
-                                stuff.control2.x-stuff.end.x) + Math.PI;
-    this.text.draw(ctx, textX, textY, linkFontSize, textAngle, selectedObject == this);
-    // draw the head of the arrow
-    drawArrow(ctx, stuff.end.x, stuff.end.y, arrowAngle, selectedObject == this);
-};
-
-SelfLink.prototype.containsPoint = function(x, y) {
-    if (this.isPointInStroke(x, y)) {
-        var stuff = this.getEndPoints();
-        if (Math.sqrt((x-stuff.start.x)**2 + (y-stuff.start.y)**2) <= hitTargetPadding)
-            return 'source';
-        else if (Math.sqrt((x-stuff.end.x)**2 + (y-stuff.end.y)**2) <= hitTargetPadding+2*arrowSize)
-            return 'target';
-        else
-            return 'circle';
-    } else if (this.text.containsPoint(x, y)) {
-        return 'text';
-    } else
-        return null;
+        return part;
+    };
 };
 
 SelfLink.prototype.parallels = function(other) {

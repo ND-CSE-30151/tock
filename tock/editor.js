@@ -39,9 +39,9 @@
 
 /* Geometry */
 
-function boxContainsPoint(box, x, y) {
-    return (x >= box[0]-hitTargetPadding && x <= box[2]+hitTargetPadding &&
-            y >= box[1]-hitTargetPadding && y <= box[3]+hitTargetPadding);
+function boxContainsPoint(x1, y1, x2, y2, x, y) {
+    return (x >= x1-hitTargetPadding && x <= x2+hitTargetPadding &&
+            y >= y1-hitTargetPadding && y <= y2+hitTargetPadding);
 }
 
 // Transform c such that a is at origin and b is on positive x-axis
@@ -163,8 +163,8 @@ Node.prototype.setAnchorPoint = function(x, y) {
 
 Node.prototype.draw = function(ctx) {
     // draw the text
-    drawText(ctx, this.text, this.x, this.y, nodeFontSize, null, selectedObject == this);
-    this.width = Math.max(this.text.box[2]-this.text.box[0] + 2*nodeMargin, nodeHeight);
+    this.text.draw(ctx, this.x, this.y, nodeFontSize, null, selectedObject == this);
+    this.width = Math.max(this.text.width + 2*nodeMargin, nodeHeight);
 
     // draw the border
     ctx.beginPath();
@@ -207,7 +207,7 @@ Node.prototype.containsPoint = function(x, y) {
     var r = nodeCornerRadius + (this.isAcceptState ? acceptDistance : 0);
     var dx = Math.abs(x-this.x);
     var dy = Math.abs(y-this.y);
-    if (boxContainsPoint([this.x-w,this.y-h,this.x+w,this.y+h], x, y)) {
+    if (boxContainsPoint(this.x-w, this.y-h, this.x+w, this.y+h, x, y)) {
         // calculate distance to border
         var distance;
         if (dx <= w-r) // top or bottom
@@ -219,7 +219,7 @@ Node.prototype.containsPoint = function(x, y) {
         }
         if (distance <= hitTargetPadding)
             return 'circle';
-        else if (boxContainsPoint(this.text.box, x, y))
+        else if (this.text.containsPoint(x, y))
             return 'text';
         else
             return 'node';
@@ -360,7 +360,7 @@ function Link(a, b) {
 }
 
 Link.prototype.setMouseStart = function(x, y) {
-    if (boxContainsPoint(this.text.box, x, y)) {
+    if (this.text.containsPoint(x, y)) {
         var anchor = this.getAnchorPoint();
         this.mouseOffsetX = anchor.x - x;
         this.mouseOffsetY = anchor.y - y;
@@ -484,17 +484,17 @@ Link.prototype.draw = function(ctx) {
         var textAngle = (startAngle + endAngle) / 2 + stuff.isReversed * Math.PI;
         var textX = stuff.circleX + stuff.circleRadius * Math.cos(textAngle);
         var textY = stuff.circleY + stuff.circleRadius * Math.sin(textAngle);
-        drawText(ctx, this.text, textX, textY, linkFontSize, textAngle, selectedObject == this);
+        this.text.draw(ctx, textX, textY, linkFontSize, textAngle, selectedObject == this);
     } else {
         var textX = (stuff.startX + stuff.endX) / 2;
         var textY = (stuff.startY + stuff.endY) / 2;
         var textAngle = Math.atan2(stuff.endX - stuff.startX, stuff.startY - stuff.endY);
-        drawText(ctx, this.text, textX, textY, linkFontSize, textAngle + this.lineAngleAdjust, selectedObject == this);
+        this.text.draw(ctx, textX, textY, linkFontSize, textAngle + this.lineAngleAdjust, selectedObject == this);
     }
 };
 
 Link.prototype.containsPoint = function(x, y) {
-    if (boxContainsPoint(this.text.box, x, y))
+    if (this.text.containsPoint(x, y))
         return 'text';
     var stuff = this.getEndPointsAndCircle();
     if(stuff.hasCircle) {
@@ -621,15 +621,13 @@ SelfLink.prototype.draw = function(ctx) {
                                stuff.end.x-stuff.start.x) - Math.PI/2;
     var arrowAngle = Math.atan2(stuff.control2.y-stuff.end.y,
                                 stuff.control2.x-stuff.end.x) + Math.PI;
-    drawText(ctx, this.text, textX, textY, linkFontSize, textAngle, selectedObject == this);
+    this.text.draw(ctx, textX, textY, linkFontSize, textAngle, selectedObject == this);
     // draw the head of the arrow
     drawArrow(ctx, stuff.end.x, stuff.end.y, arrowAngle, selectedObject == this);
 };
 
 SelfLink.prototype.containsPoint = function(x, y) {
-    if (boxContainsPoint(this.text.box, x, y))
-        return 'text';
-    else if (this.isPointInStroke(x, y)) {
+    if (this.isPointInStroke(x, y)) {
         var stuff = this.getEndPoints();
         if (Math.sqrt((x-stuff.start.x)**2 + (y-stuff.start.y)**2) <= hitTargetPadding)
             return 'source';
@@ -637,6 +635,8 @@ SelfLink.prototype.containsPoint = function(x, y) {
             return 'target';
         else
             return 'circle';
+    } else if (this.text.containsPoint(x, y)) {
+        return 'text';
     } else
         return null;
 };
@@ -650,10 +650,68 @@ SelfLink.prototype.parallels = function(other) {
 function Text(s) {
     if (s === undefined) s = '';
     this.lines = [s]; // array of strings
-    this.box = null;
+    this.x = this.y = null; // top center
+    this.width = this.height = null;
     this.caretLine = 0;
     this.caretChar = 0;
-    this.offsets = [];
+    this.lineWidths = [];
+    this.lineHeight = null;
+}
+
+Text.prototype.draw = function(ctx, x, y, fontSize, angleOrNull, isSelected) {
+    ctx.save();
+    ctx.font = fontSize+'px monospace';
+    this.lineHeight = fontSize*1.2;
+    var width = 0;
+    var height = 0;
+    this.lineWidths = [];
+    var caret;
+    for (var i=0; i<this.lines.length; i++) {
+        var line = this.lines[i];
+        var dims = ctx.measureText(line);
+        width = Math.max(width, dims.width);
+        this.lineWidths.push(dims.width);
+        if (i === this.caretLine) {
+            var cdims = ctx.measureText(line.slice(0, this.caretChar));
+            caret = [-dims.width/2+cdims.width, height];
+        }
+        height += this.lineHeight;
+    }
+
+    // center the text
+    y -= height/2;
+
+    // position the text intelligently if given an angle
+    if(angleOrNull != null) {
+        var cos = Math.cos(angleOrNull);
+        var sin = Math.sin(angleOrNull);
+        var cornerPointX = (width/2 + fontSize/4) * (cos > 0 ? 1 : -1);
+        var cornerPointY = (height/2 + fontSize/4) * (sin > 0 ? 1 : -1);
+        var slide = sin * Math.pow(Math.abs(sin), 10) * cornerPointX - cos * Math.pow(Math.abs(cos), 10) * cornerPointY;
+        x += cornerPointX - sin * slide;
+        y += cornerPointY + cos * slide;
+    }
+    // Now (x,y) is where the top center of the box should appear
+
+    // draw text and caret (round the coordinates so the caret falls on a pixel)
+    x = Math.round(x);
+    y = Math.round(y);
+    ctx.textBaseline = "top";
+    for (var i=0; i<this.lines.length; i++)
+        ctx.fillText(this.lines[i], x-this.lineWidths[i]/2, y+i*this.lineHeight);
+    if (isSelected && caretVisible && canvasHasFocus() && document.hasFocus()) {
+        ctx.lineWidth = lineWidth;
+        ctx.beginPath();
+        ctx.moveTo(x+caret[0], y+caret[1]);
+        ctx.lineTo(x+caret[0], y+caret[1]+this.lineHeight);
+        ctx.stroke();
+    }
+    ctx.restore();
+
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
 }
 
 Text.prototype.insert = function(c) {
@@ -727,20 +785,23 @@ Text.prototype.handleKey = function(key) {
 };
 
 Text.prototype.moveCaret = function(x, y) {
-    // Top center of box
-    var bx = (this.box[0] + this.box[2])/2;
-    var by = this.box[1];
     // Find line
-    var i;
-    for (i=0; i<this.offsets.length; i++)
-        if (by+this.offsets[i][1] > y) break;
-    if (i>0) i--;
-    this.caretLine = i;
+    var l = Math.floor((y-this.y)/this.lineHeight);
+    l = Math.max(0, Math.min(this.lines.length, l));
+    this.caretLine = l;
     // Estimate char
-    this.caretChar = Math.round((x - (bx+this.offsets[i][0])) / (-this.offsets[i][0]*2) * this.lines[i].length);
+    var c = Math.round((x - (this.x-this.lineWidths[l]/2)) / this.lineWidths[l] * this.lines[l].length);
+    c = Math.max(0, Math.min(this.lines[l].length, c));
+    this.caretChar = c;
     resetCaret();
     draw();
 };
+
+Text.prototype.containsPoint = function(x, y) {
+    return boxContainsPoint(this.x-this.width/2, this.y,
+                            this.x+this.width/2, this.y+this.height,
+                            x, y);
+}
 
 /* Drawing */
 
@@ -765,59 +826,6 @@ function convertShortcuts(s) {
     for (var a in mappings)
         s = s.replaceAll(a, mappings[a]);
     return s;
-}
-
-function drawText(ctx, text, x, y, fontSize, angleOrNull, isSelected) {
-    ctx.save();
-    ctx.font = fontSize+'px monospace';
-    const lineHeight = fontSize*1.2;
-    var width = 0;
-    var height = 0;
-    text.offsets = []; // relative to top center of box
-    var caret;
-    for (var i=0; i<text.lines.length; i++) {
-        var line = text.lines[i];
-        var dims = ctx.measureText(line);
-        width = Math.max(width, dims.width);
-        text.offsets.push([-dims.width/2, height]);
-        if (i === text.caretLine) {
-            var cdims = ctx.measureText(line.slice(0, text.caretChar));
-            caret = [-dims.width/2+cdims.width, height];
-        }
-        height += lineHeight;
-    }
-
-    // center the text
-    y -= height/2;
-
-    // position the text intelligently if given an angle
-    if(angleOrNull != null) {
-        var cos = Math.cos(angleOrNull);
-        var sin = Math.sin(angleOrNull);
-        var cornerPointX = (width/2 + fontSize/4) * (cos > 0 ? 1 : -1);
-        var cornerPointY = (height/2 + fontSize/4) * (sin > 0 ? 1 : -1);
-        var slide = sin * Math.pow(Math.abs(sin), 10) * cornerPointX - cos * Math.pow(Math.abs(cos), 10) * cornerPointY;
-        x += cornerPointX - sin * slide;
-        y += cornerPointY + cos * slide;
-    }
-    // Now (x,y) is where the top center of the box should appear
-
-    // draw text and caret (round the coordinates so the caret falls on a pixel)
-    x = Math.round(x);
-    y = Math.round(y);
-    ctx.textBaseline = "top";
-    for (var i=0; i<text.lines.length; i++)
-        ctx.fillText(text.lines[i], x+text.offsets[i][0], y+text.offsets[i][1]);
-    if (isSelected && caretVisible && canvasHasFocus() && document.hasFocus()) {
-        ctx.lineWidth = lineWidth;
-        ctx.beginPath();
-        ctx.moveTo(x+caret[0], y+caret[1]);
-        ctx.lineTo(x+caret[0], y+caret[1]+lineHeight);
-        ctx.stroke();
-    }
-    ctx.restore();
-
-    text.box = [x-width/2, y, x+width/2, y+height];
 }
 
 // The insertion point for text labels

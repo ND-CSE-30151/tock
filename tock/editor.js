@@ -100,7 +100,7 @@ function intersectCircleLine(ax, ay, ar, la, lb, lc) {
     lc -= la*ax + lb*ay;
 
     // Normalize so (la, lb) is a unit vector and lc is distance to origin
-    h = Math.sqrt(la**2 + lb**2);
+    h = Math.hypot(la, lb);
     la /= h; lb /= h; lc /= h;
 
     if (Math.abs(lc) > ar)
@@ -108,14 +108,14 @@ function intersectCircleLine(ax, ay, ar, la, lb, lc) {
     else if (Math.abs(lc) === ar)
         return [{'x': ax + la*lc, 'y': ay + lb*lc}];
     else {
-        d = Math.sqrt(ar**2-lc*lc);
+        d = Math.sqrt(ar**2-lc**2);
         return [{'x': ax + la*lc - lb*d, 'y': ay + lb*lc + la*d},
                 {'x': ax + la*lc + lb*d, 'y': ay + lb*lc - la*d}];
     }
 }
 
 function intersectCircles(x1, y1, r1, x2, y2, r2) {
-    var d = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+    var d = Math.hypot(x2-x1, y2-y1);
     var xu = (x2-x1)/d; // unit vector from (x1,y1) to (x2,y2)
     var yu = (y2-y1)/d;
     if (d > r1+r2 || d < Math.abs(r1-r2))
@@ -295,7 +295,7 @@ StartLink.prototype.setAnchorPoint = function(x, y) {
     var dx = x - this.node.x;
     var dy = y - this.node.y;
     var p = this.node.closestPointOnCircle(x, y);
-    this.anchorRadius = Math.sqrt((p.x-this.node.x)**2 + (p.y-this.node.y)**2)+startLength;
+    this.anchorRadius = Math.hypot(p.x-this.node.x, p.y-this.node.y)+startLength;
     this.anchorAngle = snapAngle(Math.atan2(dy, dx), this.anchorRadius);
 };
 
@@ -376,7 +376,7 @@ Link.prototype.setAnchorPoint = function(x, y) {
         var r = circle.radius * -Math.sign(t.cy);
         var midX = (this.nodeA.x + this.nodeB.x)/2 - circle.x;
         var midY = (this.nodeA.y + this.nodeB.y)/2 - circle.y;
-        var c = Math.sqrt(midX*midX + midY*midY); // distance from center to midpoint
+        var c = Math.hypot(midX, midY); // distance from center to midpoint
         t = transformToLine(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, circle.x, circle.y);
         c *= -Math.sign(t.cy);
         this.perpendicularPart = r + c;
@@ -432,7 +432,7 @@ Link.prototype.draw = function (ctx) {
         edge.arc(circle.x, circle.y, circle.radius, startAngle, endAngle, isReversed);
         
         textAngle = (startAngle+endAngle)/2 + (isReversed ? Math.PI : 0);
-        arrowAngle = endAngle + (isReversed ? -Math.PI/2 : Math.PI/2);
+        arrowAngle = endAngle + (isReversed ? -1:+1) * (Math.PI/2-arrowAngleAdjust);
     }
 
     // draw the edge
@@ -479,18 +479,16 @@ SelfLink.prototype.setMouseStart = function(x, y) {
 
 SelfLink.prototype.setAnchorPoint = function(x, y) {
     this.anchorAngle = Math.atan2(y - this.node.y, x - this.node.x) + this.mouseOffsetAngle;
-    this.anchorAngle = snapAngle(this.anchorAngle, Math.sqrt((x-this.node.x)**2+(y-this.node.y)**2));
+    this.anchorAngle = snapAngle(this.anchorAngle, Math.hypot(x-this.node.x, y-this.node.y));
 };
 
 SelfLink.prototype.draw = function(ctx) {
     const h = 2.5; // controls height of loop
     const w = 1; // controls width of loop
-    var center = this.node.closestPointOnCircle(
+    var end = this.node.closestPointOnCircle(
         this.node.x + Math.cos(this.anchorAngle), 
         this.node.y + Math.sin(this.anchorAngle));
-    // the start and end are a little to the left and right of center
-    var start = this.node.intersectArc(center.x, center.y, selfLinkRadius, this.anchorAngle-0.99*Math.PI, this.anchorAngle+0.99*Math.PI);
-    var end = this.node.intersectArc(center.x, center.y, selfLinkRadius, this.anchorAngle+0.99*Math.PI, this.anchorAngle-0.99*Math.PI, true);
+    var start = this.node.intersectArc(end.x, end.y, selfLinkRadius, this.anchorAngle-0.99*Math.PI, this.anchorAngle+0.99*Math.PI);
     var side = {'x': end.x-start.x, 'y': end.y-start.y};
     var normal = {'x': end.y-start.y, 'y': start.x-end.x};
     var control1 = {'x': start.x + h*normal.x - w*side.x,
@@ -516,7 +514,7 @@ SelfLink.prototype.draw = function(ctx) {
     
     // draw the head of the arrow
     var arrowAngle = Math.atan2(control2.y-end.y,
-                                control2.x-end.x) + Math.PI;
+                                control2.x-end.x) + Math.PI - arrowAngleAdjust;
     drawArrow(ctx, end.x, end.y, arrowAngle, selectedObject == this);
     
     this.containsPoint = function(x, y) {
@@ -524,9 +522,9 @@ SelfLink.prototype.draw = function(ctx) {
         ctx.lineWidth = hitTargetPadding*2;
         var part = null;
         if (ctx.isPointInStroke(edge, x, y)) {
-            if (Math.sqrt((x-start.x)**2 + (y-start.y)**2) <= hitTargetPadding)
+            if (Math.hypot(x-start.x, y-start.y) <= hitTargetPadding)
                 part = 'source';
-            else if (Math.sqrt((x-end.x)**2 + (y-end.y)**2) <= hitTargetPadding+2*arrowSize)
+            else if (Math.hypot(x-end.x, y-end.y) <= hitTargetPadding+2*arrowSize)
                 part = 'target';
             else
                 part = 'circle';
@@ -743,8 +741,9 @@ var nodeCornerRadius = 8;
 var nodeMargin = 6;
 var acceptDistance = 6;
 var startLength = 40;
-var selfLinkRadius = 8;
+var selfLinkRadius = 15;
 var arrowSize = 3.5;
+var arrowAngleAdjust = 0.08;
 var lineWidth = 1.5;
 var nodeFontSize = 10 / 72 * 96; // 10pt
 var linkFontSize = 9 / 72 * 96; // 9pt

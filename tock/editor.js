@@ -1,7 +1,8 @@
 /*
- Finite State Machine Designer (http://madebyevan.com/fsm/)
- License: MIT License (see below)
-
+ This code is a heavily modified version of Finite State Machine
+ Designer (http://madebyevan.com/fsm/), made available under the
+ MIT License (see below).
+  
  Copyright (c) 2010 Evan Wallace
 
  Permission is hereby granted, free of charge, to any person
@@ -33,8 +34,6 @@
      appears, which makes the output too high, so a vertical scrollbar
      appears too.
      
-   - If two nodes have the same position and are connected by a curved
-     edge, the edge disappears.
 */
 
 /* Geometry */
@@ -330,8 +329,8 @@ function Link(a, b) {
     this.nodeA = a; // source node
     this.nodeB = b; // target node
     this.text = new Text();
-    this.lineAngleAdjust = 0; // value to add to textAngle when link is straight line
-    this.perpendicularPart = 0; // pixels from line between nodeA and nodeB; positive is clockwise
+    this.perpendicularPart = 0; // pixels from line between nodeA and nodeB; positive is clockwise (like TikZ "bend left") and negative is ccw (like "bend right")
+    this.lineAngleAdjust = 0; // when link is straight line, 0 means label is on right side and π means left side
     this.mouseOffsetX = 0;
     this.mouseOffsetY = 0;
 }
@@ -350,7 +349,7 @@ Link.prototype.setMouseStart = function(x, y) {
 Link.prototype.getAnchorPoint = function() {
     var dx = this.nodeB.x - this.nodeA.x;
     var dy = this.nodeB.y - this.nodeA.y;
-    var scale = Math.sqrt(dx * dx + dy * dy);
+    var scale = Math.hypot(dx, dy);
     return {
         'x': this.nodeA.x + dx / 2 + dy * this.perpendicularPart / scale,
         'y': this.nodeA.y + dy / 2 - dx * this.perpendicularPart / scale
@@ -364,11 +363,14 @@ Link.prototype.setAnchorPoint = function(x, y) {
     const big = 1e6;
     if (circle.radius >= big) {
         var t = transformToLine(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, x, y);
-        if (t.cx >= 0 && t.cx <= t.bx)
+        if (t.cx >= 0 && t.cx <= t.bx) {
+            // (x,y) is between the endpoints
+            this.lineAngleAdjust = (t.cy < 0) * Math.PI;
             this.perpendicularPart = 0;
-        else
+        } else {
+            // (x,y) is outside the endpoints
             this.perpendicularPart = t.cy < 0 ? big : -big;
-        this.lineAngleAdjust = (t.cy < 0) * Math.PI;
+        }
     } else {
         var t = transformToLine(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, x, y);
         var r = circle.radius * -Math.sign(t.cy);
@@ -386,92 +388,62 @@ Link.prototype.setAnchorPoint = function(x, y) {
     }
 };
 
-Link.prototype.getEndPointsAndCircle = function() {
-    if (this.perpendicularPart == 0) {
-        var midX = (this.nodeA.x + this.nodeB.x) / 2;
-        var midY = (this.nodeA.y + this.nodeB.y) / 2;
-        var start = this.nodeA.closestPointOnCircle(midX, midY);
-        var end = this.nodeB.closestPointOnCircle(midX, midY);
-        return {
-            'hasCircle': false,
-            'startX': start.x,
-            'startY': start.y,
-            'endX': end.x,
-            'endY': end.y,
-        };
-    }
-    var anchor = this.getAnchorPoint();
-
-    // Compute arc from center of nodeA through anchor to center of nodeB
-    var circle = circleFromThreePoints(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, anchor.x, anchor.y);
-
-    var isReversed = (this.perpendicularPart < 0);
-    var dir = isReversed ? -1 : +1;
-    var startAngle = Math.atan2(this.nodeA.y-circle.y, this.nodeA.x-circle.x);
-    var endAngle = Math.atan2(this.nodeB.y-circle.y, this.nodeB.x-circle.x);
-    var p = this.nodeA.intersectArc(circle.x, circle.y, circle.radius, startAngle, endAngle, isReversed);
-    if (p !== null) startAngle = Math.atan2(p.y-circle.y, p.x-circle.x);
-    var p = this.nodeB.intersectArc(circle.x, circle.y, circle.radius, endAngle, startAngle, !isReversed);
-    if (p !== null) endAngle = Math.atan2(p.y-circle.y, p.x-circle.x);
-
-    var startX = circle.x + circle.radius * Math.cos(startAngle);
-    var startY = circle.y + circle.radius * Math.sin(startAngle);
-    var endX = circle.x + circle.radius * Math.cos(endAngle);
-    var endY = circle.y + circle.radius * Math.sin(endAngle);
-    
-    return {
-        'hasCircle': true,
-        'startX': startX,
-        'startY': startY,
-        'endX': endX,
-        'endY': endY,
-        'startAngle': startAngle,
-        'endAngle': endAngle,
-        'circleX': circle.x, // center of arc
-        'circleY': circle.y,
-        'circleRadius': circle.radius,
-        'isReversed': isReversed, // true = counterclockwise, false = clockwise
-    };
-};
-
-Link.prototype.draw = function(ctx) {
-    var stuff = this.getEndPointsAndCircle();
-    
-    // draw arc
+Link.prototype.draw = function (ctx) {
+    var anchor = this.getAnchorPoint(); // where the text goes
     var edge = new Path2D();
-    if (stuff.hasCircle) {
-        edge.arc(stuff.circleX, stuff.circleY, stuff.circleRadius, stuff.startAngle, stuff.endAngle, stuff.isReversed);
-    } else {
-        edge.moveTo(stuff.startX, stuff.startY);
-        edge.lineTo(stuff.endX, stuff.endY);
+    var start, end; // endpoints
+    var textAngle; // what direction relative to anchor the text goes
+    var arrowAngle; // what direction the arrow points
+
+    // Trivial edge: just don't draw anything?
+    if (Math.hypot(this.nodeB.x-this.nodeA.x, this.nodeB.y-this.nodeA.y) < 1) {
+        this.containsPoint = ((x, y) => null);
+        return;
     }
+
+    // Straight edge
+    else if (this.perpendicularPart == 0) {
+        start = this.nodeA.closestPointOnCircle(anchor.x, anchor.y);
+        end = this.nodeB.closestPointOnCircle(anchor.x, anchor.y);
+        var angle = Math.atan2(this.nodeB.y - this.nodeA.y, this.nodeB.x - this.nodeA.x);
+        edge.moveTo(start.x, start.y);
+        edge.lineTo(end.x ,end.y);
+        textAngle = principalAngle(angle + Math.PI/2 + this.lineAngleAdjust);
+        arrowAngle = angle;
+    }
+    
+    // Curved edge
+    else {
+        // Compute arc from center of nodeA through anchor to center of nodeB
+        var circle = circleFromThreePoints(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y, anchor.x, anchor.y);
+        var startAngle = Math.atan2(this.nodeA.y-circle.y, this.nodeA.x-circle.x);
+        var endAngle = Math.atan2(this.nodeB.y-circle.y, this.nodeB.x-circle.x);
+        var isReversed = (this.perpendicularPart < 0);
+    
+        // Clip arc to borders of nodes
+        start = this.nodeA.intersectArc(circle.x, circle.y, circle.radius, startAngle, endAngle, isReversed);
+        console.assert(start !== null);
+        startAngle = Math.atan2(start.y-circle.y, start.x-circle.x);
+        end = this.nodeB.intersectArc(circle.x, circle.y, circle.radius, endAngle, startAngle, !isReversed);
+        console.assert(end !== null);
+        endAngle = Math.atan2(end.y-circle.y, end.x-circle.x);
+        if (endAngle < startAngle) endAngle += 2*Math.PI;
+    
+        edge.arc(circle.x, circle.y, circle.radius, startAngle, endAngle, isReversed);
+        
+        textAngle = (startAngle+endAngle)/2 + (isReversed ? Math.PI : 0);
+        arrowAngle = endAngle + (isReversed ? -Math.PI/2 : Math.PI/2);
+    }
+
+    // draw the edge
     ctx.stroke(edge);
     
     // draw the head of the arrow
-    if(stuff.hasCircle) {
-        drawArrow(ctx, stuff.endX, stuff.endY, stuff.endAngle + (stuff.isReversed?-1:1) * (Math.PI / 2), selectedObject == this);
-    } else {
-        drawArrow(ctx, stuff.endX, stuff.endY, Math.atan2(stuff.endY - stuff.startY, stuff.endX - stuff.startX), selectedObject == this);
-    }
+    drawArrow(ctx, end.x, end.y, arrowAngle, selectedObject == this);
     
     // draw the text
     var text = this.text;
-    if (stuff.hasCircle) {
-        var startAngle = stuff.startAngle;
-        var endAngle = stuff.endAngle;
-        if(endAngle < startAngle) {
-            endAngle += Math.PI * 2;
-        }
-        var textAngle = (startAngle + endAngle) / 2 + stuff.isReversed * Math.PI;
-        var textX = stuff.circleX + stuff.circleRadius * Math.cos(textAngle);
-        var textY = stuff.circleY + stuff.circleRadius * Math.sin(textAngle);
-        text.draw(ctx, textX, textY, linkFontSize, textAngle, selectedObject == this);
-    } else {
-        var textX = (stuff.startX + stuff.endX) / 2;
-        var textY = (stuff.startY + stuff.endY) / 2;
-        var textAngle = Math.atan2(stuff.endX - stuff.startX, stuff.startY - stuff.endY);
-        text.draw(ctx, textX, textY, linkFontSize, textAngle + this.lineAngleAdjust, selectedObject == this);
-    }
+    text.draw(ctx, anchor.x, anchor.y, linkFontSize, textAngle, selectedObject == this);
 
     this.containsPoint = function(x, y) {
         ctx.save();

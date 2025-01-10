@@ -228,7 +228,7 @@ Node.prototype.containsPoint = function(x, y) {
 };
 
 Node.prototype.intersectArc = function(ax, ay, ar, astart, aend, ccw) {
-    /* Find first intersection of arc with border. Assume that starting poitn is inside the node.
+    /* Find first intersection of arc with border. Assume that starting point is inside the node.
        ax, ay, ar: center and radius of circle
        astart, aend: angles (radians)
        ccw: counterclockwise */
@@ -570,15 +570,14 @@ SelfLink.prototype.setAnchorPoint = function(x, y) {
 };
 
 SelfLink.prototype.getEndPoints = function() {
-    const r = 15; // half the distance between endpoints. Should be less than nodeHeight.
     const h = 2.5; // controls height of loop
     const w = 1; // controls width of loop
     var center = this.node.closestPointOnCircle(
         this.node.x + Math.cos(this.anchorAngle), 
         this.node.y + Math.sin(this.anchorAngle));
     // the start and end are a little to the left and right of center
-    var start = this.node.intersectArc(center.x, center.y, r, this.anchorAngle-0.99*Math.PI, this.anchorAngle+0.99*Math.PI);
-    var end = this.node.intersectArc(center.x, center.y, r, this.anchorAngle+0.99*Math.PI, this.anchorAngle-0.99*Math.PI, true);
+    var start = this.node.intersectArc(center.x, center.y, selfLinkRadius, this.anchorAngle-0.99*Math.PI, this.anchorAngle+0.99*Math.PI);
+    var end = this.node.intersectArc(center.x, center.y, selfLinkRadius, this.anchorAngle+0.99*Math.PI, this.anchorAngle-0.99*Math.PI, true);
     var side = {'x': end.x-start.x, 'y': end.y-start.y};
     var normal = {'x': end.y-start.y, 'y': start.x-end.x};
     var control1 = {
@@ -657,25 +656,6 @@ function Text(s) {
     this.offsets = [];
 }
 
-Text.prototype.backspace = function() {
-    if (this.caretChar > 0) {
-        this.lines[this.caretLine] = this.lines[this.caretLine].slice(0, this.caretChar-1) + this.lines[this.caretLine].slice(this.caretChar);
-        this.caretChar--;
-    } else if (this.caretLine > 0) {
-        this.lines.splice(this.caretLine-1, 2, this.lines[this.caretLine-1] + this.lines[this.caretLine]);
-        this.caretLine--;
-        this.caretChar = this.lines[this.caretLine].length;
-    }
-};
-
-Text.prototype.newline = function() {
-    this.lines.splice(this.caretLine, 1,
-                      this.lines[this.caretLine].slice(0, this.caretChar),
-                      this.lines[this.caretLine].slice(this.caretChar));
-    this.caretLine++;
-    this.caretChar = 0;
-};
-
 Text.prototype.insert = function(c) {
     var l = this.caretLine;
     var toEnd = this.lines[l].length - this.caretChar;
@@ -698,6 +678,23 @@ Text.prototype.empty = function() {
 
 Text.prototype.handleKey = function(key) {
     switch (key) {
+    case 8: // backspace
+        if (this.caretChar > 0) {
+            this.lines[this.caretLine] = this.lines[this.caretLine].slice(0, this.caretChar-1) + this.lines[this.caretLine].slice(this.caretChar);
+            this.caretChar--;
+        } else if (this.caretLine > 0) {
+            this.lines.splice(this.caretLine-1, 2, this.lines[this.caretLine-1] + this.lines[this.caretLine]);
+            this.caretLine--;
+            this.caretChar = this.lines[this.caretLine].length;
+        }
+        break;
+    case 13: // return
+        this.lines.splice(this.caretLine, 1,
+                          this.lines[this.caretLine].slice(0, this.caretChar),
+                          this.lines[this.caretLine].slice(this.caretChar));
+        this.caretLine++;
+        this.caretChar = 0;
+        break;
     case 37: // left
         if (this.caretChar > 0)
             this.caretChar--;
@@ -770,7 +767,7 @@ function convertShortcuts(s) {
     return s;
 }
 
-function drawText(ctx, text, x, y, fontSize, angleOrNull, isSelected, maxWidth) {
+function drawText(ctx, text, x, y, fontSize, angleOrNull, isSelected) {
     ctx.save();
     ctx.font = fontSize+'px monospace';
     const lineHeight = fontSize*1.2;
@@ -842,7 +839,7 @@ var nodeCornerRadius = 8;
 var nodeMargin = 6;
 var acceptDistance = 6;
 var startLength = 40;
-var selfLinkRadius = 10;
+var selfLinkRadius = 8;
 var arrowSize = 3.5;
 var lineWidth = 1.5;
 var nodeFontSize = 10 / 72 * 96; // 10pt
@@ -990,22 +987,22 @@ function main(ei) {
 
     function make_button(label, callback) {
         var button = document.createElement("button");
-        button.setAttribute("style", "margin: 5px;");
+        button.style.margin = "5px";
         button.textContent = label;
         button.onclick = callback;
         controls.append(button);
-    }
+    };
     make_button('Load', () => { load(ei); });
     make_button('Save', () => { save(ei); });
     make_button('Help', () => { help_div.style.display = "block"; });
 
     message_bar = document.createElement("span");
-    message_bar.setAttribute("style", "margin: 5px;");
+    message_bar.style.margin = "5px";
     controls.append(message_bar);
 
     help_div = document.createElement("div");
     help_div.innerHTML = "<table>" +
-        "<p>This is the visual editor for <code>tock.Machine</code>, based on FSM Designer by Evan Wallace.</p>" +
+        "<p>Based on FSM Designer by Evan Wallace.</p>" +
         "<tr><td>New state</td><td>double-click canvas</td></tr>" +
         "<tr><td>Start state</td><td>drag from canvas to state</td></tr>" +
         "<tr><td>Accept state</td><td>double-click state</td></tr>" +
@@ -1014,8 +1011,7 @@ function main(ei) {
         "<tr><td>New transition</td><td>drag from boundary of state to another state</td></tr>" +
         "<tr><td>Rename transition</td><td>click on transition</td></tr>" +
         "<tr><td>Delete transition</td><td>drag transition outside canvas</td></tr>" +
-        "</table>" +
-        "<p>Click anywhere on this help message to dismiss it.</p>";
+        "</table>";
     help_div.style.display = "none";
     help_div.style.position = "absolute";
     help_div.style.left = 0;
@@ -1023,7 +1019,7 @@ function main(ei) {
     help_div.style.boxSizing = "border-box";
     help_div.style.width = "100%";
     help_div.style.height = "100%";
-    help_div.style.padding = "16px 32px";
+    help_div.style.padding = "0px 16px";
     help_div.style.background = "#ffffffc0";
     help_div.style.color = "black";
     help_div.addEventListener("click", () => { help_div.style.display = "none"; });
@@ -1111,7 +1107,6 @@ function main(ei) {
 
 /* Events */
 
-var shift = false; // whether the Shift key is down
 var control = false; // whether the Ctrl key is down
 
 function onmousedown(mouse) {
@@ -1150,7 +1145,6 @@ function onmousedown(mouse) {
                 moused.object.text.moveCaret(mouse.x, mouse.y);
         }
         draw();
-        resetCaret();
     } else {
         // begin creating StartLink
         movingObject = false;
@@ -1162,16 +1156,7 @@ function onmousedown(mouse) {
         // don't draw() right away, because there might be a double-click
     }
 
-    // In Colab the canvas is inside an iframe, which seems to cause trouble
-    // with this first case.
-    if(0 && canvasHasFocus()) {
-        // disable drag-and-drop only if the canvas is already focused
-        return false;
-    } else {
-        // otherwise, let the browser switch the focus away from wherever it was
-        resetCaret();
-        return true;
-    }
+    resetCaret();
 };
 
 function onmousemove(mouse) {
@@ -1195,7 +1180,7 @@ function onmousemove(mouse) {
             if (originalLink instanceof Link && currentLink instanceof Link)
                 currentLink.perpendicularPart = originalLink.perpendicularPart;
             if (originalLink instanceof SelfLink && currentLink instanceof Link)
-                currentLink.perpendicularPart = selfLinkRadius;
+                currentLink.perpendicularPart = selfLinkRadius*2;
         }
         draw();
     }
@@ -1208,61 +1193,40 @@ function onmousemove(mouse) {
 
 document.onkeydown = function(e) {
     var key = crossBrowserKey(e);
-
-    if (key == 16) {
-        shift = true;
-    } else if (key == 17) {
+    if (key == 17) {
         control = true;
-    } else if (!canvasHasFocus()) {
-        // don't read keystrokes when other things have focus
-        return true;
-    } else if (key >= 37 && key <= 40 && selectedObject != null && 'text' in selectedObject) { // arrows
-        selectedObject.text.handleKey(key);
-        resetCaret();
-        draw();
-        return false;
-    } else if (key == 32) { // on tablets, space pages down
-        if (selectedObject != null && 'text' in selectedObject) {
+    } else if (canvasHasFocus() &&
+        selectedObject != null && 'text' in selectedObject) {
+        if (key == 32) {
+            // on tablets, this can't be handled by onkeypress
             selectedObject.text.insert(String.fromCharCode(key));
-            resetCaret();
-            draw();
+            e.preventDefault();
+        } else if (key < 48) {
+            selectedObject.text.handleKey(key);
+            e.preventDefault();
         }
-        return false;
-    } else if (key == 13 && (selectedObject instanceof Link || selectedObject instanceof SelfLink)) {
-        selectedObject.text.newline();
         resetCaret();
         draw();
-        return false;
-    } else if (key == 8) {
-        if (selectedObject != null && 'text' in selectedObject) {
-            selectedObject.text.backspace();
-            resetCaret();
-            draw();
-        }
-        return false;
-    }};
+    }
+}
 
 document.onkeyup = function(e) {
     var key = crossBrowserKey(e);
-
-    if (key == 16) {
-        shift = false;
-    } else if (key == 17) {
+    if (key == 17) {
         control = false;
     }
 };
 
 document.onkeypress = function(e) {
-    // don't read keystrokes when other things have focus
     var key = crossBrowserKey(e);
-    if (!canvasHasFocus()) {
-        // don't read keystrokes when other things have focus
-        return true;
-    } else if (key >= 0x20 && key <= 0x7E && !e.metaKey && !e.altKey && !e.ctrlKey && selectedObject != null && 'text' in selectedObject) {
+    if (canvasHasFocus() &&
+        key >= 0x20 && key <= 0x7E &&
+        !e.metaKey && !e.altKey && !e.ctrlKey &&
+        selectedObject != null && 'text' in selectedObject) {
         selectedObject.text.insert(String.fromCharCode(key));
         resetCaret();
         draw();
-        return false;
+        e.preventDefault();
     }
 };
 

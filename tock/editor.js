@@ -33,7 +33,7 @@
    - In Jupyter, if the canvas is too wide, a horizontal scrollbar
      appears, which makes the output too high, so a vertical scrollbar
      appears too.
-     
+
 */
 
 /* Geometry */
@@ -715,6 +715,16 @@ function canvasHasFocus() {
     return document.activeElement == canvas;
 }
 
+function canvasFocus() {
+    if (selectedObject != null && 'text' in selectedObject) {
+        // on mobile, if there is text, make the soft keyboard appear
+        canvas.contentEditable = true;
+        canvas.focus();
+    } else {
+        canvas.contentEditable = false;
+    }
+}
+
 var mappings = {'&': 'ε', '|-': '⊢', '-|': '⊣', '_': '␣', '->': '→'};
 function convertShortcuts(s) {
     for (var a in mappings)
@@ -813,15 +823,6 @@ function draw() {
     }
 
     ctx.restore();
-
-    // On mobile, make keyboard appear or disappear
-    if (selectedObject != null && 'text' in selectedObject) {
-        canvas.setAttribute('contenteditable', true);
-        canvas.focus();
-    } else {
-        canvas.setAttribute('contenteditable', false);
-        canvas.blur();
-    }
 }
 
 function selectObject(x, y) {
@@ -932,12 +933,14 @@ function main(ei) {
 
     canvas.ontouchstart = function(e) {
         onmousedown(crossBrowserRelativeMousePos(e));
+        canvasFocus();
     };
     canvas.onmousedown = function (e) {
-        if (e.button !== 0 || control) return true;
-        onmousedown(crossBrowserRelativeMousePos(e));
+        if (e.button === 0 && !control)
+            onmousedown(crossBrowserRelativeMousePos(e));
+        canvasFocus();
     };
-        
+
     canvas.ondblclick = function(e) {
         var mouse = crossBrowserRelativeMousePos(e);
         selectedObject = selectObject(mouse.x, mouse.y).object;
@@ -947,6 +950,7 @@ function main(ei) {
             selectedObject = new Node(mouse.x, mouse.y);
             if(typeof Jupyter !== 'undefined') Jupyter.keyboard_manager.disable();
             nodes.push(selectedObject);
+            canvasFocus();
             resetCaret();
             draw();
         } else if(selectedObject instanceof Node) {
@@ -954,7 +958,7 @@ function main(ei) {
             selectedObject.isAcceptState = !selectedObject.isAcceptState;
             draw();
         }
-        return false;
+        e.preventDefault();
     };
 
     canvas.onmousemove = function (e) {
@@ -962,12 +966,11 @@ function main(ei) {
     };
     canvas.addEventListener('touchmove', function(e) {
         onmousemove(crossBrowserRelativeMousePos(e));
-        e.preventDefault();
+        e.preventDefault(); // don't scroll
     }, { passive: false });
 
     document.onmouseup = document.ontouchend = function(e) {
         movingObject = false;
-
         if(currentLink != null) {
             if (currentLink instanceof StartLink ||
                 currentLink instanceof SelfLink ||
@@ -980,6 +983,7 @@ function main(ei) {
                     }
                 }
                 links.push(currentLink);
+                canvasFocus();
                 resetCaret();
             }
             currentLink = null;
@@ -1058,7 +1062,6 @@ function onmousedown(mouse) {
         currentLinkPart = 'target';
         // don't draw() right away, because there might be a double-click
     }
-
     resetCaret();
 };
 

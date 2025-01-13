@@ -90,44 +90,6 @@ function circleFromThreePoints(x1, y1, x2, y2, x3, y3) {
     return circle;
 }
 
-function intersectCircleLine(ax, ay, ar, la, lb, lc) {
-    /* Intersection of
-       - The circle centered at (ax, ay) with radius ar
-       - The line la * x + lb * y = lc
-    */
-
-    // Recenter at (ax, ay)
-    lc -= la*ax + lb*ay;
-
-    // Normalize so (la, lb) is a unit vector and lc is distance to origin
-    h = Math.hypot(la, lb);
-    la /= h; lb /= h; lc /= h;
-
-    if (Math.abs(lc) > ar)
-        return [];
-    else if (Math.abs(lc) === ar)
-        return [{'x': ax + la*lc, 'y': ay + lb*lc}];
-    else {
-        d = Math.sqrt(ar**2-lc**2);
-        return [{'x': ax + la*lc - lb*d, 'y': ay + lb*lc + la*d},
-                {'x': ax + la*lc + lb*d, 'y': ay + lb*lc - la*d}];
-    }
-}
-
-function intersectCircles(x1, y1, r1, x2, y2, r2) {
-    var d = Math.hypot(x2-x1, y2-y1);
-    var xu = (x2-x1)/d; // unit vector from (x1,y1) to (x2,y2)
-    var yu = (y2-y1)/d;
-    if (d > r1+r2 || d < Math.abs(r1-r2))
-        return [];
-    var d1 = (d**2 + r1**2 - r2**2)/(2*d); // from (x1,y1) to midpoint
-    if (d == r1+r2)
-        return [{'x': x1+d1*xu, 'y': y1+d1*yu}];
-    var a = Math.sqrt(r1**2-d1**2); // from midpoint to intersections
-    return [{'x': x1+d1*xu - a*yu, 'y': y1+d1*yu + a*xu},
-            {'x': x1+d1*xu + a*yu, 'y': y1+d1*yu - a*xu}];
-}
-
 /* Model */
 
 function Node(x, y) {
@@ -181,9 +143,12 @@ Node.prototype.draw = function(ctx) {
         ctx.stroke(border);
     }
     
-    this.containsPoint = function (x, y) {
+    this.containsPoint = function (x, y, lineWidth) {
         ctx.save();
-        ctx.lineWidth = hitTargetPadding*2;
+        if (lineWidth !== undefined)
+            ctx.lineWidth = lineWidth;
+        else
+            ctx.lineWidth = hitTargetPadding*2;
         var part = null;
         if (ctx.isPointInStroke(border, x, y)) part = "circle";
         else if (text.containsPoint(x, y)) part = "text";
@@ -193,73 +158,45 @@ Node.prototype.draw = function(ctx) {
     }
 };
 
-Node.prototype.closestPointOnCircle = function(x, y) {
-    var w = this.width/2 + (this.isAcceptState ? acceptDistance : 0);
-    var h = nodeHeight/2 + (this.isAcceptState ? acceptDistance : 0);
-    var r = nodeCornerRadius + (this.isAcceptState ? acceptDistance : 0);
-    var dx = x-this.x;
-    var dy = y-this.y;
-    var m = Math.abs(dy/dx);
-    if (m >= h/(w-r)) // top or bottom
-        return {'x': this.x+h/Math.abs(dy)*dx, 'y': this.y+Math.sign(dy)*h};
-    else if (m <= (h-r)/w) // left or right
-        return {'x': this.x+Math.sign(dx)*w, 'y': this.y+w/Math.abs(dx)*dy};
-    else { // corner
-        var ps = intersectCircleLine(w-r, h-r, r, Math.abs(dy), -Math.abs(dx), 0);
-        for (p of ps)
-            if (p.x >= 0 && p.y >= 0)
-                return {'x': this.x+Math.sign(dx)*p.x, 'y': this.y+Math.sign(dy)*p.y};
-    }
-    return {'x': null, 'y': null};
-};
-
-Node.prototype.intersectArc = function(ax, ay, ar, astart, aend, ccw) {
-    /* Find first intersection of arc with border. Assume that starting point is inside the node.
-       ax, ay, ar: center and radius of circle
-       astart, aend: angles (radians)
-       ccw: counterclockwise */
-
-    var w = this.width/2 + (this.isAcceptState ? acceptDistance : 0);
-    var h = nodeHeight/2 + (this.isAcceptState ? acceptDistance : 0);
-    var r = nodeCornerRadius + (this.isAcceptState ? acceptDistance : 0);
-
-    // Intersect circle with border of node
-    
-    // Sides
-    var ps = [];
-    ps.push(...intersectCircleLine(ax, ay, ar, 0, 1, this.y-h));
-    ps.push(...intersectCircleLine(ax, ay, ar, 0, 1, this.y+h));
-    ps.push(...intersectCircleLine(ax, ay, ar, 1, 0, this.x-w));
-    ps.push(...intersectCircleLine(ax, ay, ar, 1, 0, this.x+w));
-
-    // Corners
-    for (p of intersectCircles(ax, ay, ar, this.x+w-r, this.y+h-r, r))
-        if (p.x >= this.x+w-r && p.y >= this.y+h-r) ps.push(p);
-    for (p of intersectCircles(ax, ay, ar, this.x+w-r, this.y-h+r, r))
-        if (p.x >= this.x+w-r && p.y <= this.y-h+r) ps.push(p);
-    for (p of intersectCircles(ax, ay, ar, this.x-w+r, this.y+h-r, r))
-        if (p.x <= this.x-w+r && p.y >= this.y+h-r) ps.push(p);
-    for (p of intersectCircles(ax, ay, ar, this.x-w+r, this.y-h+r, r))
-        if (p.x <= this.x-w+r && p.y <= this.y-h+r) ps.push(p);
-
-    var dir = ccw ? -1 : +1;
-    astart = principalAngle(dir*astart);
-    aend = principalAngle(dir*aend);
-    if (aend < astart) aend += 2*Math.PI;
-
-    var firstAngle = null;
-    var firstPoint = null;
-    for (var p of ps) {
-        var angle = principalAngle(dir * Math.atan2(p.y-ay, p.x-ax));
-        if (angle < astart) angle += 2*Math.PI;
-        if (astart <= angle && angle <= aend) {
-            if (firstAngle === null || angle < firstAngle) {
-                firstAngle = angle;
-                firstPoint = p;
-            }
+function parametricLineSegment(ax, ay, bx, by) {
+    return function(t) {
+        return {
+            'x': ax + (bx-ax)*t,
+            'y': ay + (by-ay)*t
         }
     }
-    return firstPoint;
+}
+
+function parametricArc(ax, ay, ar, astart, aend, ccw) {
+    if (!ccw && aend < astart) aend += 2*Math.PI;
+    else if (ccw && astart < aend) astart += 2*Math.PI;
+    return function (t) {
+        return {
+            'x': ax + ar*Math.cos(astart + (aend-astart)*t),
+            'y': ay + ar*Math.sin(astart + (aend-astart)*t)
+        }
+    };
+}
+
+Node.prototype.intersect = function (f) {
+    /* Assumes f(0) is inside node and f(1) is outside node. */
+    const tol = 0.5;
+    var node = this;
+    function r(t1, ft1, t2, ft2) {
+        var t = (t1+t2)/2;
+        if (Math.hypot(ft2.x-ft1.x, ft2.y-ft1.y) <= tol)
+            return t;
+        var ft = f(t);
+        if (node.containsPoint(ft.x, ft.y, 0))
+            return r(t, ft, t2, ft2);
+        else
+            return r(t1, ft1, t, ft);
+    }
+    var f0 = f(0);
+    var f1 = f(1);
+    console.assert(node.containsPoint(f0.x, f0.y, 0), f0.x, f0.y);
+    console.assert(!node.containsPoint(f1.x, f1.y, 0), f1.x, f1.y);
+    return f(r(0, f0, 1, f1));
 }
 
 function PointNode(x, y) {
@@ -275,18 +212,17 @@ PointNode.prototype.setAnchorPoint = function(x, y) {
 PointNode.prototype.draw = function(ctx) {
 }
 
-PointNode.prototype.closestPointOnCircle = function(x, y) {
-    return { 'x': this.x, 'y': this.y };
+PointNode.prototype.containsPoint = function(x, y) {
+    return false;
 }
 
-PointNode.prototype.intersectArc = function(ax, ay, ar, astart, aend, ccw) {
+PointNode.prototype.intersect = function (f) {
     return { 'x': this.x, 'y': this.y };
 }
 
 function StartLink(start, node) {
     this.node = node;
     this.anchorAngle = 0;
-    this.anchorRadius = 0;
     if (start)
         this.setAnchorPoint(start.x, start.y);
 }
@@ -294,15 +230,17 @@ function StartLink(start, node) {
 StartLink.prototype.setAnchorPoint = function(x, y) {
     var dx = x - this.node.x;
     var dy = y - this.node.y;
-    var p = this.node.closestPointOnCircle(x, y);
-    this.anchorRadius = Math.hypot(p.x-this.node.x, p.y-this.node.y)+startLength;
     this.anchorAngle = snapAngle(Math.atan2(dy, dx), this.anchorRadius);
 };
 
 StartLink.prototype.draw = function(ctx) {
-    var startX = this.node.x + this.anchorRadius * Math.cos(this.anchorAngle);
-    var startY = this.node.y + this.anchorRadius * Math.sin(this.anchorAngle);
-    var end = this.node.closestPointOnCircle(startX, startY);
+    var p = this.node.intersect(parametricLineSegment(this.node.x, this.node.y,
+                                                      this.node.width*Math.cos(this.anchorAngle),
+                                                      this.node.width*Math.sin(this.anchorAngle)));
+    var r = Math.hypot(p.x-this.node.x, p.y-this.node.y)+startLength;
+    var startX = this.node.x + r * Math.cos(this.anchorAngle);
+    var startY = this.node.y + r * Math.sin(this.anchorAngle);
+    var end = this.node.intersect(parametricLineSegment(this.node.x, this.node.y, startX, startY));
 
     // draw the line
     var edge = new Path2D();
@@ -396,15 +334,18 @@ Link.prototype.draw = function (ctx) {
     var arrowAngle; // what direction the arrow points
 
     // Trivial edge: just don't draw anything?
-    if (Math.hypot(this.nodeB.x-this.nodeA.x, this.nodeB.y-this.nodeA.y) < 1) {
+    if (!this.nodeA.containsPoint || !this.nodeB.containsPoint ||
+        this.nodeA.containsPoint(this.nodeB.x, this.nodeB.y, 0) ||
+        this.nodeB.containsPoint(this.nodeA.x, this.nodeA.y, 0)) {
         this.containsPoint = ((x, y) => null);
         return;
     }
 
     // Straight edge
     else if (this.perpendicularPart == 0) {
-        start = this.nodeA.closestPointOnCircle(anchor.x, anchor.y);
-        end = this.nodeB.closestPointOnCircle(anchor.x, anchor.y);
+        var line = parametricLineSegment(this.nodeA.x, this.nodeA.y, this.nodeB.x, this.nodeB.y);
+        start = this.nodeA.intersect(line);
+        end = this.nodeB.intersect((t) => line(1-t));
         var angle = Math.atan2(this.nodeB.y - this.nodeA.y, this.nodeB.x - this.nodeA.x);
         edge.moveTo(start.x, start.y);
         edge.lineTo(end.x ,end.y);
@@ -421,17 +362,18 @@ Link.prototype.draw = function (ctx) {
         var isReversed = (this.perpendicularPart < 0);
     
         // Clip arc to borders of nodes
-        start = this.nodeA.intersectArc(circle.x, circle.y, circle.radius, startAngle, endAngle, isReversed);
-        console.assert(start !== null);
+        arc = parametricArc(circle.x, circle.y, circle.radius, startAngle, endAngle, isReversed);
+        start = this.nodeA.intersect(arc);
         startAngle = Math.atan2(start.y-circle.y, start.x-circle.x);
-        end = this.nodeB.intersectArc(circle.x, circle.y, circle.radius, endAngle, startAngle, !isReversed);
-        console.assert(end !== null);
+        end = this.nodeB.intersect((t) => arc(1-t));
         endAngle = Math.atan2(end.y-circle.y, end.x-circle.x);
-        if (endAngle < startAngle) endAngle += 2*Math.PI;
-    
+        
         edge.arc(circle.x, circle.y, circle.radius, startAngle, endAngle, isReversed);
         
-        textAngle = (startAngle+endAngle)/2 + (isReversed ? Math.PI : 0);
+        if (!isReversed && endAngle < startAngle) endAngle += 2*Math.PI;
+        else if (isReversed && startAngle < endAngle) startAngle += 2*Math.PI;
+        textAngle = (startAngle+endAngle)/2;
+        
         arrowAngle = endAngle + (isReversed ? -1:+1) * (Math.PI/2-arrowAngleAdjust);
     }
 
@@ -492,10 +434,13 @@ SelfLink.prototype.setAnchorPoint = function(x, y) {
 SelfLink.prototype.draw = function(ctx) {
     const h = 2.5; // controls height of loop
     const w = 1; // controls width of loop
-    var end = this.node.closestPointOnCircle(
-        this.node.x + Math.cos(this.anchorAngle), 
-        this.node.y + Math.sin(this.anchorAngle));
-    var start = this.node.intersectArc(end.x, end.y, selfLinkRadius, this.anchorAngle-0.99*Math.PI, this.anchorAngle+0.99*Math.PI);
+
+    var end = this.node.intersect(parametricLineSegment(
+        this.node.x, this.node.y,
+        this.node.x + this.node.width*Math.cos(this.anchorAngle), 
+        this.node.y + this.node.width*Math.sin(this.anchorAngle)));
+    var start = this.node.intersect(parametricArc(end.x, end.y, selfLinkRadius, this.anchorAngle-Math.PI, this.anchorAngle));
+    
     var side = {'x': end.x-start.x, 'y': end.y-start.y};
     var normal = {'x': end.y-start.y, 'y': start.x-end.x};
     var control1 = {'x': start.x + h*normal.x - w*side.x,

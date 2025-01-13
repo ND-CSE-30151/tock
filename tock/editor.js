@@ -180,7 +180,7 @@ function parametricArc(ax, ay, ar, astart, aend, ccw) {
 
 Node.prototype.intersect = function (f) {
     /* Assumes f(0) is inside node and f(1) is outside node. */
-    const tol = 0.5;
+    const tol = 0.1;
     var node = this;
     function r(t1, ft1, t2, ft2) {
         var t = (t1+t2)/2;
@@ -194,10 +194,39 @@ Node.prototype.intersect = function (f) {
     }
     var f0 = f(0);
     var f1 = f(1);
-    console.assert(node.containsPoint(f0.x, f0.y, 0), f0.x, f0.y);
-    console.assert(!node.containsPoint(f1.x, f1.y, 0), f1.x, f1.y);
-    return f(r(0, f0, 1, f1));
+    if (!node.containsPoint(f0.x, f0.y, 0))
+        console.error("Node.intersect(): path must start inside node", f0);
+    if (node.containsPoint(f1.x, f1.y, 0))
+        console.error("Node.intersect(): path must end outside node", f1);
+    var t = r(0, f0, 1, f1);
+    var ans = f(t);
+    ans.t = t;
+    return ans;
 }
+
+Node.prototype.closestPointOnCircle = function (x, y) {
+    var w = this.width/2;
+    var h = nodeHeight/2;
+    var r = nodeCornerRadius;
+    var dx = x-this.x;
+    var dy = y-this.y;
+    if (Math.abs(dx) <= w-r)
+        return {'x': x, 'y': this.y + Math.sign(dy)*h,
+                'nx': 0, 'ny': Math.sign(dy)};
+    else if (Math.abs(dy) <= h-r)
+        return {'x': this.x + Math.sign(dx)*w, 'y': y,
+                'nx': Math.sign(dx), 'ny': 0};
+    else {
+        var cx = Math.abs(dx)-w+r;
+        var cy = Math.abs(dy)-h+r;
+        var ch = Math.hypot(cx, cy);
+        cx /= ch; cy /= ch;
+        return {'x': this.x + Math.sign(dx) * (w-r + r * cx),
+                'y': this.y + Math.sign(dy) * (h-r + r * cy),
+                'nx': Math.sign(dx) * cx,
+                'ny': Math.sign(dy) * cy};
+    }
+};
 
 function PointNode(x, y) {
     this.x = x;
@@ -218,6 +247,13 @@ PointNode.prototype.containsPoint = function(x, y) {
 
 PointNode.prototype.intersect = function (f) {
     return { 'x': this.x, 'y': this.y };
+}
+
+PointNode.prototype.closestPointOnCircle = function (x, y) {
+    var dx = x-this.x;
+    var dy = y-this.y
+    return { 'x': this.x, 'y': this.y,
+             'nx': dx/Math.hypot(dx, dy), 'ny': dy/Math.hypot(dx, dy) };
 }
 
 function StartLink(start, node) {
@@ -413,70 +449,72 @@ Link.prototype.parallels = function(other) {
 
 function SelfLink(node, mouse) {
     this.node = node; // source/target node
-    this.anchorAngle = 0; // angle of midpoint (radius is fixed)
-    this.mouseOffsetAngle = 0; // when link is being moved, angle of anchor relative to angle of mouse
+    this.anchorX = 0
+    this.anchorY = 0;
     this.text = new Text();
-
-    if(mouse) {
-        this.setAnchorPoint(mouse.x, mouse.y);
-    }
+    if (mouse) this.setAnchorPoint(mouse.x, mouse.y);
 }
 
 SelfLink.prototype.setMouseStart = function(x, y) {
-    this.mouseOffsetAngle = this.anchorAngle - Math.atan2(y - this.node.y, x - this.node.x);
 };
 
 SelfLink.prototype.setAnchorPoint = function(x, y) {
-    this.anchorAngle = Math.atan2(y - this.node.y, x - this.node.x) + this.mouseOffsetAngle;
-    this.anchorAngle = snapAngle(this.anchorAngle, Math.hypot(x-this.node.x, y-this.node.y));
+    var p = this.node.closestPointOnCircle(x, y);
+    this.anchorX = p.x-this.node.x;
+    this.anchorY = p.y-this.node.y;
 };
 
 SelfLink.prototype.draw = function(ctx) {
-    const h = 2.5; // controls height of loop
-    const w = 1; // controls width of loop
+    const d = -nodeHeight/2; // how deep the endpoints are buried inside node
+    const h = selfLinkRadius*1.5; // controls height of loop
+    const w = selfLinkRadius; // controls width of loop
 
-    var end = this.node.intersect(parametricLineSegment(
-        this.node.x, this.node.y,
-        this.node.x + this.node.width*Math.cos(this.anchorAngle), 
-        this.node.y + this.node.width*Math.sin(this.anchorAngle)));
-    var start = this.node.intersect(parametricArc(end.x, end.y, selfLinkRadius, this.anchorAngle-Math.PI, this.anchorAngle));
+    var center = this.node.closestPointOnCircle(this.node.x+this.anchorX,
+                                                this.node.y+this.anchorY);
+    var curve = new Bezier(center.x + d*center.nx,
+                           center.y + d*center.ny,
+                           center.x + h*center.nx + w*center.ny,
+                           center.y + h*center.ny - w*center.nx,
+                           center.x + h*center.nx - w*center.ny,
+                           center.y + h*center.ny + w*center.nx,
+                           center.x + d*center.nx,
+                           center.y + d*center.ny);
     
-    var side = {'x': end.x-start.x, 'y': end.y-start.y};
-    var normal = {'x': end.y-start.y, 'y': start.x-end.x};
-    var control1 = {'x': start.x + h*normal.x - w*side.x,
-                    'y': start.y + h*normal.y - w*side.y};
-    var control2 = {'x': end.x + h*normal.x + w*side.x,
-                    'y': end.y + h*normal.y + w*side.y};
+    // clip curve
+    var tstart = this.node.intersect((t) => curve.eval(t/2)).t/2;
+    curve = curve.clip(tstart);
+    var tend = this.node.intersect((t) => curve.eval(1-t/2)).t/2;
+    curve = curve.reverse().clip(tend).reverse();
     
-    // draw arc
+    // draw curve
     var edge = new Path2D();
-    edge.moveTo(start.x, start.y);
-    edge.bezierCurveTo(control1.x, control1.y,
-                       control2.x, control2.y,
-                       end.x, end.y);
+    edge.moveTo(curve.x0, curve.y0);
+    edge.bezierCurveTo(curve.x1, curve.y1,
+                       curve.x2, curve.y2,
+                       curve.x3, curve.y3);
     ctx.stroke(edge);
 
     // draw the text at midpoint of path
     var text = this.text;
-    var textX = (start.x + control1.x*3 + control2.x*3 + end.x)/8;
-    var textY = (start.y + control1.y*3 + control2.y*3 + end.y)/8;
-    var textAngle = Math.atan2(end.y-start.y,
-                               end.x-start.x) - Math.PI/2;
+    var textX = (curve.x0 + curve.x1*3 + curve.x2*3 + curve.x3)/8;
+    var textY = (curve.y0 + curve.y1*3 + curve.y2*3 + curve.y3)/8;
+    var textAngle = Math.atan2(curve.y2-curve.y1,
+                               curve.x2-curve.x1) - Math.PI/2;
     text.draw(ctx, textX, textY, linkFontSize, textAngle, selectedObject == this);
     
     // draw the head of the arrow
-    var arrowAngle = Math.atan2(control2.y-end.y,
-                                control2.x-end.x) + Math.PI - arrowAngleAdjust;
-    drawArrow(ctx, end.x, end.y, arrowAngle, selectedObject == this);
+    var arrowAngle = Math.atan2(curve.y2-curve.y3,
+                                curve.x2-curve.x3) + Math.PI - arrowAngleAdjust;
+    drawArrow(ctx, curve.x3, curve.y3, arrowAngle, selectedObject == this);
     
     this.containsPoint = function(x, y) {
         ctx.save();
         ctx.lineWidth = hitTargetPadding*2;
         var part = null;
         if (ctx.isPointInStroke(edge, x, y)) {
-            if (Math.hypot(x-start.x, y-start.y) <= hitTargetPadding)
+            if (Math.hypot(x-curve.x0, y-curve.y0) <= hitTargetPadding)
                 part = 'source';
-            else if (Math.hypot(x-end.x, y-end.y) <= hitTargetPadding+2*arrowSize)
+            else if (Math.hypot(x-curve.x3, y-curve.y3) <= hitTargetPadding+2*arrowSize)
                 part = 'target';
             else
                 part = 'edge';
@@ -490,7 +528,7 @@ SelfLink.prototype.draw = function(ctx) {
 SelfLink.prototype.parallels = function(other) {
     return (other instanceof SelfLink &&
             this.node === other.node &&
-            Math.abs(this.anchorAngle - other.anchorAngle) < 0.01);
+            Math.hypot(this.anchorX - other.anchorX, this.anchorY - other.anchorY) < 0.01);
 }
 
 function Text(s) {
@@ -533,7 +571,7 @@ Text.prototype.draw = function(ctx, x, y, fontSize, angleOrNull, isSelected) {
         var sin = Math.sin(angleOrNull);
         var cornerPointX = (width/2 + fontSize/4) * (cos > 0 ? 1 : -1);
         var cornerPointY = (height/2 + fontSize/4) * (sin > 0 ? 1 : -1);
-        var slide = sin * Math.pow(Math.abs(sin), 10) * cornerPointX - cos * Math.pow(Math.abs(cos), 10) * cornerPointY;
+        var slide = sin * Math.pow(Math.abs(sin), 40) * cornerPointX - cos * Math.pow(Math.abs(cos), 40) * cornerPointY;
         x += cornerPointX - sin * slide;
         y += cornerPointY + cos * slide;
     }
@@ -649,6 +687,46 @@ Text.prototype.containsPoint = function(x, y) {
                             x, y);
 }
 
+function Bezier(x0, y0, x1, y1, x2, y2, x3, y3) {
+    this.x0 = x0; this.y0 = y0;
+    this.x1 = x1; this.y1 = y1;
+    this.x2 = x2; this.y2 = y2;
+    this.x3 = x3; this.y3 = y3;
+}
+
+Bezier.prototype.reverse = function () {
+    return new Bezier(this.x3, this.y3, this.x2, this.y2, this.x1, this.y1, this.x0, this.y0);
+}
+
+Bezier.prototype.draw = function (ctx) {
+    ctx.beginPath();
+    ctx.moveTo(this.x0, this.y0);
+    ctx.bezierCurveTo(this.x1, this.y1, this.x2, this.y2,this.x3, this.y3);
+    ctx.stroke();
+}
+
+Bezier.prototype.eval = function (t) {
+    var b = this;
+    return {
+        'x': (1-t)**3*b.x0 + 3*(1-t)**2*t*b.x1 + 3*(1-t)*t**2*b.x2 + t**3*b.x3,
+        'y': (1-t)**3*b.y0 + 3*(1-t)**2*t*b.y1 + 3*(1-t)*t**2*b.y2 + t**3*b.y3
+    };
+};
+
+Bezier.prototype.clip = function (t) {
+    // Return new Bezier curve equivalent to this curve from t to 1.
+    var b = this;
+    return new Bezier (
+        (1-t)**3*b.x0 + 3*(1-t)**2*t*b.x1 + 3*(1-t)*t**2*b.x2 + t**3*b.x3,
+        (1-t)**3*b.y0 + 3*(1-t)**2*t*b.y1 + 3*(1-t)*t**2*b.y2 + t**3*b.y3,
+        (1-t)**2*b.x1+2*(1-t)*t*b.x2+t**2*b.x3,
+        (1-t)**2*b.y1+2*(1-t)*t*b.y2+t**2*b.y3,
+        (1-t)*b.x2+t*b.x3,
+        (1-t)*b.y2+t*b.y3,
+        b.x3, b.y3
+    );
+}
+
 /* Drawing */
 
 function drawArrow(ctx, x, y, angle, isSelected) {
@@ -703,7 +781,7 @@ var nodeCornerRadius = 8;
 var nodeMargin = 6;
 var acceptDistance = 6;
 var startLength = 40;
-var selfLinkRadius = 15;
+var selfLinkRadius = 30;
 var arrowSize = 3.5;
 var arrowAngleAdjust = 0.08;
 var lineWidth = 1.5;
@@ -1038,7 +1116,7 @@ function onmousemove(mouse) {
             if (originalLink instanceof Link && currentLink instanceof Link)
                 currentLink.perpendicularPart = originalLink.perpendicularPart;
             if (originalLink instanceof SelfLink && currentLink instanceof Link)
-                currentLink.perpendicularPart = selfLinkRadius*2;
+                currentLink.perpendicularPart = selfLinkRadius;
         }
         draw();
     }

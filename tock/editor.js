@@ -449,7 +449,14 @@ Link.prototype.draw = function (ctx) {
         ctx.save();
         ctx.lineWidth = hitTargetPadding*2;
         var part = null;
-        if (ctx.isPointInStroke(edge, x, y)) part = "edge";
+        if (ctx.isPointInStroke(edge, x, y)) {
+            if (Math.hypot(x-start.x, y-start.y) <= hitTargetPadding)
+                part = 'source';
+            else if (Math.hypot(x-end.x, y-end.y) <= hitTargetPadding+2*arrowSize)
+                part = 'target';
+            else
+                part = "edge";
+        }
         else if (text.containsPoint(x, y)) part = "text";
         ctx.restore();
         return part;
@@ -527,7 +534,7 @@ SelfLink.prototype.draw = function(ctx) {
             else if (Math.hypot(x-end.x, y-end.y) <= hitTargetPadding+2*arrowSize)
                 part = 'target';
             else
-                part = 'circle';
+                part = 'edge';
         } else if (text.containsPoint(x, y))
             part = 'text';
         ctx.restore();

@@ -674,8 +674,11 @@ Text.prototype.moveCaret = function(x, y) {
     l = Math.max(0, Math.min(this.lines.length, l));
     this.caretLine = l;
     // Estimate char
-    var c = Math.round((x - (this.x-this.lineWidths[l]/2)) / this.lineWidths[l] * this.lines[l].length);
-    c = Math.max(0, Math.min(this.lines[l].length, c));
+    var c = 0;
+    if (this.lines[l].length > 0) {
+        c = Math.round((x - (this.x-this.lineWidths[l]/2)) / this.lineWidths[l] * this.lines[l].length);
+        c = Math.max(0, Math.min(this.lines[l].length, c));
+    }
     this.caretChar = c;
     resetCaret();
     draw();

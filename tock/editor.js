@@ -1246,7 +1246,7 @@ function to_json() {
                 g.edges[u][v].push({ 'label': line });
             }
         } else if (links[i] instanceof SelfLink) {
-            var v = links[i].node.text;
+            var v = links[i].node.text.str();
             if (!(v in g.edges)) g.edges[v] = {};
             if (!(v in g.edges[v])) g.edges[v][v] = [];
             for (var line of links[i].text.lines) {

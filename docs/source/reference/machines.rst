@@ -5,18 +5,17 @@ Module tock.machines
 --------------------
 
 .. automodule:: tock.machines
-   :members: Path
 
    .. autoclass:: Machine
 
       **High-level interface**
 
-      .. autoinstanceattribute:: store_types
-         :annotation:
+      .. attribute:: store_types
+
+         A list of store types, one for each store.
       .. autoproperty:: num_stores
 
-      .. method:: add_transition(transition)
-      .. automethod:: add_transition(lhs, rhs)
+      .. automethod:: add_transition
       .. automethod:: add_transitions
       .. automethod:: get_transitions
       .. autoproperty:: states
@@ -29,12 +28,15 @@ Module tock.machines
                       
       **Low-level interface**
 
-      .. autoinstanceattribute:: transitions
-         :annotation:
-      .. autoinstanceattribute:: start_config
-         :annotation:
-      .. autoinstanceattribute:: accept_configs
-         :annotation:
+      .. attribute:: transitions
+
+         List of transitions.
+      .. attribute:: start_config
+
+         The start configuration.
+      .. attribute:: accept_configs
+
+         Set of accept configurations.
       
       **Tests for different types of automata**
 
@@ -43,33 +45,34 @@ Module tock.machines
       .. automethod:: is_turing
       .. automethod:: is_deterministic
 
-   .. class:: Store(values=(), position=0)
-   .. autoclass:: Store(store)
+   .. autoclass:: Store
 
       .. attribute:: values
 
          A sequence of Symbols
          
-      .. autoinstanceattribute:: position
-         :annotation:
+      .. attribute:: position
+
+         The head position, between -1 and ``len(values)``.
 
       .. automethod:: match
                       
-   .. class:: Configuration(stores)
-   .. autoclass:: Configuration(config)
+   .. autoclass:: Configuration
 
-      .. autoinstanceattribute:: stores
-         :annotation:
+      .. attribute:: stores
+
+         A tuple of Stores.
 
       .. automethod:: match
                       
-   .. class:: Transition(lhs, rhs)
-   .. autoclass:: Transition(transition)
+   .. autoclass:: Transition
 
-      .. autoinstanceattribute:: lhs
-         :annotation:
-      .. autoinstanceattribute:: rhs
-         :annotation:
+      .. attribute:: lhs
+
+         Left-hand side Configuration.
+      .. attribute:: rhs
+
+         Right-hand side Configuration.
 
       .. automethod:: match
       .. automethod:: apply

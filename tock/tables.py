@@ -6,17 +6,17 @@ from . import syntax
 __all__ = ['Table', 'from_table', 'read_csv', 'read_excel', 'to_table', 'write_csv']
 
 class Table:
-    """A simple class that just stores a list of lists of strings.
+    """A simple class that stores a list of lists of strings.
 
     Arguments:
         rows: list of lists of strings
-        num_header_rows (int): number of header rows
         num_header_cols (int): number of header columns
+        num_header_rows (int): number of header rows
     """
     def __init__(self, rows, num_header_cols=1, num_header_rows=1):
-        self.rows = rows                       #: The table contents
-        self.num_header_cols = num_header_cols #: Number of header rows
-        self.num_header_rows = num_header_rows #: Number of header columns
+        self.rows = rows                       #: The table contents.
+        self.num_header_cols = num_header_cols #: Number of header columns.
+        self.num_header_rows = num_header_rows #: Number of header rows.
     def __getitem__(self, i):
         return self.rows[i]
     def __len__(self):
@@ -44,7 +44,7 @@ def addr(i, j):
     return chr(ord('A')+j) + str(i+1)
 
 def from_table(table):
-    """Convert a `Table` to a `Machine`.
+    """Convert a ``Table`` to a ``Machine``.
 
     Example:
 
@@ -96,8 +96,7 @@ def from_table(table):
                     else:
                         c = tuple(syntax.str_to_config(cell))
                 except Exception as e:
-                    e.message = f"cell {addr(i,j)}: {e.message}"
-                    raise
+                    raise ValueError(f"cell {addr(i,j)}: {e}") from e
                 while j-1 >= len(lhs2):
                     lhs2.append(())
                 lhs2[j-1] += c
@@ -113,8 +112,7 @@ def from_table(table):
                     accept_states.add(q)
                 lhs1 = ([q],)
             except Exception as e:
-                e.message = f"cell {addr(i,0)}: {e.message}"
-                raise
+                raise ValueError(f"cell {addr(i,0)}: {e}") from e
 
             # Rest of row has right-hand sides
             if len(row[1:]) != len(lhs2):
@@ -124,8 +122,7 @@ def from_table(table):
                     for rhs in syntax.str_to_configs(cell):
                         transitions.append((lhs1+lhs2[j-1], rhs))
                 except Exception as e:
-                    e.message = f"cell {addr(i,j)}: {e.message}"
-                    raise
+                    raise ValueError(f"cell {addr(i,j)}: {e}") from e
         
     if start_state is None:
         raise ValueError("missing start state")
@@ -134,7 +131,7 @@ def from_table(table):
 
 def read_csv(filename):
     """Reads a CSV file containing a tabular description of a transition
-       function (see `from_table`).
+       function (see ``from_table``).
     """
 
     with open(filename) as file:
@@ -144,7 +141,7 @@ def read_csv(filename):
 
 def read_excel(filename, sheet=None):
     """Reads an Excel file containing a tabular description of a
-       transition function (see `from_table`).
+       transition function (see ``from_table``).
     """
 
     from openpyxl import load_workbook # type: ignore
@@ -152,12 +149,14 @@ def read_excel(filename, sheet=None):
     if sheet is None:
         ws = wb.active
     else:
-        ws = wb.get_sheet_by_name(sheet)
+        ws = wb[sheet]
+    if ws is None:
+        raise ValueError("worksheet not found")
     table = [[cell.value or "" for cell in row] for row in ws.rows]
     return from_table(table)
 
 def to_table(m):
-    """Converts a `Machine` to a `Table`."""
+    """Convert a ``Machine`` to a ``Table``."""
     rows = []
 
     states = set()
@@ -204,7 +203,7 @@ def to_table(m):
     return Table(rows, num_header_rows=num_header_rows)
 
 def write_csv(m, filename):
-    """Writes `Machine` `m` to file named by `filename`."""
+    """Write machine ``m`` to file ``filename``."""
     t = to_table(m)
     with open(filename, 'w') as file:
         writer = csv.writer(file)

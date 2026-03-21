@@ -14,13 +14,13 @@ except ImportError:
 __all__ = ['Graph', 'from_graph', 'write_dot', 'read_tgf', 'to_graph', 'apply_graph_to_machine', 'Editor']
 
 class Graph:
-    """A directed graph. Both nodes and edges can have a `dict` of attributes.
+    """A directed graph. Both nodes and edges can have a ``dict`` of attributes.
 
-    Nodes can be any object that implements `__hash__` and `__eq__`.
+    Nodes can be any object that implements ``__hash__`` and ``__eq__``.
 
-    If `g` is a `Graph` and `v` is a node, `v`'s attributes can be
-    accessed as `g.nodes[v]`. If `u` and `v` are nodes, edge (`u`,
-    `v`)'s attributes can be accessed as `g.edges[u][v]`.
+    If ``g`` is a ``Graph`` and ``v`` is a node, its attributes can be
+    accessed as ``g.nodes[v]``. If ``u`` and ``v`` are nodes, edge ``(u, v)``'s
+    attributes can be accessed as ``g.edges[u][v]``.
     """
     def __init__(self, attrs=None):
         self.nodes = {}
@@ -29,7 +29,7 @@ class Graph:
         self.attrs = attrs
 
     def add_node(self, v, attrs=None):
-        """Add node `v` to graph with attributes `attrs`."""
+        """Add node ``v`` to the graph with attributes ``attrs``."""
         if attrs is None: attrs = {}
         if v in self.nodes:
             self.nodes[v].update(attrs)
@@ -37,7 +37,7 @@ class Graph:
             self.nodes[v] = attrs
 
     def remove_node(self, v):
-        """Remove node `v`, as well as any edges incident to `v`."""
+        """Remove node ``v`` and any edges incident to it."""
         del self.nodes[v]
         del self.edges[v]
         for u in self.nodes:
@@ -45,7 +45,7 @@ class Graph:
                 del self.edges[u][v]
 
     def add_edge(self, u, v, attrs=None):
-        """Add edge from `u` to `v` to graph with attributes `attrs`."""
+        """Add an edge from ``u`` to ``v`` with attributes ``attrs``."""
         if attrs is None: attrs = {}
         if u not in self.nodes: self.nodes[u] = {}
         if v not in self.nodes: self.nodes[v] = {}
@@ -54,7 +54,7 @@ class Graph:
         self.edges[u][v].append(attrs)
 
     def has_edge(self, u, v):
-        """Remove edge from `u` to `v`."""
+        """Return ``True`` iff there is at least one edge from ``u`` to ``v``."""
         return u in self.edges and v in self.edges[u] and len(self.edges[u][v]) > 0
 
     def get_edges(self, u, v):
@@ -117,7 +117,7 @@ class Graph:
         raise ValueError("There is no accepting path")
 
     def has_path(self):
-        """Returns `True` iff there is a path from the start node to an accept node."""
+        """Return ``True`` iff there is a path from the start node to an accept node."""
         try:
             self.shortest_path()
             return True
@@ -282,7 +282,7 @@ def json_to_graph(j):
 
 def read_tgf(filename):
     """Reads a file in Trivial Graph Format. Edge labels are read into the
-    `label` attribute."""
+    ``label`` attribute."""
     with open(filename) as file:
         g = Graph()
 
@@ -317,7 +317,7 @@ def read_tgf(filename):
     return from_graph(g)
 
 def from_graph(g):
-    """Converts a `Graph` to a `Machine`."""
+    """Convert a ``Graph`` ``g`` to a ``Machine``."""
     transitions = []
 
     for q in g.edges:
@@ -341,7 +341,7 @@ def from_graph(g):
     return machines.from_transitions(transitions, start_state, accept_states)
 
 def apply_graph_to_machine(m, g):
-    """Replace machine `m` with the contents of graph `g`."""
+    """Replace machine ``m`` with the contents of graph ``g``."""
     m.transitions = []
     for q in g.edges:
         for r in g.edges[q]:
@@ -372,7 +372,7 @@ def apply_graph_to_machine(m, g):
     m.add_accept_states(accept_states)
 
 def write_dot(x, filename):
-    """Writes a `Machine` or `Graph` to file named `filename` in GraphViz
+    """Write a ``Machine`` or ``Graph`` ``x`` to file ``filename`` in GraphViz
     (DOT) format."""
     if isinstance(x, machines.Machine):
         x = to_graph(x)
@@ -382,7 +382,7 @@ def write_dot(x, filename):
         file.write(x._repr_dot_())
 
 def to_graph(m):
-    """Converts a `Machine` to a `Graph`."""
+    """Convert a ``Machine`` ``m`` to a ``Graph``."""
     g = Graph()
     g.attrs['rankdir'] = 'LR'
     try:
@@ -434,7 +434,7 @@ def layout(g):
     try:
         import pydot
     except ImportError as e:
-        raise ImportError('pydot is required for graph layout. Reinstall tock or run `pip install pydot`.') from e
+        raise ImportError("pydot is required for graph layout. Reinstall tock or run 'pip install pydot'.") from e
     from .graphviz import run_dot
 
     def parse_string(s):

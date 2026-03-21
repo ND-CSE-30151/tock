@@ -17,11 +17,8 @@
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Reading and writing" href="readwrite.html" />
     <link rel="prev" title="Machines" href="machines.html" />
-   
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
 
-  
   
 
   </head><body>
@@ -38,40 +35,6 @@
 <h1>Regular expressions and grammars<a class="headerlink" href="#regular-expressions-and-grammars" title="Link to this heading">¶</a></h1>
 <section id="module-tock.regexps">
 <span id="module-tock-regexps"></span><h2>Module tock.regexps<a class="headerlink" href="#module-tock.regexps" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="tock.regexps.RegularExpression">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">tock.regexps.</span></span><span class="sig-name descname"><span class="pre">RegularExpression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.RegularExpression" title="Link to this definition">¶</a></dt>
-<dd><p>A (abstract syntax tree of a) regular expression.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>op</strong> (<em>str</em>) – Possible values are: ‘union’, ‘concatenation’, ‘star’, ‘symbol’.</p></li>
-<li><p><strong>args</strong> – tuple of <cite>RegularExpression</cite> or <cite>Symbol</cite> objects.</p></li>
-</ul>
-</dd>
-</dl>
-<p>The empty string is represented as RegularExpression(‘concatenation’, ()).</p>
-<p>The empty set is represented as RegularExpression(‘union’, ()).</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="tock.regexps.RegularExpression.from_str">
-<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.RegularExpression.from_str" title="Link to this definition">¶</a></dt>
-<dd><p>Constructs a <cite>RegularExpression</cite> from a <cite>str</cite>.</p>
-<p>Regular expressions allow the following operations (precedence
-from lowest to highest):</p>
-<ul class="simple">
-<li><p>Symbols</p></li>
-<li><p>Empty string (<code class="docutils literal notranslate"><span class="pre">&amp;</span></code>)</p></li>
-<li><p>Empty set (<code class="docutils literal notranslate"><span class="pre">∅</span></code>)</p></li>
-<li><p>Union (<code class="docutils literal notranslate"><span class="pre">|</span></code>)</p></li>
-<li><p>Concatenation: Two concatenated symbols must be separated by
-a space. For example, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">b</span></code> is <code class="docutils literal notranslate"><span class="pre">a</span></code> concatenated with
-<code class="docutils literal notranslate"><span class="pre">b</span></code>, but <code class="docutils literal notranslate"><span class="pre">ab</span></code> is a single symbol.</p></li>
-<li><p>Kleene star (<code class="docutils literal notranslate"><span class="pre">*</span></code>)</p></li>
-</ul>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="py function">
 <dt class="sig sig-object py" id="tock.regexps.from_regexp">
 <span class="sig-prename descclassname"><span class="pre">tock.regexps.</span></span><span class="sig-name descname"><span class="pre">from_regexp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.from_regexp" title="Link to this definition">¶</a></dt>
@@ -102,6 +65,40 @@ displays all steps of the conversion.</p></li>
 </dl>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="tock.regexps.RegularExpression">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">tock.regexps.</span></span><span class="sig-name descname"><span class="pre">RegularExpression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.RegularExpression" title="Link to this definition">¶</a></dt>
+<dd><p>A (abstract syntax tree of a) regular expression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>op</strong> (<em>str</em>) – Possible values are: ‘union’, ‘concatenation’, ‘star’, ‘symbol’.</p></li>
+<li><p><strong>args</strong> – tuple of <code class="docutils literal notranslate"><span class="pre">RegularExpression</span></code> or <code class="docutils literal notranslate"><span class="pre">Symbol</span></code> objects.</p></li>
+</ul>
+</dd>
+</dl>
+<p>The empty string is represented as RegularExpression(‘concatenation’, ()).</p>
+<p>The empty set is represented as RegularExpression(‘union’, ()).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tock.regexps.RegularExpression.from_str">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.regexps.RegularExpression.from_str" title="Link to this definition">¶</a></dt>
+<dd><p>Construct a <code class="docutils literal notranslate"><span class="pre">RegularExpression</span></code> from a <code class="docutils literal notranslate"><span class="pre">str</span></code>.</p>
+<p>Regular expressions allow the following operations (precedence
+from lowest to highest):</p>
+<ul class="simple">
+<li><p>Symbols</p></li>
+<li><p>Empty string (<code class="docutils literal notranslate"><span class="pre">&amp;</span></code>)</p></li>
+<li><p>Empty set (<code class="docutils literal notranslate"><span class="pre">∅</span></code>)</p></li>
+<li><p>Union (<code class="docutils literal notranslate"><span class="pre">|</span></code>)</p></li>
+<li><p>Concatenation: Two concatenated symbols must be separated by
+a space. For example, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">b</span></code> is <code class="docutils literal notranslate"><span class="pre">a</span></code> concatenated with
+<code class="docutils literal notranslate"><span class="pre">b</span></code>, but <code class="docutils literal notranslate"><span class="pre">ab</span></code> is a single symbol.</p></li>
+<li><p>Kleene star (<code class="docutils literal notranslate"><span class="pre">*</span></code>)</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="module-tock.grammars">
 <span id="module-tock-grammars"></span><h2>Module tock.grammars<a class="headerlink" href="#module-tock.grammars" title="Link to this heading">¶</a></h2>
@@ -109,40 +106,6 @@ displays all steps of the conversion.</p></li>
 <dt class="sig sig-object py" id="tock.grammars.Grammar">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">tock.grammars.</span></span><span class="sig-name descname"><span class="pre">Grammar</span></span><a class="headerlink" href="#tock.grammars.Grammar" title="Link to this definition">¶</a></dt>
 <dd><p>A string-rewriting grammar.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="tock.grammars.Grammar.add_nonterminal">
-<span class="sig-name descname"><span class="pre">add_nonterminal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.add_nonterminal" title="Link to this definition">¶</a></dt>
-<dd><p>Add <cite>x</cite> to the nonterminal alphabet.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="tock.grammars.Grammar.add_rule">
-<span class="sig-name descname"><span class="pre">add_rule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lhs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.add_rule" title="Link to this definition">¶</a></dt>
-<dd><p>Add rule with left-hand side <cite>lhs</cite> and right-hand side <cite>rhs</cite>,
-where <cite>lhs</cite> and <cite>rhs</cite> are both Strings.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="tock.grammars.Grammar.compute_first">
-<span class="sig-name descname"><span class="pre">compute_first</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nullable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.compute_first" title="Link to this definition">¶</a></dt>
-<dd><p>Compute, for every terminal, nonterminal, and rhs suffix α, the set of
-terminals b where α ⇒* b γ for some γ.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="tock.grammars.Grammar.compute_follow">
-<span class="sig-name descname"><span class="pre">compute_follow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nullable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.compute_follow" title="Link to this definition">¶</a></dt>
-<dd><p>Compute, for every nonterminal A, the set of terminals b where
-S →* γ A b δ for some γ, δ.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="tock.grammars.Grammar.compute_nullable">
-<span class="sig-name descname"><span class="pre">compute_nullable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.compute_nullable" title="Link to this definition">¶</a></dt>
-<dd><p>Compute, for every nonterminal and rhs suffix α,
-whether α ⇒* ε.</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="tock.grammars.Grammar.from_file">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.from_file" title="Link to this definition">¶</a></dt>
@@ -172,7 +135,7 @@ start symbol.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="tock.grammars.Grammar.from_lines">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.from_lines" title="Link to this definition">¶</a></dt>
-<dd><p>Read a grammar from a list of strings (see <cite>from_file</cite>).</p>
+<dd><p>Read a grammar from a list of strings (see <code class="docutils literal notranslate"><span class="pre">from_file</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>lines</strong> – a list of strings</p>
@@ -187,35 +150,31 @@ start symbol.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="tock.grammars.Grammar.set_start_nonterminal">
+<span class="sig-name descname"><span class="pre">set_start_nonterminal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.set_start_nonterminal" title="Link to this definition">¶</a></dt>
+<dd><p>Set the start symbol to <code class="docutils literal notranslate"><span class="pre">x</span></code>. If <code class="docutils literal notranslate"><span class="pre">x</span></code> is not already a nonterminal,
+it is added to the nonterminal alphabet.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tock.grammars.Grammar.add_nonterminal">
+<span class="sig-name descname"><span class="pre">add_nonterminal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.add_nonterminal" title="Link to this definition">¶</a></dt>
+<dd><p>Add <code class="docutils literal notranslate"><span class="pre">x</span></code> to the nonterminal alphabet.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tock.grammars.Grammar.add_rule">
+<span class="sig-name descname"><span class="pre">add_rule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lhs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.add_rule" title="Link to this definition">¶</a></dt>
+<dd><p>Add a rule with left-hand side <code class="docutils literal notranslate"><span class="pre">lhs</span></code> and right-hand side <code class="docutils literal notranslate"><span class="pre">rhs</span></code>,
+where <code class="docutils literal notranslate"><span class="pre">lhs</span></code> and <code class="docutils literal notranslate"><span class="pre">rhs</span></code> are both strings.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="tock.grammars.Grammar.has_strict_start">
 <span class="sig-name descname"><span class="pre">has_strict_start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.has_strict_start" title="Link to this definition">¶</a></dt>
 <dd><p>Returns True iff the start nonterminal does not appear in the rhs
 of any rule. I don’t know what the correct terminology for
 this is.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="tock.grammars.Grammar.is_contextfree">
-<span class="sig-name descname"><span class="pre">is_contextfree</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.is_contextfree" title="Link to this definition">¶</a></dt>
-<dd><p>Returns True iff the grammar is context-free.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="tock.grammars.Grammar.is_contextsensitive">
-<span class="sig-name descname"><span class="pre">is_contextsensitive</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.is_contextsensitive" title="Link to this definition">¶</a></dt>
-<dd><p>Returns True iff the grammar is context-sensitive, that is, each
-rule is of the form α A β → α B β where one of the following is true:</p>
-<ul class="simple">
-<li><p>A is a nonterminal and len(B) &gt; 0</p></li>
-<li><p>A = S, α = β = B = ε, and S does not occur on the rhs of any rule</p></li>
-</ul>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="tock.grammars.Grammar.is_leftlinear">
-<span class="sig-name descname"><span class="pre">is_leftlinear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.is_leftlinear" title="Link to this definition">¶</a></dt>
-<dd><p>Returns True iff the grammar is left-linear, that is, it is context-free and
-every rule is of the form A → B w or A → w where w contains only terminals.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -230,9 +189,33 @@ is, each rule is of the form α → β where one of the following is true:</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="tock.grammars.Grammar.is_contextsensitive">
+<span class="sig-name descname"><span class="pre">is_contextsensitive</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.is_contextsensitive" title="Link to this definition">¶</a></dt>
+<dd><p>Returns True iff the grammar is context-sensitive, that is, each
+rule is of the form α A β → α B β where one of the following is true:</p>
+<ul class="simple">
+<li><p>A is a nonterminal and len(B) &gt; 0</p></li>
+<li><p>A = S, α = β = B = ε, and S does not occur on the rhs of any rule</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tock.grammars.Grammar.is_contextfree">
+<span class="sig-name descname"><span class="pre">is_contextfree</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.is_contextfree" title="Link to this definition">¶</a></dt>
+<dd><p>Returns True iff the grammar is context-free.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tock.grammars.Grammar.is_leftlinear">
+<span class="sig-name descname"><span class="pre">is_leftlinear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.is_leftlinear" title="Link to this definition">¶</a></dt>
+<dd><p>Returns True iff the grammar is left-linear, that is, it is context-free and
+every rule is of the form A → B w or A → w where w contains only terminals.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="tock.grammars.Grammar.is_rightlinear">
 <span class="sig-name descname"><span class="pre">is_rightlinear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.is_rightlinear" title="Link to this definition">¶</a></dt>
-<dd><p>Returns True iff the grammar is left-linear, that is, it is context-free and
+<dd><p>Returns True iff the grammar is right-linear, that is, it is context-free and
 every rule is of the form A → w B or A → w where w contains only terminals.</p>
 </dd></dl>
 
@@ -243,10 +226,24 @@ every rule is of the form A → w B or A → w where w contains only terminals.<
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="tock.grammars.Grammar.set_start_nonterminal">
-<span class="sig-name descname"><span class="pre">set_start_nonterminal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.set_start_nonterminal" title="Link to this definition">¶</a></dt>
-<dd><p>Set the start symbol to <cite>x</cite>. If <cite>x</cite> is not already a nonterminal,
-it is added to the nonterminal alphabet.</p>
+<dt class="sig sig-object py" id="tock.grammars.Grammar.compute_nullable">
+<span class="sig-name descname"><span class="pre">compute_nullable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.compute_nullable" title="Link to this definition">¶</a></dt>
+<dd><p>Compute, for every nonterminal and rhs suffix α,
+whether α ⇒* ε.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tock.grammars.Grammar.compute_first">
+<span class="sig-name descname"><span class="pre">compute_first</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nullable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.compute_first" title="Link to this definition">¶</a></dt>
+<dd><p>Compute, for every terminal, nonterminal, and rhs suffix α, the set of
+terminals b where α ⇒* b γ for some γ.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tock.grammars.Grammar.compute_follow">
+<span class="sig-name descname"><span class="pre">compute_follow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nullable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.grammars.Grammar.compute_follow" title="Link to this definition">¶</a></dt>
+<dd><p>Compute, for every nonterminal A, the set of terminals b where
+S →* γ A b δ for some γ, δ.</p>
 </dd></dl>
 
 </dd></dl>
@@ -271,7 +268,7 @@ it is added to the nonterminal alphabet.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>a PDA equivalent to <cite>g</cite>.</p>
+<dd class="field-even"><p>a PDA equivalent to <code class="docutils literal notranslate"><span class="pre">g</span></code>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="machines.html#tock.machines.Machine" title="tock.machines.Machine">Machine</a></p>

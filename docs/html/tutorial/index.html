@@ -15,13 +15,10 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="More general machines" href="General.html" />
+    <link rel="next" title="Deterministic finite automata" href="DFAs.html" />
     <link rel="prev" title="tock: Theory of Computing toolKit" href="../index.html" />
-   
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
 
-  
   
 
   </head><body>
@@ -37,14 +34,57 @@
   <section id="tutorial">
 <h1>Tutorial<a class="headerlink" href="#tutorial" title="Link to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="General.html">More general machines</a></li>
-<li class="toctree-l1"><a class="reference internal" href="DFAs.html">Deterministic finite automata</a></li>
-<li class="toctree-l1"><a class="reference internal" href="NFAs.html">Nondeterministic finite automata</a></li>
-<li class="toctree-l1"><a class="reference internal" href="PDAs.html">Pushdown automata</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Regexps.html">Regular expressions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="CFGs.html">Context-free grammars</a></li>
-<li class="toctree-l1"><a class="reference internal" href="TMs.html">Turing machines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DFAs.html">Deterministic finite automata</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="DFAs.html#Loading-DFAs-from-files">Loading DFAs from files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFAs.html#Creating-DFAs-in-code">Creating DFAs in code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFAs.html#Editing-DFAs-graphically">Editing DFAs graphically</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFAs.html#Inspecting-DFAs">Inspecting DFAs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DFAs.html#Running-DFAs">Running DFAs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="NFAs.html">Nondeterministic finite automata</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="NFAs.html#Creating-NFAs">Creating NFAs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NFAs.html#Running-NFAs">Running NFAs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Regexps.html">Regular expressions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Regexps.html#From-regular-expressions-to-NFAs">From regular expressions to NFAs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Regexps.html#From-NFAs-to-regular-expressions">From NFAs to regular expressions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="CFGs.html">Context-free grammars</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="CFGs.html#Creating-CFGs">Creating CFGs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CFGs.html#From-CFGs-to-PDAs">From CFGs to PDAs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="CFGs.html#Shift-reduce-parsing">Shift-reduce parsing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CFGs.html#LL(1)-parsing">LL(1) parsing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="CFGs.html#LR-parsing">LR parsing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="CFGs.html#From-PDAs-to-CFGs">From PDAs to CFGs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="PDAs.html">Pushdown automata</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="PDAs.html#Creating-PDAs">Creating PDAs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PDAs.html#Running-PDAs">Running PDAs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="TMs.html">Turing machines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="TMs.html#Creating-TMs">Creating TMs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TMs.html#Running-TMs">Running TMs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="General.html">More general machines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="General.html#Store-types">Store types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="General.html#BASE">BASE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="General.html#STREAM">STREAM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="General.html#TAPE">TAPE</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="General.html#Low-level-interface">Low-level interface</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
@@ -78,13 +118,13 @@
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="General.html">More general machines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="DFAs.html">Deterministic finite automata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="NFAs.html">Nondeterministic finite automata</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PDAs.html">Pushdown automata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Regexps.html">Regular expressions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="CFGs.html">Context-free grammars</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PDAs.html">Pushdown automata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="TMs.html">Turing machines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="General.html">More general machines</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
@@ -95,7 +135,7 @@
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
       <li>Previous: <a href="../index.html" title="previous chapter">tock: Theory of Computing toolKit</a></li>
-      <li>Next: <a href="General.html" title="next chapter">More general machines</a></li>
+      <li>Next: <a href="DFAs.html" title="next chapter">Deterministic finite automata</a></li>
   </ul></li>
 </ul>
 </div>

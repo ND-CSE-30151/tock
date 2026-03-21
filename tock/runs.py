@@ -1,5 +1,5 @@
 """This module contains functions for simulating machines on
-strings. Normally, `run` is the only function one needs to use."""
+strings. Normally, ``run`` is the only function one needs to use."""
 
 import collections
 from . import machines
@@ -8,7 +8,7 @@ from . import graphs
 __all__ = ['run', 'run_bfs', 'run_pda']
 
 def run(m, w, trace=False, steps=1000, show_stack=3):
-    """Runs machine `m` on string `w`, automatically selecting a search method.
+    """Run machine ``m`` on string ``w``, automatically selecting a search method.
 
     Arguments:
     
@@ -21,9 +21,9 @@ def run(m, w, trace=False, steps=1000, show_stack=3):
     Returns:
     
         A Graph whose nodes are the configurations reachable from the
-        start configuration (which has the attribute `start=True`). It has
-        an accept configuration (attribute `accept=True`) iff `m` accepts
-        `w`.
+        start configuration (which has the attribute ``start=True``). It has
+        an accept configuration (attribute ``accept=True``) iff ``m`` accepts
+        ``w``.
     """
 
     # Check to see whether run_pda can handle it.
@@ -54,7 +54,7 @@ def run(m, w, trace=False, steps=1000, show_stack=3):
         return run_bfs(m, w, trace=trace, steps=steps)
 
 def run_bfs(m, w, trace=False, steps=1000):
-    """Runs machine `m` on string `w` using breadth-first search.
+    """Run machine ``m`` on string ``w`` using breadth-first search.
 
     Arguments:
 
@@ -65,7 +65,7 @@ def run_bfs(m, w, trace=False, steps=1000):
 
     Returns:
 
-        Same as `run`.
+        Same as ``run``.
     """
     from .machines import Store, Configuration, Transition
 
@@ -118,10 +118,11 @@ def run_bfs(m, w, trace=False, steps=1000):
             ql = list(q)
             run.nodes[q]['rank'] = ql.pop(m.input)
             run.nodes[q]['label'] = Configuration(ql)
+        rprev = None
         for i in range(len(w)+1):
             r = 'rank{}'.format(i)
             run.add_node(r, {'rank' : Store(w[i:]), 'style' : 'invisible'})
-            if i > 0:
+            if i > 0 and rprev is not None:
                 run.add_edge(rprev, r, {'color': 'white', 'label' : w[i-1]})
             rprev = r
 
@@ -143,7 +144,7 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3, keep_nodes=False):
 
     Returns:
 
-        Same as `run`. Because stacks are truncated, the number of nodes
+        Same as ``run``. Because stacks are truncated, the number of nodes
         in the returned graph may be less than the actual number of
         configurations (which may be infinite).
 
@@ -226,10 +227,11 @@ def run_pda(m, w, stack=2, trace=False, show_stack=3, keep_nodes=False):
     config = Configuration(config)
 
     # draw input symbols
+    rprev = None
     for i in range(len(w)+1):
         r = 'rank{}'.format(i)
         run.add_node(r, {'rank' : Store(w[i:]), 'style' : 'invisible'})
-        if i > 0:
+        if i > 0 and rprev is not None:
             run.add_edge(rprev, r, {'color': 'white', 'label' : w[i-1]})
         rprev = r
 

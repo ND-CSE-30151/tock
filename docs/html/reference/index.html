@@ -16,12 +16,9 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Machines" href="machines.html" />
-    <link rel="prev" title="Turing machines" href="../tutorial/TMs.html" />
-   
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="prev" title="More general machines" href="../tutorial/General.html" />
   
 
-  
   
 
   </head><body>
@@ -40,127 +37,19 @@
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="machines.html">Machines</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="machines.html#module-tock.machines">Module tock.machines</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="machines.html#tock.machines.Machine"><code class="docutils literal notranslate"><span class="pre">Machine</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.store_types"><code class="docutils literal notranslate"><span class="pre">Machine.store_types</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.num_stores"><code class="docutils literal notranslate"><span class="pre">Machine.num_stores</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.add_transition"><code class="docutils literal notranslate"><span class="pre">Machine.add_transition()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.add_transitions"><code class="docutils literal notranslate"><span class="pre">Machine.add_transitions()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.get_transitions"><code class="docutils literal notranslate"><span class="pre">Machine.get_transitions()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.states"><code class="docutils literal notranslate"><span class="pre">Machine.states</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.set_start_state"><code class="docutils literal notranslate"><span class="pre">Machine.set_start_state()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.get_start_state"><code class="docutils literal notranslate"><span class="pre">Machine.get_start_state()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.add_accept_state"><code class="docutils literal notranslate"><span class="pre">Machine.add_accept_state()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.add_accept_states"><code class="docutils literal notranslate"><span class="pre">Machine.add_accept_states()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.get_accept_states"><code class="docutils literal notranslate"><span class="pre">Machine.get_accept_states()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.transitions"><code class="docutils literal notranslate"><span class="pre">Machine.transitions</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.start_config"><code class="docutils literal notranslate"><span class="pre">Machine.start_config</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.accept_configs"><code class="docutils literal notranslate"><span class="pre">Machine.accept_configs</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.is_finite"><code class="docutils literal notranslate"><span class="pre">Machine.is_finite()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.is_pushdown"><code class="docutils literal notranslate"><span class="pre">Machine.is_pushdown()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.is_turing"><code class="docutils literal notranslate"><span class="pre">Machine.is_turing()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Machine.is_deterministic"><code class="docutils literal notranslate"><span class="pre">Machine.is_deterministic()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="machines.html#tock.machines.Store"><code class="docutils literal notranslate"><span class="pre">Store</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Store.values"><code class="docutils literal notranslate"><span class="pre">Store.values</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Store.position"><code class="docutils literal notranslate"><span class="pre">Store.position</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Store.match"><code class="docutils literal notranslate"><span class="pre">Store.match()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="machines.html#tock.machines.Configuration"><code class="docutils literal notranslate"><span class="pre">Configuration</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Configuration.stores"><code class="docutils literal notranslate"><span class="pre">Configuration.stores</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Configuration.match"><code class="docutils literal notranslate"><span class="pre">Configuration.match()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="machines.html#tock.machines.Transition"><code class="docutils literal notranslate"><span class="pre">Transition</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Transition.lhs"><code class="docutils literal notranslate"><span class="pre">Transition.lhs</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Transition.rhs"><code class="docutils literal notranslate"><span class="pre">Transition.rhs</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Transition.match"><code class="docutils literal notranslate"><span class="pre">Transition.match()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="machines.html#tock.machines.Transition.apply"><code class="docutils literal notranslate"><span class="pre">Transition.apply()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="machines.html#tock.machines.AlignedTransition"><code class="docutils literal notranslate"><span class="pre">AlignedTransition</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="machines.html#module-tock.operations">Module tock.operations</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="machines.html#tock.operations.determinize"><code class="docutils literal notranslate"><span class="pre">determinize()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="machines.html#tock.operations.equivalent"><code class="docutils literal notranslate"><span class="pre">equivalent()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="machines.html#tock.operations.intersect"><code class="docutils literal notranslate"><span class="pre">intersect()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="machines.html#tock.operations.prefix"><code class="docutils literal notranslate"><span class="pre">prefix()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="machines.html#module-tock.machines">Module tock.machines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="machines.html#module-tock.operations">Module tock.operations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="machines.html#module-tock.run">Module tock.run</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="grammars.html">Regular expressions and grammars</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="grammars.html#module-tock.regexps">Module tock.regexps</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="grammars.html#tock.regexps.RegularExpression"><code class="docutils literal notranslate"><span class="pre">RegularExpression</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.regexps.RegularExpression.from_str"><code class="docutils literal notranslate"><span class="pre">RegularExpression.from_str()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="grammars.html#tock.regexps.from_regexp"><code class="docutils literal notranslate"><span class="pre">from_regexp()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="grammars.html#tock.regexps.to_regexp"><code class="docutils literal notranslate"><span class="pre">to_regexp()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="grammars.html#module-tock.grammars">Module tock.grammars</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="grammars.html#tock.grammars.Grammar"><code class="docutils literal notranslate"><span class="pre">Grammar</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.add_nonterminal"><code class="docutils literal notranslate"><span class="pre">Grammar.add_nonterminal()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.add_rule"><code class="docutils literal notranslate"><span class="pre">Grammar.add_rule()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.compute_first"><code class="docutils literal notranslate"><span class="pre">Grammar.compute_first()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.compute_follow"><code class="docutils literal notranslate"><span class="pre">Grammar.compute_follow()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.compute_nullable"><code class="docutils literal notranslate"><span class="pre">Grammar.compute_nullable()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.from_file"><code class="docutils literal notranslate"><span class="pre">Grammar.from_file()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.from_lines"><code class="docutils literal notranslate"><span class="pre">Grammar.from_lines()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.has_strict_start"><code class="docutils literal notranslate"><span class="pre">Grammar.has_strict_start()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.is_contextfree"><code class="docutils literal notranslate"><span class="pre">Grammar.is_contextfree()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.is_contextsensitive"><code class="docutils literal notranslate"><span class="pre">Grammar.is_contextsensitive()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.is_leftlinear"><code class="docutils literal notranslate"><span class="pre">Grammar.is_leftlinear()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.is_noncontracting"><code class="docutils literal notranslate"><span class="pre">Grammar.is_noncontracting()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.is_rightlinear"><code class="docutils literal notranslate"><span class="pre">Grammar.is_rightlinear()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.remove_useless"><code class="docutils literal notranslate"><span class="pre">Grammar.remove_useless()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="grammars.html#tock.grammars.Grammar.set_start_nonterminal"><code class="docutils literal notranslate"><span class="pre">Grammar.set_start_nonterminal()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="grammars.html#tock.grammars.from_grammar"><code class="docutils literal notranslate"><span class="pre">from_grammar()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="grammars.html#module-tock.regexps">Module tock.regexps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grammars.html#module-tock.grammars">Module tock.grammars</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="readwrite.html">Reading and writing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="readwrite.html#module-tock.tables">Module tock.tables</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="readwrite.html#tock.tables.Table"><code class="docutils literal notranslate"><span class="pre">Table</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="readwrite.html#tock.tables.Table.num_header_cols"><code class="docutils literal notranslate"><span class="pre">Table.num_header_cols</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="readwrite.html#tock.tables.Table.num_header_rows"><code class="docutils literal notranslate"><span class="pre">Table.num_header_rows</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="readwrite.html#tock.tables.Table.rows"><code class="docutils literal notranslate"><span class="pre">Table.rows</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="readwrite.html#tock.tables.from_table"><code class="docutils literal notranslate"><span class="pre">from_table()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="readwrite.html#tock.tables.read_csv"><code class="docutils literal notranslate"><span class="pre">read_csv()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="readwrite.html#tock.tables.read_excel"><code class="docutils literal notranslate"><span class="pre">read_excel()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="readwrite.html#tock.tables.to_table"><code class="docutils literal notranslate"><span class="pre">to_table()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="readwrite.html#tock.tables.write_csv"><code class="docutils literal notranslate"><span class="pre">write_csv()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="readwrite.html#module-tock.graphs">Module tock.graphs</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="readwrite.html#tock.graphs.Editor"><code class="docutils literal notranslate"><span class="pre">Editor</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="readwrite.html#tock.graphs.Graph"><code class="docutils literal notranslate"><span class="pre">Graph</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="readwrite.html#tock.graphs.Graph.add_edge"><code class="docutils literal notranslate"><span class="pre">Graph.add_edge()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="readwrite.html#tock.graphs.Graph.add_node"><code class="docutils literal notranslate"><span class="pre">Graph.add_node()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="readwrite.html#tock.graphs.Graph.has_edge"><code class="docutils literal notranslate"><span class="pre">Graph.has_edge()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="readwrite.html#tock.graphs.Graph.has_path"><code class="docutils literal notranslate"><span class="pre">Graph.has_path()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="readwrite.html#tock.graphs.Graph.only_path"><code class="docutils literal notranslate"><span class="pre">Graph.only_path()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="readwrite.html#tock.graphs.Graph.remove_node"><code class="docutils literal notranslate"><span class="pre">Graph.remove_node()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="readwrite.html#tock.graphs.Graph.shortest_path"><code class="docutils literal notranslate"><span class="pre">Graph.shortest_path()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="readwrite.html#tock.graphs.apply_graph_to_machine"><code class="docutils literal notranslate"><span class="pre">apply_graph_to_machine()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="readwrite.html#tock.graphs.from_graph"><code class="docutils literal notranslate"><span class="pre">from_graph()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="readwrite.html#tock.graphs.read_tgf"><code class="docutils literal notranslate"><span class="pre">read_tgf()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="readwrite.html#tock.graphs.to_graph"><code class="docutils literal notranslate"><span class="pre">to_graph()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="readwrite.html#tock.graphs.write_dot"><code class="docutils literal notranslate"><span class="pre">write_dot()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="readwrite.html#module-tock.tables">Module tock.tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="readwrite.html#module-tock.graphs">Module tock.graphs</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="internals.html">Internal representation of machines</a><ul>
@@ -217,7 +106,7 @@
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="../tutorial/TMs.html" title="previous chapter">Turing machines</a></li>
+      <li>Previous: <a href="../tutorial/General.html" title="previous chapter">More general machines</a></li>
       <li>Next: <a href="machines.html" title="next chapter">Machines</a></li>
   </ul></li>
 </ul>

@@ -17,7 +17,7 @@ class RegularExpression:
     Arguments:
 
         op (str): Possible values are: 'union', 'concatenation', 'star', 'symbol'.
-        args: tuple of `RegularExpression` or `Symbol` objects.
+        args: tuple of ``RegularExpression`` or ``Symbol`` objects.
 
     The empty string is represented as RegularExpression('concatenation', ()).
 
@@ -69,7 +69,7 @@ class RegularExpression:
 
     @classmethod
     def from_str(cls, s):
-        """Constructs a `RegularExpression` from a `str`.
+        """Construct a ``RegularExpression`` from a ``str``.
 
         Regular expressions allow the following operations (precedence
         from lowest to highest):
@@ -342,4 +342,3 @@ def to_regexp(m, display_steps=False):
         return g.edges[start][accept][0]['label']
     else:
         return union([])
-

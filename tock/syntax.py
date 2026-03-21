@@ -190,7 +190,7 @@ def str_to_config(s):
     return Configuration(x)
 
 def str_to_configs(s):
-    """Convert str `s` in one of the following formats to a set of tuples of Stores:
+    """Convert string ``s`` in one of the following formats to a set of tuples of ``Store`` objects:
        - {(w,x),(y,z)} -> {(w,x),(y,z)}
        - x,y -> {(x, y)}
        - (x,y) -> {(x, y)}
@@ -248,9 +248,9 @@ def str_to_transition(s):
 
 @dataclasses.dataclass(frozen=True, order=True)
 class String:
-    """A sequence of `Symbols` (not to be confused with `str`)."""
-
-    values: tuple #: A sequence of Symbols
+    """A sequence of ``Symbol`` objects (not to be confused with ``str``)."""
+    
+    values: tuple #: A sequence of symbols
     
     def __init__(self, values=None):
         if values is None:

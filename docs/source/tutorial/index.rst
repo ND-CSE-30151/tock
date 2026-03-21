@@ -2,12 +2,13 @@ Tutorial
 ========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
+   :caption: Contents:
 
-   General
    DFAs
    NFAs
-   PDAs
    Regexps
    CFGs
+   PDAs
    TMs
+   General

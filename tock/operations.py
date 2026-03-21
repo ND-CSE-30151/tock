@@ -201,8 +201,8 @@ def intersect(m1, m2):
     return m
 
 def prefix(m):
-    """Given a NFA `m`, construct a new NFA that accepts all prefixes of
-    strings accepted by `m`.
+    """Given an NFA ``m``, construct a new NFA that accepts all prefixes of
+    strings accepted by ``m``.
     """
     if not m.is_finite():
         raise ValueError('m must be a finite automaton')
@@ -220,4 +220,3 @@ def prefix(m):
         mp.add_transition(t)
     mp.add_accept_states(f)
     return mp
-

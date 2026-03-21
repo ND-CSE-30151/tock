@@ -17,11 +17,8 @@
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Regular expressions and grammars" href="grammars.html" />
     <link rel="prev" title="Reference" href="index.html" />
-   
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
 
-  
   
 
   </head><body>
@@ -51,9 +48,9 @@ configuration is reached or no more rewrites are possible.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>store_types</strong> – A list of store types, one for each
-store. Allowed types are <cite>BASE</cite>, <cite>STREAM</cite>, and <cite>TAPE</cite>. See
-<cite>add_transition</cite> and <cite>add_accept_state</cite> for explanation of
+<li><p><strong>store_types</strong> – A sequence of store types, one for each
+store. Allowed types are <code class="docutils literal notranslate"><span class="pre">BASE</span></code>, <code class="docutils literal notranslate"><span class="pre">STREAM</span></code>, and <code class="docutils literal notranslate"><span class="pre">TAPE</span></code>. See
+<code class="docutils literal notranslate"><span class="pre">add_transition</span></code> and <code class="docutils literal notranslate"><span class="pre">add_accept_state</span></code> for explanation of
 these types.</p></li>
 <li><p><strong>state</strong> (<em>int</em>) – The index of the store which is the state. The state
 is usually what distinguishes the start and accept
@@ -69,7 +66,7 @@ to the string.</p></li>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="tock.machines.Machine.store_types">
 <span class="sig-name descname"><span class="pre">store_types</span></span><a class="headerlink" href="#tock.machines.Machine.store_types" title="Link to this definition">¶</a></dt>
-<dd><p>A list of store types, one for each store.</p>
+<dd><p>A tuple of store types, one for each store.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -78,10 +75,16 @@ to the string.</p></li>
 <dd><p>How many stores the Machine has.</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="tock.machines.Machine.states">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">states</span></span><a class="headerlink" href="#tock.machines.Machine.states" title="Link to this definition">¶</a></dt>
+<dd><p>The set of all possible states.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="tock.machines.Machine.add_transition">
 <span class="sig-name descname"><span class="pre">add_transition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Machine.add_transition" title="Link to this definition">¶</a></dt>
-<dd><p>Add a transition. The argument can either be a <cite>Transition</cite> or a
+<dd><p>Add a transition. The argument can either be a <code class="docutils literal notranslate"><span class="pre">Transition</span></code> or a
 left-hand side and a right-hand side.</p>
 <ul class="simple">
 <li><p>If a store is a STREAM, there should not be an rhs; an empty
@@ -94,7 +97,7 @@ rhs is automatically inserted.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="tock.machines.Machine.add_transitions">
 <span class="sig-name descname"><span class="pre">add_transitions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transitions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Machine.add_transitions" title="Link to this definition">¶</a></dt>
-<dd><p>Add a list of transitions (see <cite>add_transition</cite>).</p>
+<dd><p>Add a list of transitions (see <code class="docutils literal notranslate"><span class="pre">add_transition</span></code>).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -109,16 +112,10 @@ have an additional field to indicate a move (L or R).</p></li>
 </ul>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="tock.machines.Machine.states">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">states</span></span><a class="headerlink" href="#tock.machines.Machine.states" title="Link to this definition">¶</a></dt>
-<dd><p>The set of all possible states.</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="tock.machines.Machine.set_start_state">
 <span class="sig-name descname"><span class="pre">set_start_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Machine.set_start_state" title="Link to this definition">¶</a></dt>
-<dd><p>Set the start configuration with <cite>q</cite> as the start state. The input
+<dd><p>Set the start configuration with <code class="docutils literal notranslate"><span class="pre">q</span></code> as the start state. The input
 store will be initialized to the input string, and all other
 stores will be initialized to the empty string.</p>
 </dd></dl>
@@ -132,7 +129,7 @@ stores will be initialized to the empty string.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="tock.machines.Machine.add_accept_state">
 <span class="sig-name descname"><span class="pre">add_accept_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Machine.add_accept_state" title="Link to this definition">¶</a></dt>
-<dd><p>Add an accept configuration with <cite>q</cite> as the state. Any stores with
+<dd><p>Add an accept configuration with <code class="docutils literal notranslate"><span class="pre">q</span></code> as the state. Any stores with
 type STREAM must reach the end of the string in order to
 accept. All other stores will not have any accepting
 conditions.</p>
@@ -141,7 +138,7 @@ conditions.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="tock.machines.Machine.add_accept_states">
 <span class="sig-name descname"><span class="pre">add_accept_states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">qs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Machine.add_accept_states" title="Link to this definition">¶</a></dt>
-<dd><p>Add a list of accept states (see <cite>add_accept_state</cite>).</p>
+<dd><p>Add a list of accept states (see <code class="docutils literal notranslate"><span class="pre">add_accept_state</span></code>).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -154,7 +151,7 @@ conditions.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="tock.machines.Machine.transitions">
 <span class="sig-name descname"><span class="pre">transitions</span></span><a class="headerlink" href="#tock.machines.Machine.transitions" title="Link to this definition">¶</a></dt>
-<dd><p>List of transitions.</p>
+<dd><p>A list of transitions.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -166,7 +163,7 @@ conditions.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="tock.machines.Machine.accept_configs">
 <span class="sig-name descname"><span class="pre">accept_configs</span></span><a class="headerlink" href="#tock.machines.Machine.accept_configs" title="Link to this definition">¶</a></dt>
-<dd><p>Set of accept configurations.</p>
+<dd><p>A set of accept configurations.</p>
 </dd></dl>
 
 <p><strong>Tests for different types of automata</strong></p>
@@ -200,35 +197,35 @@ conditions.</p>
 <dt class="sig sig-object py" id="tock.machines.Store">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Store" title="Link to this definition">¶</a></dt>
 <dd><p>A string together with a head position. It is used either as a
-store of a Machine or as a pattern to be matched against a store of a
-Machine.</p>
+store of a <code class="docutils literal notranslate"><span class="pre">Machine</span></code> or as a pattern to be matched against a store of a
+<code class="docutils literal notranslate"><span class="pre">Machine</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>values</strong> – Sequence of Symbols</p></li>
-<li><p><strong>position</strong> (<em>int</em>) – The head position, between -1 and len(values)</p></li>
-<li><p><strong>store</strong> (<a class="reference internal" href="#tock.machines.Store" title="tock.machines.Store"><em>Store</em></a><em> or </em><em>str</em>) – Another Store to copy, or a str to convert to a Store</p></li>
+<li><p><strong>values</strong> – Sequence of symbols.</p></li>
+<li><p><strong>position</strong> (<em>int</em>) – The head position, between <code class="docutils literal notranslate"><span class="pre">-1</span></code> and <code class="docutils literal notranslate"><span class="pre">len(values)</span></code>.</p></li>
+<li><p><strong>store</strong> (<a class="reference internal" href="#tock.machines.Store" title="tock.machines.Store"><em>Store</em></a><em> or </em><em>str</em>) – Another <code class="docutils literal notranslate"><span class="pre">Store</span></code> to copy, or a <code class="docutils literal notranslate"><span class="pre">str</span></code> to convert to a <code class="docutils literal notranslate"><span class="pre">Store</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="tock.machines.Store.values">
 <span class="sig-name descname"><span class="pre">values</span></span><a class="headerlink" href="#tock.machines.Store.values" title="Link to this definition">¶</a></dt>
-<dd><p>A sequence of Symbols</p>
+<dd><p>A sequence of symbols.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="tock.machines.Store.position">
 <span class="sig-name descname"><span class="pre">position</span></span><a class="headerlink" href="#tock.machines.Store.position" title="Link to this definition">¶</a></dt>
-<dd><p>The head position, between -1 and <code class="docutils literal notranslate"><span class="pre">len(values)</span></code>.</p>
+<dd><p>The head position, between <code class="docutils literal notranslate"><span class="pre">-1</span></code> and <code class="docutils literal notranslate"><span class="pre">len(values)</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tock.machines.Store.match">
 <span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Store.match" title="Link to this definition">¶</a></dt>
-<dd><p>Returns true iff <cite>self</cite> (as a pattern) matches <cite>other</cite> (as a
-store). Note that this is asymmetric: <cite>other</cite> is allowed
-to have symbols that aren’t found in <cite>self</cite>.</p>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> iff <code class="docutils literal notranslate"><span class="pre">self</span></code> (as a pattern) matches <code class="docutils literal notranslate"><span class="pre">other</span></code> (as a
+store). This relation is asymmetric: <code class="docutils literal notranslate"><span class="pre">other</span></code> is allowed
+to have symbols that are not found in <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -236,13 +233,11 @@ to have symbols that aren’t found in <cite>self</cite>.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="tock.machines.Configuration">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Configuration" title="Link to this definition">¶</a></dt>
-<dd><p>A configuration, which is essentially a tuple of <cite>Stores</cite>.</p>
+<dd><p>A configuration, which is essentially a tuple of <code class="docutils literal notranslate"><span class="pre">Store</span></code> objects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>stores</strong> – A tuple of Stores</p></li>
-<li><p><strong>config</strong> (<a class="reference internal" href="#tock.machines.Configuration" title="tock.machines.Configuration"><em>Configuration</em></a><em> or </em><em>str</em>) – Another Configuration to copy, or a str to convert to a Configuration</p></li>
-</ul>
+<dd class="field-odd"><p><strong>arg</strong> (<a class="reference internal" href="#tock.machines.Configuration" title="tock.machines.Configuration"><em>Configuration</em></a><em> or </em><em>str</em><em> or </em><em>sequence</em>) – Another <code class="docutils literal notranslate"><span class="pre">Configuration</span></code> to copy,
+a <code class="docutils literal notranslate"><span class="pre">str</span></code> to convert to a <code class="docutils literal notranslate"><span class="pre">Configuration</span></code>, or a sequence of stores.</p>
 </dd>
 </dl>
 <dl class="py attribute">
@@ -254,9 +249,9 @@ to have symbols that aren’t found in <cite>self</cite>.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="tock.machines.Configuration.match">
 <span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Configuration.match" title="Link to this definition">¶</a></dt>
-<dd><p>Returns true iff self (as a pattern) matches other (as a
-configuration). Note that this is asymmetric: other is allowed
-to have symbols that aren’t found in self.</p>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> iff <code class="docutils literal notranslate"><span class="pre">self</span></code> (as a pattern) matches <code class="docutils literal notranslate"><span class="pre">other</span></code> (as a
+configuration). This relation is asymmetric: <code class="docutils literal notranslate"><span class="pre">other</span></code> is allowed
+to have symbols that are not found in <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -264,32 +259,33 @@ to have symbols that aren’t found in self.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="tock.machines.Transition">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">Transition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Transition" title="Link to this definition">¶</a></dt>
-<dd><p>A transition from one <cite>Configuration</cite> to another <cite>Configuration</cite>.</p>
+<dd><p>A transition from one <code class="docutils literal notranslate"><span class="pre">Configuration</span></code> to another <code class="docutils literal notranslate"><span class="pre">Configuration</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>lhs</strong> (<a class="reference internal" href="#tock.machines.Configuration" title="tock.machines.Configuration"><em>Configuration</em></a>) – left-hand side</p></li>
-<li><p><strong>rhs</strong> (<a class="reference internal" href="#tock.machines.Configuration" title="tock.machines.Configuration"><em>Configuration</em></a>) – right-hand side</p></li>
-<li><p><strong>transition</strong> (<a class="reference internal" href="#tock.machines.Transition" title="tock.machines.Transition"><em>Transition</em></a><em> or </em><em>str</em>) – Another Transition to copy, or a str to convert to a Transition</p></li>
+<li><p><strong>lhs</strong> (<a class="reference internal" href="#tock.machines.Configuration" title="tock.machines.Configuration"><em>Configuration</em></a>) – Left-hand-side configuration.</p></li>
+<li><p><strong>rhs</strong> (<a class="reference internal" href="#tock.machines.Configuration" title="tock.machines.Configuration"><em>Configuration</em></a>) – Right-hand-side configuration.</p></li>
+<li><p><strong>transition</strong> (<a class="reference internal" href="#tock.machines.Transition" title="tock.machines.Transition"><em>Transition</em></a><em> or </em><em>str</em>) – Another <code class="docutils literal notranslate"><span class="pre">Transition</span></code> to copy, or a
+<code class="docutils literal notranslate"><span class="pre">str</span></code> to convert to a <code class="docutils literal notranslate"><span class="pre">Transition</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="tock.machines.Transition.lhs">
 <span class="sig-name descname"><span class="pre">lhs</span></span><a class="headerlink" href="#tock.machines.Transition.lhs" title="Link to this definition">¶</a></dt>
-<dd><p>Left-hand side Configuration.</p>
+<dd><p>The left-hand-side configuration.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="tock.machines.Transition.rhs">
 <span class="sig-name descname"><span class="pre">rhs</span></span><a class="headerlink" href="#tock.machines.Transition.rhs" title="Link to this definition">¶</a></dt>
-<dd><p>Right-hand side Configuration.</p>
+<dd><p>The right-hand-side configuration.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tock.machines.Transition.match">
 <span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.Transition.match" title="Link to this definition">¶</a></dt>
-<dd><p>Returns True iff self can be applied to config.</p>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> iff <code class="docutils literal notranslate"><span class="pre">self</span></code> can be applied to <code class="docutils literal notranslate"><span class="pre">config</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -302,12 +298,12 @@ to have symbols that aren’t found in self.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="tock.machines.AlignedTransition">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">tock.machines.</span></span><span class="sig-name descname"><span class="pre">AlignedTransition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transitions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.machines.AlignedTransition" title="Link to this definition">¶</a></dt>
-<dd><p>A <cite>Transition</cite> that has an alignment between the lhs and rhs. These
-are generated by <cite>get_transitions</cite> so that even if the number of
+<dd><p>A <code class="docutils literal notranslate"><span class="pre">Transition</span></code> that has an alignment between the lhs and rhs. These
+are generated by <code class="docutils literal notranslate"><span class="pre">get_transitions</span></code> so that even if the number of
 lhs and rhs stores changes, we can still keep track of their
 relationship to the machine’s stores.</p>
-<p>If <cite>t</cite> is an <cite>AlignedTransition</cite>, <cite>t[i]</cite> is a <cite>Transition</cite>
-containing the lhs and rhs just for store number <cite>i</cite>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">t</span></code> is an <code class="docutils literal notranslate"><span class="pre">AlignedTransition</span></code>, <code class="docutils literal notranslate"><span class="pre">t[i]</span></code> is a <code class="docutils literal notranslate"><span class="pre">Transition</span></code>
+containing the lhs and rhs just for store number <code class="docutils literal notranslate"><span class="pre">i</span></code>.</p>
 </dd></dl>
 
 </section>
@@ -344,14 +340,14 @@ is a PDA.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="tock.operations.prefix">
 <span class="sig-prename descclassname"><span class="pre">tock.operations.</span></span><span class="sig-name descname"><span class="pre">prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tock.operations.prefix" title="Link to this definition">¶</a></dt>
-<dd><p>Given a NFA <cite>m</cite>, construct a new NFA that accepts all prefixes of
-strings accepted by <cite>m</cite>.</p>
+<dd><p>Given an NFA <code class="docutils literal notranslate"><span class="pre">m</span></code>, construct a new NFA that accepts all prefixes of
+strings accepted by <code class="docutils literal notranslate"><span class="pre">m</span></code>.</p>
 </dd></dl>
 
 </section>
 <section id="module-tock.run">
 <span id="module-tock-run"></span><h2>Module tock.run<a class="headerlink" href="#module-tock.run" title="Link to this heading">¶</a></h2>
-<p>Runs machine <cite>m</cite> on string <cite>w</cite>, automatically selecting a search method.</p>
+<p>Run machine <code class="docutils literal notranslate"><span class="pre">m</span></code> on string <code class="docutils literal notranslate"><span class="pre">w</span></code>, automatically selecting a search method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">param m<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The machine to run.</p>
@@ -385,9 +381,9 @@ strings accepted by <cite>m</cite>.</p>
 </dd>
 <dt class="field-odd">returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A Graph whose nodes are the configurations reachable from the
-start configuration (which has the attribute <cite>start=True</cite>). It has
-an accept configuration (attribute <cite>accept=True</cite>) iff <cite>m</cite> accepts
-<cite>w</cite>.</p>
+start configuration (which has the attribute <code class="docutils literal notranslate"><span class="pre">start=True</span></code>). It has
+an accept configuration (attribute <code class="docutils literal notranslate"><span class="pre">accept=True</span></code>) iff <code class="docutils literal notranslate"><span class="pre">m</span></code> accepts
+<code class="docutils literal notranslate"><span class="pre">w</span></code>.</p>
 </dd>
 </dl>
 </section>

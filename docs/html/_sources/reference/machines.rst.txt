@@ -12,13 +12,13 @@ Module tock.machines
 
       .. attribute:: store_types
 
-         A list of store types, one for each store.
+         A tuple of store types, one for each store.
       .. autoproperty:: num_stores
+      .. autoproperty:: states
 
       .. automethod:: add_transition
       .. automethod:: add_transitions
       .. automethod:: get_transitions
-      .. autoproperty:: states
                         
       .. automethod:: set_start_state
       .. automethod:: get_start_state
@@ -30,13 +30,13 @@ Module tock.machines
 
       .. attribute:: transitions
 
-         List of transitions.
+         A list of transitions.
       .. attribute:: start_config
 
          The start configuration.
       .. attribute:: accept_configs
 
-         Set of accept configurations.
+         A set of accept configurations.
       
       **Tests for different types of automata**
 
@@ -49,11 +49,11 @@ Module tock.machines
 
       .. attribute:: values
 
-         A sequence of Symbols
+         A sequence of symbols.
          
       .. attribute:: position
 
-         The head position, between -1 and ``len(values)``.
+         The head position, between ``-1`` and ``len(values)``.
 
       .. automethod:: match
                       
@@ -69,10 +69,10 @@ Module tock.machines
 
       .. attribute:: lhs
 
-         Left-hand side Configuration.
+         The left-hand-side configuration.
       .. attribute:: rhs
 
-         Right-hand side Configuration.
+         The right-hand-side configuration.
 
       .. automethod:: match
       .. automethod:: apply

@@ -25,9 +25,10 @@ class Store(syntax.String):
     position: int #: The head position
 
     def __init__(self, *args):
+        default_position = 0
         if len(args) == 0:
             values = []
-            position = 0
+            position = default_position
         elif len(args) == 1:
             if isinstance(args[0], Store):
                 values = args[0].values
@@ -38,7 +39,7 @@ class Store(syntax.String):
                 position = other.position
             else:
                 values = tuple(args[0])
-                position = 0
+                position = default_position
         elif len(args) == 2:
             values = args[0]
             position = args[1]
@@ -47,7 +48,7 @@ class Store(syntax.String):
             
         syntax.String.__init__(self, values)
         object.__setattr__(self, 'position',
-                           position if position is not None else 0)
+                           position if position is not None else default_position)
 
     def __str__(self):
         if len(self) == 0:

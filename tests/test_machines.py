@@ -141,6 +141,11 @@ class TestAlignedTransition(unittest.TestCase):
         t = AlignedTransition(['a, b -> c', 'd -> e, f'])
         self.assertEqual(t.lhs, Configuration('a, b, d'))
         self.assertEqual(t.rhs, Configuration('c, e, f'))
+
+    def test_str_and_html(self):
+        t = AlignedTransition(['a', '& -> x'])
+        self.assertEqual(str(t), 'a,ε → x')
+        self.assertEqual(t._repr_html_(), 'a,ε &rarr; x')
                 
 class TestMachine(unittest.TestCase):
     def test_fa(self):

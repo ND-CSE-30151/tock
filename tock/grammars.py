@@ -106,7 +106,10 @@ class Grammar:
     def _repr_html_(self):
         result = []
         result.append("nonterminals: {{{}}}".format(','.join(x._repr_html_() for x in sorted(self.nonterminals))))
-        result.append('start: {}'.format(self.start_nonterminal._repr_html_()))
+        if self.start_nonterminal is None:
+            result.append('start: None')
+        else:
+            result.append('start: {}'.format(self.start_nonterminal._repr_html_()))
         for lhs, rhs in self.rules:
             result.append('{} &rarr; {}'.format(lhs._repr_html_(), rhs._repr_html_()))
         return '<br>\n'.join(result)
@@ -183,7 +186,7 @@ class Grammar:
         return True
             
     def is_rightlinear(self):
-        """Returns True iff the grammar is left-linear, that is, it is context-free and
+        """Returns True iff the grammar is right-linear, that is, it is context-free and
         every rule is of the form A → w B or A → w where w contains only terminals.
         """
         if not self.is_contextfree():
@@ -533,31 +536,39 @@ def renumber_states(m, verbose=False):
 def lr_automaton(g, k=0):
     """Construct the nondeterministic LR(k) automaton for CFG g."""
 
+    nullable = set()
+    first = {}
+    follow = {}
     if k == 1:
         nullable = g.compute_nullable()
         first = g.compute_first(nullable)
         follow = g.compute_follow(nullable, first)
+    elif k == 0:
+        pass
     elif k > 1:
         raise NotImplementedError()
-    
+    else:
+        raise ValueError("k must be nonnegative")
+
     g_bylhs = collections.defaultdict(list)
     for [[lhs], rhs] in g.rules:
         g_bylhs[lhs].append(rhs)
-        
+
     # Add top pseudo-rule
     g_bylhs[None] = [syntax.String([g.start_nonterminal])]
     if k == 1: follow[None] = [END]
 
     m = machines.FiniteAutomaton()
     m.set_start_state('start')
-    
+
     # Nonstandardly read a $ because from_cfg_bottomup pushes a $ at
     # the bottom of its stack.
     m.add_transition(['start', '$'],
                      [[DottedRule(None, [g.start_nonterminal] + [END]*k, 0, 1)]])
-    
+
     for lhs in g_bylhs:
         for rhs in g_bylhs[lhs]:
+            looks = []
             if k == 0:
                 looks = [[]]
             elif k == 1:
@@ -570,6 +581,7 @@ def lr_automaton(g, k=0):
                     # Predict
                     if x not in g.nonterminals:
                         continue
+                    looks1 = []
                     if k == 0:
                         looks1 = [[]]
                     elif k == 1:

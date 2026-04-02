@@ -1,3 +1,4 @@
+import shutil
 import unittest
 import pathlib
 import importlib.util
@@ -49,6 +50,7 @@ class TestRead(unittest.TestCase):
         self.assertEqual(str(g.edges['q1']['q2'][0]['label']), 'a')
 
     @unittest.skipUnless(importlib.util.find_spec('pydot') is not None, 'pydot not installed')
+    @unittest.skipUnless(shutil.which('dot') is not None, 'Graphviz dot not installed')
     def test_layout_turing_machine_graph(self):
         m = read_csv(examples.joinpath('sipser-3-7.csv'))
         g = to_graph(m)

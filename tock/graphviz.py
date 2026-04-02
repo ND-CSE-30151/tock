@@ -17,10 +17,6 @@ def _run_dot_text(dot, format):
         raise Exception(err)
     return out.decode('utf8')
 
-def dot_to_svg_text(dot):
-    out = _run_dot_text(dot, "svg")
-    return re.sub(r'<title>.*?</title>', '', out)
-
 def run_dot(dot, format="svg"):
     out = _run_dot_text(dot, format)
     if format == "svg":

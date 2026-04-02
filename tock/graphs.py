@@ -251,20 +251,20 @@ def graph_to_json(g):
         if attr in g.attrs:
             j[attr] = g.attrs[attr]
     for v in g.nodes:
-        j['nodes'][v] = {}
+        j['nodes'][str(v)] = {}
         for attr in ['start', 'accept', 'x', 'y', 'startx', 'starty']:
             if attr in g.nodes[v]:
                 j['nodes'][str(v)][attr] = g.nodes[v][attr]
     for u in g.edges:
-        j['edges'][u] = {}
+        j['edges'][str(u)] = {}
         for v in g.edges[u]:
-            j['edges'][u][v] = []
+            j['edges'][str(u)][str(v)] = []
             for e in g.edges[u][v]:
                 attrs = {'label': str(e['label'])}
                 for attr in ['anchorx', 'anchory']:
                     if attr in e:
                         attrs[attr] = e[attr]
-                j['edges'][u][v].append(attrs)
+                j['edges'][str(u)][str(v)].append(attrs)
     return j
 
 def json_to_graph(j):

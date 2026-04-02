@@ -398,7 +398,7 @@ Link.prototype.draw = function (ctx) {
         var isReversed = (this.perpendicularPart < 0);
     
         // Clip arc to borders of nodes
-        arc = parametricArc(circle.x, circle.y, circle.radius, startAngle, endAngle, isReversed);
+        var arc = parametricArc(circle.x, circle.y, circle.radius, startAngle, endAngle, isReversed);
         start = this.nodeA.intersect(arc);
         startAngle = Math.atan2(start.y-circle.y, start.x-circle.x);
         end = this.nodeB.intersect((t) => arc(1-t));
@@ -745,14 +745,25 @@ function drawArrow(ctx, x, y, angle, isSelected) {
 }
 
 function canvasHasFocus() {
-    return document.activeElement == canvas;
+    if (!canvas) return false;
+    if (document.activeElement == canvas) return true;
+    if (canvas.getRootNode) {
+        var root = canvas.getRootNode();
+        if (root && root.activeElement == canvas)
+            return true;
+    }
+    return false;
 }
 
 function canvasFocus() {
     if (selectedObject != null && 'text' in selectedObject) {
         // on mobile, if there is text, make the soft keyboard appear
         canvas.contentEditable = true;
-        canvas.focus();
+        try {
+            canvas.focus({ preventScroll: true });
+        } catch (e) {
+            canvas.focus();
+        }
     } else {
         canvas.contentEditable = false;
     }
@@ -776,6 +787,8 @@ function resetCaret() {
 }
 
 var canvas;
+var canvas_stage;
+var canvas_window;
 var canvas_dpr;
 var canvasWidth = 600;
 var canvasHeight = 600;
@@ -806,6 +819,94 @@ var currentLinkPart; // which part of currentLink is being moved
 var originalLink; // the Link being reattached
 var trash;
 
+var BASE_DIMENSIONS = {
+    canvasWidth: 600,
+    canvasHeight: 600,
+    nodeHeight: 25,
+    nodeCornerRadius: 8,
+    nodeMargin: 6,
+    acceptDistance: 6,
+    startLength: 40,
+    selfLinkRadius: 30,
+    arrowSize: 3.5,
+    arrowAngleAdjust: 0.08,
+    lineWidth: 1.5,
+    nodeFontSize: 10 / 72 * 96,
+    linkFontSize: 9 / 72 * 96,
+    snapToPadding: 6,
+    hitTargetPadding: 6,
+};
+
+function resetEditorState() {
+    canvas = null;
+    canvas_stage = null;
+    canvas_window = null;
+    canvas_dpr = 1;
+    canvasWidth = BASE_DIMENSIONS.canvasWidth;
+    canvasHeight = BASE_DIMENSIONS.canvasHeight;
+    nodeHeight = BASE_DIMENSIONS.nodeHeight;
+    nodeCornerRadius = BASE_DIMENSIONS.nodeCornerRadius;
+    nodeMargin = BASE_DIMENSIONS.nodeMargin;
+    acceptDistance = BASE_DIMENSIONS.acceptDistance;
+    startLength = BASE_DIMENSIONS.startLength;
+    selfLinkRadius = BASE_DIMENSIONS.selfLinkRadius;
+    arrowSize = BASE_DIMENSIONS.arrowSize;
+    arrowAngleAdjust = BASE_DIMENSIONS.arrowAngleAdjust;
+    lineWidth = BASE_DIMENSIONS.lineWidth;
+    nodeFontSize = BASE_DIMENSIONS.nodeFontSize;
+    linkFontSize = BASE_DIMENSIONS.linkFontSize;
+    snapToPadding = BASE_DIMENSIONS.snapToPadding;
+    hitTargetPadding = BASE_DIMENSIONS.hitTargetPadding;
+    nodes = [];
+    links = [];
+    selectedObject = null;
+    movingObject = false;
+    currentLink = null;
+    currentLinkSource = null;
+    currentLinkTarget = null;
+    currentLinkPart = null;
+    originalLink = null;
+    trash = [];
+}
+
+function syncCanvasMetrics() {
+    nodeHeight = BASE_DIMENSIONS.nodeHeight * canvas_dpr;
+    nodeCornerRadius = BASE_DIMENSIONS.nodeCornerRadius * canvas_dpr;
+    nodeMargin = BASE_DIMENSIONS.nodeMargin * canvas_dpr;
+    acceptDistance = BASE_DIMENSIONS.acceptDistance * canvas_dpr;
+    startLength = BASE_DIMENSIONS.startLength * canvas_dpr;
+    selfLinkRadius = BASE_DIMENSIONS.selfLinkRadius * canvas_dpr;
+    arrowSize = BASE_DIMENSIONS.arrowSize * canvas_dpr;
+    arrowAngleAdjust = BASE_DIMENSIONS.arrowAngleAdjust;
+    lineWidth = BASE_DIMENSIONS.lineWidth * canvas_dpr;
+    nodeFontSize = BASE_DIMENSIONS.nodeFontSize * canvas_dpr;
+    linkFontSize = BASE_DIMENSIONS.linkFontSize * canvas_dpr;
+    snapToPadding = BASE_DIMENSIONS.snapToPadding * canvas_dpr;
+    hitTargetPadding = BASE_DIMENSIONS.hitTargetPadding * canvas_dpr;
+}
+
+function syncCanvasSize() {
+    if (!canvas || !canvas_stage) return false;
+    var win = canvas_window || window;
+    var rect = canvas_stage.getBoundingClientRect();
+    if (!(rect.width > 0) || !(rect.height > 0))
+        return false;
+
+    var nextDpr = win.devicePixelRatio || 1;
+    var width = Math.max(1, Math.round(rect.width * nextDpr));
+    var height = Math.max(1, Math.round(rect.height * nextDpr));
+    var changed = (canvas.width !== width ||
+                   canvas.height !== height ||
+                   canvas_dpr !== nextDpr);
+    canvas_dpr = nextDpr;
+    syncCanvasMetrics();
+    if (changed) {
+        canvas.width = width;
+        canvas.height = height;
+    }
+    return changed;
+}
+
 function deleteObject() {
     var trash = [];
     for(var i = 0; i < nodes.length; i++) {
@@ -824,8 +925,15 @@ function deleteObject() {
 }
 
 function draw() {
+    if (!canvas) return;
     var ctx = canvas.getContext('2d');
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+
     ctx.save();
     ctx.translate(0.5, 0.5);
 
@@ -877,67 +985,97 @@ function selectObject(x, y) {
 var message_bar;
 function message(s) {
     s = s.toString().replace(/(Error:\s*)*/, ''); // Colab generates two of these
-    message_bar.innerHTML = s;
+    message_bar.textContent = s;
 }
 
 var help_div;
 
-function main(ei) {
-    var container = document.createElement("div");
+function main(ei, options) {
+    if (options === undefined) options = {};
+    resetEditorState();
+    var root = options.element || element;
+    var backend = options.backend || null;
+    var doc = root.ownerDocument || document;
+    var win = doc.defaultView || window;
+    var cleanup = [];
+
+    function listen(target, type, handler, listenerOptions) {
+        target.addEventListener(type, handler, listenerOptions);
+        cleanup.push(() => target.removeEventListener(type, handler, listenerOptions));
+    }
+
+    var container = doc.createElement("div");
     container.setAttribute("class", "editor");
     container.setAttribute("id", "editor"+ei);
     container.style.maxWidth = canvasWidth + "px";
+    container.style.width = "100%";
     container.style.position = "relative";
     container.style.left = 0;
     container.style.top = 0;
-    element.append(container);
+    root.append(container);
 
-    canvas = document.createElement("canvas");
-    canvas.style.border = "1px solid gray";
+    canvas_stage = doc.createElement("div");
+    canvas_stage.style.position = "relative";
+    canvas_stage.style.boxSizing = "border-box";
+    canvas_stage.style.width = "100%";
+    canvas_stage.style.aspectRatio = canvasWidth + " / " + canvasHeight;
+    canvas_stage.style.border = "1px solid gray";
+    canvas_stage.style.background = "white";
+    canvas_stage.style.overflow = "hidden";
+    container.append(canvas_stage);
+
+    canvas = doc.createElement("canvas");
+    canvas_window = win;
     canvas.style.outline = "0px"; // no focus ring
-    canvas.style.background = "white";
-    canvas.style.boxSizing = "border-box";
+    canvas.style.position = "absolute";
+    canvas.style.inset = 0;
+    canvas.style.display = "block";
     canvas.style.width = "100%";
-    canvas.style.maxWidth = canvasWidth + "px";
-    canvas.style.aspectRatio = canvasWidth + " / " + canvasHeight;
+    canvas.style.height = "100%";
+    canvas.style.background = "transparent";
+    canvas.style.touchAction = "none";
     canvas.style.cursor = "default"; // don't change cursor to 'text' on desktop
     canvas.setAttribute("tabindex", -1); // make canvas focusable
-    canvas_dpr = window.devicePixelRatio || 1;
-    canvas.width = canvasWidth * canvas_dpr;
-    canvas.height = canvasHeight * canvas_dpr;
-    container.append(canvas);
+    canvas_dpr = win.devicePixelRatio || 1;
+    syncCanvasMetrics();
+    canvas.width = Math.round(canvasWidth * canvas_dpr);
+    canvas.height = Math.round(canvasHeight * canvas_dpr);
+    canvas_stage.append(canvas);
+    syncCanvasSize();
 
-    nodeHeight *= canvas_dpr;
-    nodeCornerRadius *= canvas_dpr;
-    nodeMargin *= canvas_dpr;
-    startLength *= canvas_dpr;
-    acceptDistance *= canvas_dpr;
-    selfLinkRadius *= canvas_dpr;
-    arrowSize *= canvas_dpr;
-    lineWidth *= canvas_dpr;
-    nodeFontSize *= canvas_dpr;
-    linkFontSize *= canvas_dpr;
-    snapToPadding *= canvas_dpr; hitTargetPadding *= canvas_dpr;
+    if (win.ResizeObserver) {
+        var resizeObserver = new win.ResizeObserver(() => {
+            if (syncCanvasSize())
+                draw();
+        });
+        resizeObserver.observe(canvas_stage);
+        cleanup.push(() => resizeObserver.disconnect());
+    } else {
+        listen(win, 'resize', function () {
+            if (syncCanvasSize())
+                draw();
+        });
+    }
 
-    var controls = document.createElement("div");
+    var controls = doc.createElement("div");
     container.append(controls);
 
     function make_button(label, callback) {
-        var button = document.createElement("button");
+        var button = doc.createElement("button");
         button.style.margin = "5px";
         button.textContent = label;
         button.onclick = callback;
         controls.append(button);
     };
-    make_button('Load', () => { load(ei); });
-    make_button('Save', () => { save(ei); });
+    make_button('Load', () => { load(ei, backend); });
+    make_button('Save', () => { save(ei, backend); });
     make_button('Help', () => { help_div.style.display = "block"; });
 
-    message_bar = document.createElement("span");
+    message_bar = doc.createElement("span");
     message_bar.style.margin = "5px";
     controls.append(message_bar);
 
-    help_div = document.createElement("div");
+    help_div = doc.createElement("div");
     help_div.innerHTML = "<table>" +
         "<p>Based on FSM Designer by Evan Wallace.</p>" +
         "<tr><td>New state</td><td>double-click canvas</td></tr>" +
@@ -960,21 +1098,27 @@ function main(ei) {
     help_div.style.background = "#ffffffc0";
     help_div.style.color = "black";
     help_div.addEventListener("click", () => { help_div.style.display = "none"; });
-    container.append(help_div);
-    
-    load(ei); // bug: if there is an error later in the notebook, this doesn't work
+    canvas_stage.append(help_div);
 
-    canvas.ontouchstart = function(e) {
+    if (backend && backend.onLoad)
+        backend.onLoad(handle_loaded_graph);
+    if (backend && backend.onStatus)
+        backend.onStatus((s) => {
+            if (s !== undefined && s !== null && s !== '')
+                message(s);
+        });
+
+    listen(canvas, 'touchstart', function(e) {
         onmousedown(crossBrowserRelativeMousePos(e));
         canvasFocus();
-    };
-    canvas.onmousedown = function (e) {
+    }, { passive: false });
+    listen(canvas, 'mousedown', function (e) {
         if (e.button === 0 && !control)
             onmousedown(crossBrowserRelativeMousePos(e));
         canvasFocus();
-    };
+    });
 
-    canvas.ondblclick = function(e) {
+    listen(canvas, 'dblclick', function(e) {
         var mouse = crossBrowserRelativeMousePos(e);
         selectedObject = selectObject(mouse.x, mouse.y).object;
 
@@ -992,17 +1136,17 @@ function main(ei) {
             draw();
         }
         e.preventDefault();
-    };
+    });
 
-    canvas.onmousemove = function (e) {
+    listen(canvas, 'mousemove', function (e) {
         onmousemove(crossBrowserRelativeMousePos(e));
-    };
-    canvas.addEventListener('touchmove', function(e) {
+    });
+    listen(canvas, 'touchmove', function(e) {
         onmousemove(crossBrowserRelativeMousePos(e));
         e.preventDefault(); // don't scroll
     }, { passive: false });
 
-    document.onmouseup = document.ontouchend = function(e) {
+    function finishInteraction() {
         movingObject = false;
         if(currentLink != null) {
             if (currentLink instanceof StartLink ||
@@ -1022,16 +1166,18 @@ function main(ei) {
             currentLink = null;
             draw();
         }
-    };
-    
-    canvas.onmouseleave = function(e) {
+    }
+    listen(doc, 'mouseup', finishInteraction);
+    listen(doc, 'touchend', finishInteraction, { passive: false });
+
+    listen(canvas, 'mouseleave', function(e) {
         if (movingObject) {
             trash = deleteObject(selectedObject);
             draw();
         }
-    }
+    });
 
-    canvas.onmouseenter = function(e) {
+    listen(canvas, 'mouseenter', function(e) {
         if (movingObject) {
             for (var i=0; i<trash.length; i++) {
                 if (trash[i] instanceof Node)
@@ -1042,7 +1188,28 @@ function main(ei) {
             draw();
             resetCaret();
         }
+    });
+
+    listen(doc, 'keydown', ondocumentkeydown);
+    listen(doc, 'keyup', ondocumentkeyup);
+    listen(doc, 'keypress', ondocumentkeypress);
+
+    if (backend && backend.initialGraph) {
+        var initial = backend.initialGraph();
+        if (initial !== undefined && initial !== null)
+            handle_loaded_graph(initial);
+        else
+            load(ei, backend);
+    } else {
+        load(ei); // bug: if there is an error later in the notebook, this doesn't work
     }
+
+    return function cleanupMain() {
+        for (var i = cleanup.length - 1; i >= 0; i--)
+            cleanup[i]();
+        if (container.parentElement)
+            container.parentElement.removeChild(container);
+    };
 }
 
 /* Events */
@@ -1130,7 +1297,7 @@ function onmousemove(mouse) {
     }
 };
 
-document.onkeydown = function(e) {
+function ondocumentkeydown(e) {
     var key = crossBrowserKey(e);
     if (key == 17) {
         control = true;
@@ -1149,14 +1316,14 @@ document.onkeydown = function(e) {
     }
 }
 
-document.onkeyup = function(e) {
+function ondocumentkeyup(e) {
     var key = crossBrowserKey(e);
     if (key == 17) {
         control = false;
     }
-};
+}
 
-document.onkeypress = function(e) {
+function ondocumentkeypress(e) {
     var key = crossBrowserKey(e);
     if (canvasHasFocus() &&
         key >= 0x20 && key <= 0x7E &&
@@ -1167,46 +1334,24 @@ document.onkeypress = function(e) {
         draw();
         e.preventDefault();
     }
-};
+}
 
 function crossBrowserKey(e) {
     e = e || window.event;
     return e.which || e.keyCode;
 }
 
-function crossBrowserElementPos(e) {
-    e = e || window.event;
-    // Add up offsets
-    var obj = e.target || e.srcElement;
-    var x = 0, y = 0;
-    while(obj.offsetParent) {
-        x += obj.offsetLeft;
-        y += obj.offsetTop;
-        obj = obj.offsetParent;
-    }
-    // Add up scroll positions
-    obj = e.target || e.srcElement;
-    while (obj.offsetParent) {
-        x -= obj.scrollLeft;
-        y -= obj.scrollTop;
-        obj = obj.parentElement;
-    }
-    return { 'x': x * canvas_dpr, 'y': y * canvas_dpr };
-}
-
-function crossBrowserMousePos(e) {
-    e = e || window.event;
-    var x = e.pageX || e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-    var y = e.pageY || e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-    return { 'x': x * canvas_dpr, 'y': y * canvas_dpr };
-}
-
 function crossBrowserRelativeMousePos(e) {
-    var element = crossBrowserElementPos(e);
-    var mouse = crossBrowserMousePos(e);
+    e = e || window.event;
+    var source = e;
+    if (e.touches && e.touches.length > 0)
+        source = e.touches[0];
+    else if (e.changedTouches && e.changedTouches.length > 0)
+        source = e.changedTouches[0];
+    var rect = canvas.getBoundingClientRect();
     return {
-        'x': (mouse.x - element.x) * canvasWidth / canvas.offsetWidth,
-        'y': (mouse.y - element.y) * canvasHeight / canvas.offsetHeight
+        'x': (source.clientX - rect.left) * canvas.width / rect.width,
+        'y': (source.clientY - rect.top) * canvas.height / rect.height
     };
 }
 
@@ -1258,7 +1403,7 @@ function to_json() {
     return g;
 }
 
-function save(ei) {
+function save(ei, backend) {
     for (var vi=0; vi<nodes.length; vi++)
         if (nodes[vi].text.empty()) {
             message('Every state must have a nonempty name.');
@@ -1272,7 +1417,9 @@ function save(ei) {
     
     var g = to_json();
     if (g === null) return;
-    if (typeof Jupyter !== 'undefined') {
+    if (backend) {
+        backend.save(g);
+    } else if (typeof Jupyter !== 'undefined') {
         function handle (r) {
             if (r.content.status == "ok") {
                 message('Save successful');
@@ -1293,6 +1440,8 @@ function save(ei) {
 }
 
 function from_json(g) {
+    syncCanvasSize();
+
     // Clear the current graph
     nodes = [];
     links = [];
@@ -1353,8 +1502,10 @@ function from_json(g) {
     }
 }
 
-function load(ei) {
-    if (typeof Jupyter !== 'undefined') {
+function load(ei, backend) {
+    if (backend) {
+        backend.load();
+    } else if (typeof Jupyter !== 'undefined') {
         function handle (r) {
             if (r.msg_type == "stream") {
                 message('Load successful');
@@ -1376,5 +1527,18 @@ function load(ei) {
         var result = google.colab.kernel.invokeFunction('notebook.editor_load', [ei]).then(success, message);
     } else {
         message('Load requires Colab or Jupyter NbClassic.');
+    }
+}
+
+function handle_loaded_graph(g) {
+    message('Load successful');
+    from_json(g);
+    draw();
+    if (typeof requestAnimationFrame !== 'undefined') {
+        requestAnimationFrame(function () {
+            if (syncCanvasSize())
+                from_json(g);
+            draw();
+        });
     }
 }

@@ -256,6 +256,73 @@ PointNode.prototype.closestPointOnCircle = function (x, y) {
              'nx': dx/Math.hypot(dx, dy), 'ny': dy/Math.hypot(dx, dy) };
 }
 
+function transformGraphForCanvasResize(oldWidth, oldHeight, oldDpr, newWidth, newHeight, newDpr) {
+    if (!(oldWidth > 0) || !(oldHeight > 0) || !(oldDpr > 0) ||
+        !(newWidth > 0) || !(newHeight > 0) || !(newDpr > 0))
+        return;
+
+    var oldCssWidth = oldWidth / oldDpr;
+    var oldCssHeight = oldHeight / oldDpr;
+    var newCssWidth = newWidth / newDpr;
+    var newCssHeight = newHeight / newDpr;
+    if (Math.abs(oldCssWidth - newCssWidth) > 0.5 ||
+        Math.abs(oldCssHeight - newCssHeight) > 0.5)
+        return;
+
+    var xScale = newDpr / oldDpr;
+    var yScale = newDpr / oldDpr;
+    var scalarScale = newDpr / oldDpr;
+    if (Math.abs(xScale - 1) < 1e-9 &&
+        Math.abs(yScale - 1) < 1e-9 &&
+        Math.abs(scalarScale - 1) < 1e-9)
+        return;
+    var seen = new Set();
+
+    function transformPoint(point) {
+        if (point == null || seen.has(point))
+            return;
+        if (!(point instanceof Node) && !(point instanceof PointNode))
+            return;
+        seen.add(point);
+        point.x *= xScale;
+        point.y *= yScale;
+    }
+
+    for (var i = 0; i < nodes.length; i++)
+        transformPoint(nodes[i]);
+
+    if (trash) {
+        for (var i = 0; i < trash.length; i++)
+            transformPoint(trash[i]);
+    }
+
+    if (currentLink instanceof Link) {
+        transformPoint(currentLink.nodeA);
+        transformPoint(currentLink.nodeB);
+        currentLink.perpendicularPart *= scalarScale;
+        currentLink.mouseOffsetX *= xScale;
+        currentLink.mouseOffsetY *= yScale;
+    } else if (currentLink instanceof StartLink || currentLink instanceof SelfLink) {
+        transformPoint(currentLink.node);
+        if (currentLink instanceof SelfLink) {
+            currentLink.anchorX *= xScale;
+            currentLink.anchorY *= yScale;
+        }
+    }
+
+    if (selectedObject instanceof Node) {
+        selectedObject.mouseOffsetX *= xScale;
+        selectedObject.mouseOffsetY *= yScale;
+    } else if (selectedObject instanceof Link) {
+        selectedObject.perpendicularPart *= scalarScale;
+        selectedObject.mouseOffsetX *= xScale;
+        selectedObject.mouseOffsetY *= yScale;
+    } else if (selectedObject instanceof SelfLink) {
+        selectedObject.anchorX *= xScale;
+        selectedObject.anchorY *= yScale;
+    }
+}
+
 function StartLink(start, node) {
     this.node = node;
     this.anchorAngle = 0;
@@ -790,6 +857,7 @@ var canvas;
 var canvas_stage;
 var canvas_window;
 var canvas_dpr;
+var viewZoom = 1;
 var canvasWidth = 600;
 var canvasHeight = 600;
 var nodeHeight = 25;
@@ -842,6 +910,7 @@ function resetEditorState() {
     canvas_stage = null;
     canvas_window = null;
     canvas_dpr = 1;
+    viewZoom = 1;
     canvasWidth = BASE_DIMENSIONS.canvasWidth;
     canvasHeight = BASE_DIMENSIONS.canvasHeight;
     nodeHeight = BASE_DIMENSIONS.nodeHeight;
@@ -869,6 +938,16 @@ function resetEditorState() {
     trash = [];
 }
 
+function applyViewTransform(ctx) {
+    if (!(viewZoom > 0) || Math.abs(viewZoom - 1) < 1e-9)
+        return;
+    var cx = canvas.width / 2;
+    var cy = canvas.height / 2;
+    ctx.translate(cx, cy);
+    ctx.scale(viewZoom, viewZoom);
+    ctx.translate(-cx, -cy);
+}
+
 function syncCanvasMetrics() {
     nodeHeight = BASE_DIMENSIONS.nodeHeight * canvas_dpr;
     nodeCornerRadius = BASE_DIMENSIONS.nodeCornerRadius * canvas_dpr;
@@ -892,6 +971,9 @@ function syncCanvasSize() {
     if (!(rect.width > 0) || !(rect.height > 0))
         return false;
 
+    var oldWidth = canvas.width;
+    var oldHeight = canvas.height;
+    var oldDpr = canvas_dpr;
     var nextDpr = win.devicePixelRatio || 1;
     var width = Math.max(1, Math.round(rect.width * nextDpr));
     var height = Math.max(1, Math.round(rect.height * nextDpr));
@@ -901,6 +983,8 @@ function syncCanvasSize() {
     canvas_dpr = nextDpr;
     syncCanvasMetrics();
     if (changed) {
+        transformGraphForCanvasResize(oldWidth, oldHeight, oldDpr,
+                                      width, height, nextDpr);
         canvas.width = width;
         canvas.height = height;
     }
@@ -936,6 +1020,7 @@ function draw() {
 
     ctx.save();
     ctx.translate(0.5, 0.5);
+    applyViewTransform(ctx);
 
     for(var i = 0; i < nodes.length; i++) {
         if (nodes[i] == selectedObject) {
@@ -998,16 +1083,41 @@ function main(ei, options) {
     var doc = root.ownerDocument || document;
     var win = doc.defaultView || window;
     var cleanup = [];
+    var resizePending = false;
+    var resizeScheduled = false;
+    var viewportWidth = canvasWidth;
+    var viewportHeight = canvasHeight;
+    var controls = null;
 
     function listen(target, type, handler, listenerOptions) {
         target.addEventListener(type, handler, listenerOptions);
         cleanup.push(() => target.removeEventListener(type, handler, listenerOptions));
     }
 
+    function flushCanvasResize() {
+        resizeScheduled = false;
+        if (movingObject || currentLink != null) {
+            resizePending = true;
+            return;
+        }
+        var changed = syncCanvasSize();
+        resizePending = false;
+        if (changed)
+            draw();
+    }
+
+    function scheduleCanvasResize() {
+        resizePending = true;
+        if (resizeScheduled)
+            return;
+        resizeScheduled = true;
+        var raf = win.requestAnimationFrame || function (handler) { return win.setTimeout(handler, 0); };
+        raf(flushCanvasResize);
+    }
+
     var container = doc.createElement("div");
     container.setAttribute("class", "editor");
     container.setAttribute("id", "editor"+ei);
-    container.style.maxWidth = canvasWidth + "px";
     container.style.width = "100%";
     container.style.position = "relative";
     container.style.left = 0;
@@ -1018,7 +1128,7 @@ function main(ei, options) {
     canvas_stage.style.position = "relative";
     canvas_stage.style.boxSizing = "border-box";
     canvas_stage.style.width = "100%";
-    canvas_stage.style.aspectRatio = canvasWidth + " / " + canvasHeight;
+    canvas_stage.style.height = viewportHeight + "px";
     canvas_stage.style.border = "1px solid gray";
     canvas_stage.style.background = "white";
     canvas_stage.style.overflow = "hidden";
@@ -1045,19 +1155,20 @@ function main(ei, options) {
 
     if (win.ResizeObserver) {
         var resizeObserver = new win.ResizeObserver(() => {
-            if (syncCanvasSize())
-                draw();
+            scheduleCanvasResize();
         });
         resizeObserver.observe(canvas_stage);
         cleanup.push(() => resizeObserver.disconnect());
     } else {
         listen(win, 'resize', function () {
-            if (syncCanvasSize())
-                draw();
+            scheduleCanvasResize();
         });
     }
 
-    var controls = doc.createElement("div");
+    controls = doc.createElement("div");
+    controls.style.display = "flex";
+    controls.style.flexWrap = "wrap";
+    controls.style.alignItems = "center";
     container.append(controls);
 
     function make_button(label, callback) {
@@ -1066,14 +1177,108 @@ function main(ei, options) {
         button.textContent = label;
         button.onclick = callback;
         controls.append(button);
+        return button;
     };
+
+    function setViewZoom(nextZoom) {
+        viewZoom = Math.max(0.25, Math.min(4, nextZoom));
+        zoom_readout.textContent = Math.round(viewZoom * 100) + '%';
+        draw();
+    }
+
+    function applyViewportDimensions() {
+        if (doc.fullscreenElement === container) {
+            container.style.maxWidth = 'none';
+            container.style.width = '100vw';
+            var controlsHeight = 0;
+            if (controls)
+                controlsHeight = Math.ceil(controls.getBoundingClientRect().height);
+            var fullscreenHeight = Math.max(240, Math.floor(win.innerHeight - controlsHeight - 24));
+            canvas_stage.style.height = fullscreenHeight + 'px';
+        } else {
+            container.style.width = '100%';
+            container.style.maxWidth = viewportWidth == null ? 'none' : viewportWidth + 'px';
+            canvas_stage.style.height = viewportHeight + 'px';
+        }
+    }
+
+    function currentViewportWidth() {
+        if (viewportWidth != null)
+            return viewportWidth;
+        var rect = container.getBoundingClientRect();
+        return Math.max(400, Math.round(rect.width));
+    }
+
+    function setViewportWidth(nextWidth) {
+        viewportWidth = nextWidth;
+        if (viewportWidth == null) {
+            viewport_readout.textContent = 'Fit';
+        } else {
+            viewportWidth = Math.max(400, Math.min(2400, Math.round(viewportWidth)));
+            viewport_readout.textContent = viewportWidth + 'px';
+        }
+        applyViewportDimensions();
+        scheduleCanvasResize();
+    }
+
+    function currentViewportHeight() {
+        return viewportHeight;
+    }
+
+    function setViewportHeight(nextHeight) {
+        viewportHeight = Math.max(240, Math.min(2400, Math.round(nextHeight)));
+        viewport_height_readout.textContent = viewportHeight + 'px';
+        applyViewportDimensions();
+        scheduleCanvasResize();
+    }
+
+    function updateFullscreenButton() {
+        fullscreen_button.textContent = doc.fullscreenElement ? 'Window' : 'Fullscreen';
+    }
+
     make_button('Load', () => { load(ei, backend); });
     make_button('Save', () => { save(ei, backend); });
     make_button('Help', () => { help_div.style.display = "block"; });
+    make_button('Width -', () => { setViewportWidth(currentViewportWidth() - 200); });
+    var viewport_readout = doc.createElement("span");
+    viewport_readout.style.margin = "5px";
+    viewport_readout.textContent = viewportWidth + 'px';
+    controls.append(viewport_readout);
+    make_button('Width +', () => { setViewportWidth(currentViewportWidth() + 200); });
+    make_button('Fit Width', () => { setViewportWidth(null); });
+    make_button('Height -', () => { setViewportHeight(currentViewportHeight() - 150); });
+    var viewport_height_readout = doc.createElement("span");
+    viewport_height_readout.style.margin = "5px";
+    viewport_height_readout.textContent = viewportHeight + 'px';
+    controls.append(viewport_height_readout);
+    make_button('Height +', () => { setViewportHeight(currentViewportHeight() + 150); });
+    var fullscreen_button = make_button('Fullscreen', () => {
+        if (doc.fullscreenElement) {
+            if (doc.exitFullscreen)
+                doc.exitFullscreen();
+        } else if (container.requestFullscreen) {
+            container.requestFullscreen();
+        }
+    });
+    make_button('Zoom -', () => { setViewZoom(viewZoom / 1.25); });
+    var zoom_readout = doc.createElement("span");
+    zoom_readout.style.margin = "5px";
+    zoom_readout.textContent = '100%';
+    controls.append(zoom_readout);
+    make_button('100%', () => { setViewZoom(1); });
+    make_button('Zoom +', () => { setViewZoom(viewZoom * 1.25); });
 
     message_bar = doc.createElement("span");
     message_bar.style.margin = "5px";
     controls.append(message_bar);
+    listen(doc, 'fullscreenchange', function () {
+        updateFullscreenButton();
+        applyViewportDimensions();
+        scheduleCanvasResize();
+    });
+    applyViewportDimensions();
+    syncCanvasSize();
+    updateFullscreenButton();
 
     help_div = doc.createElement("div");
     help_div.innerHTML = "<table>" +
@@ -1086,6 +1291,10 @@ function main(ei, options) {
         "<tr><td>New transition</td><td>drag from boundary of state to another state</td></tr>" +
         "<tr><td>Rename transition</td><td>click on transition</td></tr>" +
         "<tr><td>Delete transition</td><td>drag transition outside canvas</td></tr>" +
+        "<tr><td>Viewport width</td><td>use Width -, Width +, or Fit Width</td></tr>" +
+        "<tr><td>Viewport height</td><td>use Height - or Height +</td></tr>" +
+        "<tr><td>Fullscreen</td><td>use Fullscreen</td></tr>" +
+        "<tr><td>Zoom</td><td>use Zoom -, 100%, or Zoom +</td></tr>" +
         "</table>";
     help_div.style.display = "none";
     help_div.style.position = "absolute";
@@ -1164,8 +1373,11 @@ function main(ei, options) {
                 resetCaret();
             }
             currentLink = null;
-            draw();
         }
+        if (resizePending)
+            flushCanvasResize();
+        else
+            draw();
     }
     listen(doc, 'mouseup', finishInteraction);
     listen(doc, 'touchend', finishInteraction, { passive: false });
@@ -1349,10 +1561,15 @@ function crossBrowserRelativeMousePos(e) {
     else if (e.changedTouches && e.changedTouches.length > 0)
         source = e.changedTouches[0];
     var rect = canvas.getBoundingClientRect();
-    return {
-        'x': (source.clientX - rect.left) * canvas.width / rect.width,
-        'y': (source.clientY - rect.top) * canvas.height / rect.height
-    };
+    var x = (source.clientX - rect.left) * canvas.width / rect.width;
+    var y = (source.clientY - rect.top) * canvas.height / rect.height;
+    if (viewZoom !== 1) {
+        var cx = canvas.width / 2;
+        var cy = canvas.height / 2;
+        x = (x - cx) / viewZoom + cx;
+        y = (y - cy) / viewZoom + cy;
+    }
+    return { 'x': x, 'y': y };
 }
 
 function getNodeId(node) {

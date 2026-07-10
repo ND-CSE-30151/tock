@@ -1,7 +1,10 @@
+import shutil
 import unittest
 import pathlib
+import importlib.util
 from tock import *
 from tock.machines import Transition, AlignedTransition
+from tock.graphs import json_to_graph, layout
 
 examples = pathlib.Path(__file__).parent.parent.joinpath('examples')
 
@@ -27,3 +30,29 @@ class TestRead(unittest.TestCase):
         g = to_graph(m)
         self.assertEqual(g.nodes, {'q1': {'start': True}, 'q2': {'accept': True}})
         self.assertEqual(g.edges, {'q1': {'q2': [{'label': AlignedTransition(['a'])}]}})
+
+    def test_json_to_graph_defaults_missing_node_flags(self):
+        g = json_to_graph({
+            'nodes': {
+                'q1': {'start': True},
+                'q2': {},
+            },
+            'edges': {
+                'q1': {
+                    'q2': [{'label': 'a'}],
+                },
+            },
+        })
+        self.assertEqual(g.nodes, {
+            'q1': {'start': True, 'accept': False},
+            'q2': {'start': False, 'accept': False},
+        })
+        self.assertEqual(str(g.edges['q1']['q2'][0]['label']), 'a')
+
+    @unittest.skipUnless(importlib.util.find_spec('pydot') is not None, 'pydot not installed')
+    @unittest.skipUnless(shutil.which('dot') is not None, 'Graphviz dot not installed')
+    def test_layout_turing_machine_graph(self):
+        m = read_csv(examples.joinpath('sipser-3-7.csv'))
+        g = to_graph(m)
+        layout(g)
+        self.assertIn('xmin', g.attrs)

@@ -1,3 +1,4 @@
 jupyter
 pydot
 openpyxl
+anywidget>=0.9

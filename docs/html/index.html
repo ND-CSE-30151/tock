@@ -1,27 +1,24 @@
-
 <!DOCTYPE html>
 
-<html>
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>tock: Theory of Computing toolKit &#8212; tock  documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Tutorial" href="tutorial/index.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head><body>
   
@@ -34,12 +31,35 @@
           <div class="body" role="main">
             
   <section id="tock-theory-of-computing-toolkit">
-<h1>tock: Theory of Computing toolKit<a class="headerlink" href="#tock-theory-of-computing-toolkit" title="Permalink to this headline">¶</a></h1>
+<h1>tock: Theory of Computing toolKit<a class="headerlink" href="#tock-theory-of-computing-toolkit" title="Link to this heading">¶</a></h1>
 <p>Tock stands for Theory Of Computing toolKit. It can simulate the
 automata taught in standard theory of computation courses
 (deterministic and nondeterministic finite automata, pushdown
 automata, and Turing machines). It can also simulate many extensions,
 like multiple stacks or tapes.</p>
+</section>
+<section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
+<ol class="arabic">
+<li><p>Install the Python package:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>tock
+</pre></div>
+</div>
+<p>This installs Tock’s Python dependencies, including <code class="docutils literal notranslate"><span class="pre">pydot</span></code>,
+<code class="docutils literal notranslate"><span class="pre">anywidget</span></code>, and <code class="docutils literal notranslate"><span class="pre">openpyxl</span></code>.</p>
+</li>
+<li><p>If you want to run local Jupyter notebooks, install Jupyter:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>jupyter
+</pre></div>
+</div>
+</li>
+<li><p>Install the system <a class="reference external" href="https://graphviz.org/">GraphViz</a> package so
+the <code class="docutils literal notranslate"><span class="pre">dot</span></code> executable is available on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">tock</span></code> installs the Python packages that talk to
+GraphViz, but GraphViz itself must be installed through your
+operating system or environment.</p>
+</li>
+</ol>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
@@ -64,7 +84,7 @@ like multiple stacks or tapes.</p>
 </div>
 </section>
 <section id="indexes">
-<h1>Indexes<a class="headerlink" href="#indexes" title="Permalink to this headline">¶</a></h1>
+<h1>Indexes<a class="headerlink" href="#indexes" title="Link to this heading">¶</a></h1>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
@@ -77,7 +97,7 @@ like multiple stacks or tapes.</p>
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="#">tock</a></h1>
 
@@ -88,7 +108,16 @@ like multiple stacks or tapes.</p>
 
 
 
-<h3>Navigation</h3>
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorial/index.html">Tutorial</a></li>
@@ -103,16 +132,6 @@ like multiple stacks or tapes.</p>
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
 
 
 
@@ -126,11 +145,11 @@ like multiple stacks or tapes.</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2022, David Chiang.
+      &#169;2020, David Chiang.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |
       <a href="_sources/index.rst.txt"

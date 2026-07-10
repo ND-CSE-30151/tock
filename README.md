@@ -15,10 +15,11 @@ Installation
 Tock depends on the following:
 
 -  Python 3.7 (required)
--  [GraphViz](http://www.graphviz.org) (to draw graphs)
 -  [Jupyter](http://jupyter.org) (to
    view notebooks)
--  [pydot](https://pypi.org/project/pydot/) (to edit machines)   
+-  [GraphViz](http://www.graphviz.org) (required system package; provides the `dot` executable used to draw and lay out graphs)
+-  [pydot](https://pypi.org/project/pydot/) (required Python package; installed automatically by `pip install tock`)   
+-  [anywidget](https://pypi.org/project/anywidget/) (required Python package for the interactive machine editor; installed automatically by `pip install tock`)  
 -  [openpyxl](https://pypi.python.org/pypi/openpyxl) (to open Excel
    files)
 
@@ -26,10 +27,9 @@ Steps:
 
 1. Run `pip install tock`.
 
-2. Install [Jupyter](http://jupyter.org) by running `pip install
-   jupyter` (or `conda install jupyter` if you use Anaconda).
+2. If you want to run local Jupyter notebooks, install [Jupyter](http://jupyter.org) by running `pip install jupyter` (or `conda install jupyter` if you use Anaconda).
 
-3. Install [GraphViz](http://www.graphviz.org).
+3. Install the system [GraphViz](http://www.graphviz.org) package so the `dot` executable is available on your `PATH`. This is separate from `pip install tock`: `pip` installs the Python packages (`pydot`, `anywidget`), but GraphViz itself must be installed through your operating system or environment.
 
 Copying
 -------

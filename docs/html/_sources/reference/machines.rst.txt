@@ -5,21 +5,20 @@ Module tock.machines
 --------------------
 
 .. automodule:: tock.machines
-   :members: Path
 
    .. autoclass:: Machine
 
       **High-level interface**
 
-      .. autoinstanceattribute:: store_types
-         :annotation:
-      .. autoproperty:: num_stores
+      .. attribute:: store_types
 
-      .. method:: add_transition(transition)
-      .. automethod:: add_transition(lhs, rhs)
+         A tuple of store types, one for each store.
+      .. autoproperty:: num_stores
+      .. autoproperty:: states
+
+      .. automethod:: add_transition
       .. automethod:: add_transitions
       .. automethod:: get_transitions
-      .. autoproperty:: states
                         
       .. automethod:: set_start_state
       .. automethod:: get_start_state
@@ -29,12 +28,15 @@ Module tock.machines
                       
       **Low-level interface**
 
-      .. autoinstanceattribute:: transitions
-         :annotation:
-      .. autoinstanceattribute:: start_config
-         :annotation:
-      .. autoinstanceattribute:: accept_configs
-         :annotation:
+      .. attribute:: transitions
+
+         A list of transitions.
+      .. attribute:: start_config
+
+         The start configuration.
+      .. attribute:: accept_configs
+
+         A set of accept configurations.
       
       **Tests for different types of automata**
 
@@ -43,33 +45,34 @@ Module tock.machines
       .. automethod:: is_turing
       .. automethod:: is_deterministic
 
-   .. class:: Store(values=(), position=0)
-   .. autoclass:: Store(store)
+   .. autoclass:: Store
 
       .. attribute:: values
 
-         A sequence of Symbols
+         A sequence of symbols.
          
-      .. autoinstanceattribute:: position
-         :annotation:
+      .. attribute:: position
+
+         The head position, between ``-1`` and ``len(values)``.
 
       .. automethod:: match
                       
-   .. class:: Configuration(stores)
-   .. autoclass:: Configuration(config)
+   .. autoclass:: Configuration
 
-      .. autoinstanceattribute:: stores
-         :annotation:
+      .. attribute:: stores
+
+         A tuple of Stores.
 
       .. automethod:: match
                       
-   .. class:: Transition(lhs, rhs)
-   .. autoclass:: Transition(transition)
+   .. autoclass:: Transition
 
-      .. autoinstanceattribute:: lhs
-         :annotation:
-      .. autoinstanceattribute:: rhs
-         :annotation:
+      .. attribute:: lhs
+
+         The left-hand-side configuration.
+      .. attribute:: rhs
+
+         The right-hand-side configuration.
 
       .. automethod:: match
       .. automethod:: apply

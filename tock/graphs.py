@@ -1,17 +1,26 @@
 import collections
+import html
+import textwrap
 from . import machines
 from . import syntax
 
-__all__ = ['Graph', 'from_graph', 'write_dot', 'read_tgf', 'to_graph', 'Editor']
+try:
+    import anywidget
+    import traitlets
+except ImportError:
+    anywidget = None
+    traitlets = None
+
+__all__ = ['Graph', 'from_graph', 'write_dot', 'read_tgf', 'to_graph', 'apply_graph_to_machine', 'Editor']
 
 class Graph:
-    """A directed graph. Both nodes and edges can have a `dict` of attributes.
+    """A directed graph. Both nodes and edges can have a ``dict`` of attributes.
 
-    Nodes can be any object that implements `__hash__` and `__eq__`.
+    Nodes can be any object that implements ``__hash__`` and ``__eq__``.
 
-    If `g` is a `Graph` and `v` is a node, `v`'s attributes can be
-    accessed as `g.nodes[v]`. If `u` and `v` are nodes, edge (`u`,
-    `v`)'s attributes can be accessed as `g.edges[u][v]`.
+    If ``g`` is a ``Graph`` and ``v`` is a node, its attributes can be
+    accessed as ``g.nodes[v]``. If ``u`` and ``v`` are nodes, edge ``(u, v)``'s
+    attributes can be accessed as ``g.edges[u][v]``.
     """
     def __init__(self, attrs=None):
         self.nodes = {}
@@ -20,7 +29,7 @@ class Graph:
         self.attrs = attrs
 
     def add_node(self, v, attrs=None):
-        """Add node `v` to graph with attributes `attrs`."""
+        """Add node ``v`` to the graph with attributes ``attrs``."""
         if attrs is None: attrs = {}
         if v in self.nodes:
             self.nodes[v].update(attrs)
@@ -28,7 +37,7 @@ class Graph:
             self.nodes[v] = attrs
 
     def remove_node(self, v):
-        """Remove node `v`, as well as any edges incident to `v`."""
+        """Remove node ``v`` and any edges incident to it."""
         del self.nodes[v]
         del self.edges[v]
         for u in self.nodes:
@@ -36,7 +45,7 @@ class Graph:
                 del self.edges[u][v]
 
     def add_edge(self, u, v, attrs=None):
-        """Add edge from `u` to `v` to graph with attributes `attrs`."""
+        """Add an edge from ``u`` to ``v`` with attributes ``attrs``."""
         if attrs is None: attrs = {}
         if u not in self.nodes: self.nodes[u] = {}
         if v not in self.nodes: self.nodes[v] = {}
@@ -45,7 +54,7 @@ class Graph:
         self.edges[u][v].append(attrs)
 
     def has_edge(self, u, v):
-        """Remove edge from `u` to `v`."""
+        """Return ``True`` iff there is at least one edge from ``u`` to ``v``."""
         return u in self.edges and v in self.edges[u] and len(self.edges[u][v]) > 0
 
     def get_edges(self, u, v):
@@ -108,7 +117,7 @@ class Graph:
         raise ValueError("There is no accepting path")
 
     def has_path(self):
-        """Returns `True` iff there is a path from the start node to an accept node."""
+        """Return ``True`` iff there is a path from the start node to an accept node."""
         try:
             self.shortest_path()
             return True
@@ -123,7 +132,7 @@ class Graph:
             if hasattr(x, '_repr_html_'):
                 return x._repr_html_()
             else:
-                return str(x)
+                return html.escape(str(x), quote=False).replace('\n', '<br/>')
             
         result = []
         result.append('digraph {')
@@ -171,6 +180,8 @@ class Graph:
         # Organize nodes into ranks, if any
         rank_nodes = collections.defaultdict(set)
         has_rank = set()
+        node_has_constraint = set()  # Initialize to handle case when len(has_rank) == 0
+        rank_has_constraint = set()
         for v in self.nodes:
             if 'rank' in self.nodes[v]:
                 has_rank.add(v)
@@ -178,11 +189,6 @@ class Graph:
                 rank_nodes[rank].add(v)
 
         if len(has_rank) > 0:
-            for rank in rank_nodes:
-                result.append('  {{ rank=same; {} }}'.format(' '.join(str(index[v]) for v in rank_nodes[rank])))
-
-            node_has_constraint = set()
-            rank_has_constraint = set()
             for u in has_rank:
                 ur = self.nodes[u]['rank']
                 for v in self.edges.get(u, ()):
@@ -265,8 +271,8 @@ def json_to_graph(j):
     g = Graph()
     for v in j['nodes']:
         g.add_node(str(v), {
-            'start': j['nodes'][v]['start'],
-            'accept': j['nodes'][v]['accept']})
+            'start': j['nodes'][v].get('start', False),
+            'accept': j['nodes'][v].get('accept', False)})
     for u in j['edges']:
         for v in j['edges'][u]:
             for e in j['edges'][u][v]:
@@ -276,7 +282,7 @@ def json_to_graph(j):
 
 def read_tgf(filename):
     """Reads a file in Trivial Graph Format. Edge labels are read into the
-    `label` attribute."""
+    ``label`` attribute."""
     with open(filename) as file:
         g = Graph()
 
@@ -311,7 +317,7 @@ def read_tgf(filename):
     return from_graph(g)
 
 def from_graph(g):
-    """Converts a `Graph` to a `Machine`."""
+    """Convert a ``Graph`` ``g`` to a ``Machine``."""
     transitions = []
 
     for q in g.edges:
@@ -334,8 +340,39 @@ def from_graph(g):
 
     return machines.from_transitions(transitions, start_state, accept_states)
 
+def apply_graph_to_machine(m, g):
+    """Replace machine ``m`` with the contents of graph ``g``."""
+    m.transitions = []
+    for q in g.edges:
+        for r in g.edges[q]:
+            for e in g.edges[q][r]:
+                t = e['label']
+                lhs = list(t.lhs)
+                lhs[m.state:m.state] = [q]
+                rhs = list(t.rhs)
+                rhs[m.state:m.state] = [r]
+                try:
+                    m.add_transition(lhs, rhs)
+                except Exception as e:
+                    raise ValueError(f"In transition from {q} on {t} to {r}: {e}") from None
+
+    start_state = None
+    accept_states = set()
+    for q in g.nodes:
+        if g.nodes[q].get('start', False):
+            if start_state is not None:
+                raise ValueError("A Machine must have only one start state")
+            start_state = q
+        if g.nodes[q].get('accept', False):
+            accept_states.add(q)
+    if start_state is None:
+        raise ValueError("A Machine must have one start state")
+    m.set_start_state(start_state)
+    m.accept_configs.clear()
+    m.add_accept_states(accept_states)
+
 def write_dot(x, filename):
-    """Writes a `Machine` or `Graph` to file named `filename` in GraphViz
+    """Write a ``Machine`` or ``Graph`` ``x`` to file ``filename`` in GraphViz
     (DOT) format."""
     if isinstance(x, machines.Machine):
         x = to_graph(x)
@@ -345,7 +382,7 @@ def write_dot(x, filename):
         file.write(x._repr_dot_())
 
 def to_graph(m):
-    """Converts a `Machine` to a `Graph`."""
+    """Convert a ``Machine`` ``m`` to a ``Graph``."""
     g = Graph()
     g.attrs['rankdir'] = 'LR'
     try:
@@ -394,7 +431,10 @@ class Path:
         return ''.join(html)
 
 def layout(g):
-    import pydot
+    try:
+        import pydot
+    except ImportError as e:
+        raise ImportError("pydot is required for graph layout. Reinstall tock or run 'pip install pydot'.") from e
     from .graphviz import run_dot
 
     def parse_string(s):
@@ -405,14 +445,17 @@ def layout(g):
     
     node_index = {}
     dot = g._repr_dot_(index=node_index)
-    dot = run_dot(dot, format="dot")
-    dot = dot.replace('#', '&#35;') # workaround for https://github.com/pydot/pydot/issues/235
-    dot = pydot.graph_from_dot_data(dot)[0]
+    dot_str: str = run_dot(dot, format="dot")  # type: ignore
+    dot_str = dot_str.replace('#', '&#35;') # workaround for https://github.com/pydot/pydot/issues/235
+    dot_list = pydot.graph_from_dot_data(dot_str)
+    dot = dot_list[0] if dot_list else None  # type: ignore
+    if dot is None:
+        raise ValueError("Failed to parse dot data")
 
-    bb_string = dot.get_bb()
+    bb_string = dot.get_bb()  # type: ignore
     if bb_string is None:
         # dot -Tdot relocates bb="..." into graph[bb="..."] (a bug?)
-        for attrs in dot.get_graph_defaults():
+        for attrs in dot.get_graph_defaults():  # type: ignore
             if 'bb' in attrs:
                 bb_string = attrs['bb']
     bbox = parse_string(bb_string).split(',')
@@ -423,13 +466,13 @@ def layout(g):
 
     for v in g.nodes:
         vid = node_index[v]
-        vdot = dot.get_node(str(vid))[0]
+        vdot = dot.get_node(str(vid))[0]  # type: ignore
         pos = parse_string(vdot.get_attributes()['pos'])
         x, y = pos.split(',', 1)
         g.nodes[v]['x'] = float(x)
         g.nodes[v]['y'] = float(y)
         if g.nodes[v].get('start', False):
-            sdot = dot.get_node('_START')[0]
+            sdot = dot.get_node('_START')[0]  # type: ignore
             pos = parse_string(sdot.get_attributes()['pos'])
             x, y = pos.split(',', 1)
             g.nodes[v]['startx'] = float(x)
@@ -462,71 +505,151 @@ def layout(g):
                 e['anchorx'], e['anchory'] = anchor
     return g
 
-class Editor:
+def _editor_widget_esm():
+    import importlib.resources
+
+    if __package__ is None:
+        raise RuntimeError("__package__ is not defined")
+    src = importlib.resources.read_text(__package__, 'editor.js')
+    src = textwrap.indent(src, '    ')
+    return (
+        "function createTockEditorRuntime() {\n"
+        f"{src}\n"
+        "    return { main };\n"
+        "}\n\n"
+        "function makeAnywidgetBackend(model) {\n"
+        "    let requestNonce = 0;\n"
+        "    const loadHandlers = [];\n"
+        "    const statusHandlers = [];\n"
+        "\n"
+        "    model.on('change:editor_graph', () => {\n"
+        "        const graph = model.get('editor_graph');\n"
+        "        for (const handler of loadHandlers)\n"
+        "            handler(graph);\n"
+        "    });\n"
+        "\n"
+        "    model.on('change:editor_status', () => {\n"
+        "        const status = model.get('editor_status');\n"
+        "        for (const handler of statusHandlers)\n"
+        "            handler(status);\n"
+        "    });\n"
+        "\n"
+        "    function sendRequest(kind, graph) {\n"
+        "        requestNonce += 1;\n"
+        "        const request = { kind, nonce: requestNonce };\n"
+        "        if (graph !== undefined)\n"
+        "            request.graph = graph;\n"
+        "        model.set('editor_request', request);\n"
+        "        model.save_changes();\n"
+        "    }\n"
+        "\n"
+        "    return {\n"
+        "        load() {\n"
+        "            sendRequest('load');\n"
+        "        },\n"
+        "        save(graph) {\n"
+        "            sendRequest('save', graph);\n"
+        "        },\n"
+        "        onLoad(handler) {\n"
+        "            loadHandlers.push(handler);\n"
+        "        },\n"
+        "        onStatus(handler) {\n"
+        "            statusHandlers.push(handler);\n"
+        "        },\n"
+        "        initialGraph() {\n"
+        "            return model.get('editor_graph');\n"
+        "        },\n"
+        "    };\n"
+        "}\n\n"
+        "function render({ model, el }) {\n"
+        "    const runtime = createTockEditorRuntime();\n"
+        "    return runtime.main(0, { element: el, backend: makeAnywidgetBackend(model) });\n"
+        "}\n\n"
+        "export default { render };\n"
+    )
+
+
+class _EditorBase:
     _editors = []
-    
-    def __init__(self, m):
+
+    def __init__(self, m, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.m = m
-        
-        import importlib.resources
-        self.src = importlib.resources.read_text(__package__, 'editor.js');
-        self.src = self.src + f'main({len(Editor._editors)});'
-        Editor._editors.append(self)
-
-        try:
-            import google.colab
-            import IPython.display
-            google.colab.output.register_callback('notebook.editor_load',
-                                                  lambda ei: IPython.display.JSON(editor_load(ei)))
-            google.colab.output.register_callback('notebook.editor_save', editor_save)
-        except ImportError:
-            pass
-
-    def _ipython_display_(self):
-        # bad to have more than one of these per Editor object?
-        import IPython
-        IPython.display.display(IPython.display.Javascript(self.src))
+        self.editor_index = len(type(self)._editors)
+        type(self)._editors.append(self)
 
     def save(self, j):
         g = json_to_graph(j)
-
-        # from_graph knows how to convert g to a Machine, but tries to
-        # guess store_types whereas we know what it should actually
-        # be. So we can do some more careful validation here.
-
-        self.m.transitions = []
-        for q in g.edges:
-            for r in g.edges[q]:
-                for e in g.edges[q][r]:
-                    t = e['label']
-                    lhs = list(t.lhs)
-                    lhs[self.m.state:self.m.state] = [q]
-                    rhs = list(t.rhs)
-                    rhs[self.m.state:self.m.state] = [r]
-                    try:
-                        self.m.add_transition(lhs, rhs)
-                    except Exception as e:
-                        raise ValueError(f"In transition from {q} on {t} to {r}: {e}") from None # work around bug in IPython?
-        
-        start_state = None
-        accept_states = set()
-        for q in g.nodes:
-            if g.nodes[q].get('start', False):
-                if start_state is not None:
-                    raise ValueError("A Machine must have only one start state")
-                start_state = q
-            if g.nodes[q].get('accept', False):
-                accept_states.add(q)
-        if start_state is None:
-            raise ValueError("A Machine must have one start state")
-        self.m.set_start_state(start_state)
-        self.m.accept_configs.clear()
-        self.m.add_accept_states(accept_states)
+        apply_graph_to_machine(self.m, g)
 
     def load(self):
         g = to_graph(self.m)
         layout(g)
         return graph_to_json(g)
+
+
+if anywidget is not None and traitlets is not None:
+    class Editor(_EditorBase, anywidget.AnyWidget):  # type: ignore
+        _editors = []
+        _esm = _editor_widget_esm()
+        editor_graph = traitlets.Dict(default_value={}).tag(sync=True)  # type: ignore
+        editor_request = traitlets.Dict(default_value={}).tag(sync=True)  # type: ignore
+        editor_status = traitlets.Unicode('').tag(sync=True)  # type: ignore
+
+        def __init__(self, m):
+            self._last_request_nonce = None
+            super().__init__(m)
+            self.observe(self._handle_request, names='editor_request')
+            self.editor_graph = self.load()
+
+        def _handle_request(self, change):
+            request = change['new']
+            if not request:
+                return
+
+            nonce = request.get('nonce')
+            if nonce is None or nonce == self._last_request_nonce:
+                return
+            self._last_request_nonce = nonce
+
+            kind = request.get('kind')
+            try:
+                if kind == 'save':
+                    self.save(request.get('graph'))
+                    self.editor_status = 'Save successful'
+                elif kind == 'load':
+                    self.editor_graph = self.load()
+                    self.editor_status = ''
+                else:
+                    self.editor_status = f'Unknown editor request: {kind}'
+            except Exception as e:
+                self.editor_status = str(e)
+else:
+    class Editor(_EditorBase):  # type: ignore
+        _editors = []
+
+        def __init__(self, m):
+            super().__init__(m)
+
+            import importlib.resources
+            if __package__ is None:
+                raise RuntimeError("__package__ is not defined")
+            self.src = importlib.resources.read_text(__package__, 'editor.js')
+            self.src = self.src + f'main({self.editor_index});'
+
+            try:
+                import google.colab  # type: ignore
+                import IPython.display  # type: ignore
+                google.colab.output.register_callback('notebook.editor_load',
+                                                      lambda ei: IPython.display.JSON(editor_load(ei)))
+                google.colab.output.register_callback('notebook.editor_save', editor_save)
+            except ImportError:
+                pass
+
+        def _ipython_display_(self):
+            # bad to have more than one of these per Editor object?
+            from IPython.display import display, Javascript  # type: ignore
+            display(Javascript(self.src))
 
 def editor_save(ei, g):
     Editor._editors[ei].save(g)

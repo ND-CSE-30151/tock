@@ -49,7 +49,7 @@ class Grammar:
         
     @classmethod
     def from_lines(cls, lines):
-        """Read a grammar from a list of strings (see `from_file`).
+        """Read a grammar from a list of strings (see ``from_file``).
 
         Arguments:
             lines: a list of strings
@@ -78,20 +78,20 @@ class Grammar:
         return g
 
     def set_start_nonterminal(self, x):
-        """Set the start symbol to `x`. If `x` is not already a nonterminal,
+        """Set the start symbol to ``x``. If ``x`` is not already a nonterminal,
         it is added to the nonterminal alphabet."""
         x = syntax.Symbol(x)
         self.add_nonterminal(x)
         self.start_nonterminal = x
 
     def add_nonterminal(self, x):
-        """Add `x` to the nonterminal alphabet."""
+        """Add ``x`` to the nonterminal alphabet."""
         x = syntax.Symbol(x)
         self.nonterminals.add(x)
         
     def add_rule(self, lhs, rhs):
-        """Add rule with left-hand side `lhs` and right-hand side `rhs`,
-        where `lhs` and `rhs` are both Strings.
+        """Add a rule with left-hand side ``lhs`` and right-hand side ``rhs``,
+        where ``lhs`` and ``rhs`` are both strings.
         """
         self.rules.append((syntax.String(lhs), syntax.String(rhs)))
 
@@ -106,7 +106,10 @@ class Grammar:
     def _repr_html_(self):
         result = []
         result.append("nonterminals: {{{}}}".format(','.join(x._repr_html_() for x in sorted(self.nonterminals))))
-        result.append('start: {}'.format(self.start_nonterminal._repr_html_()))
+        if self.start_nonterminal is None:
+            result.append('start: None')
+        else:
+            result.append('start: {}'.format(self.start_nonterminal._repr_html_()))
         for lhs, rhs in self.rules:
             result.append('{} &rarr; {}'.format(lhs._repr_html_(), rhs._repr_html_()))
         return '<br>\n'.join(result)
@@ -183,7 +186,7 @@ class Grammar:
         return True
             
     def is_rightlinear(self):
-        """Returns True iff the grammar is left-linear, that is, it is context-free and
+        """Returns True iff the grammar is right-linear, that is, it is context-free and
         every rule is of the form A → w B or A → w where w contains only terminals.
         """
         if not self.is_contextfree():
@@ -345,7 +348,7 @@ def from_grammar(g, mode="topdown"):
           - ``"lr1"``: LR(1) deterministic bottom-up.
 
     Returns:
-        Machine: a PDA equivalent to `g`.
+        Machine: a PDA equivalent to ``g``.
     """
 
     if g.is_contextfree():
@@ -462,13 +465,13 @@ class DottedRule:
         return str(self)
 
 def intersect_stack(p, m):
-    """Given a PDA `p` and DFA `m`, construct a new PDA whose stack
-    language is the intersection of the stack language of `p`
-    (bottom-to-top) and the language of `m`.
+    """Given a PDA ``p`` and DFA ``m``, construct a new PDA whose stack
+    language is the intersection of the stack language of ``p``
+    (bottom-to-top) and the language of ``m``.
 
     This construction is the same as Hopcroft and Ullman (1e), page 254.
    
-    `p` can push and pop multiple symbols, and the resulting PDA does
+    ``p`` can push and pop multiple symbols, and the resulting PDA does
     push and pop multiple symbols.
     """
     if not p.is_pushdown():
@@ -533,12 +536,19 @@ def renumber_states(m, verbose=False):
 def lr_automaton(g, k=0):
     """Construct the nondeterministic LR(k) automaton for CFG g."""
 
+    nullable = set()
+    first = {}
+    follow = {}
     if k == 1:
         nullable = g.compute_nullable()
         first = g.compute_first(nullable)
         follow = g.compute_follow(nullable, first)
+    elif k == 0:
+        pass
     elif k > 1:
         raise NotImplementedError()
+    else:
+        raise ValueError("k must be nonnegative")
     
     g_bylhs = collections.defaultdict(list)
     for [[lhs], rhs] in g.rules:
@@ -558,6 +568,7 @@ def lr_automaton(g, k=0):
     
     for lhs in g_bylhs:
         for rhs in g_bylhs[lhs]:
+            looks = []
             if k == 0:
                 looks = [[]]
             elif k == 1:
@@ -570,6 +581,7 @@ def lr_automaton(g, k=0):
                     # Predict
                     if x not in g.nonterminals:
                         continue
+                    looks1 = []
                     if k == 0:
                         looks1 = [[]]
                     elif k == 1:
@@ -632,7 +644,7 @@ def pda_to_cfg(m):
       m (Machine): automaton to convert, which must be a PDA.
 
     Returns:
-      Grammar: A CFG equivalent to `m`.
+      Grammar: A CFG equivalent to ``m``.
     """
 
     Tuple = syntax.Tuple

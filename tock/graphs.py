@@ -45,7 +45,7 @@ class Graph:
         self.edges[u][v].append(attrs)
 
     def has_edge(self, u, v):
-        """Remove edge from `u` to `v`."""
+        """Return True iff there is at least one edge from `u` to `v`."""
         return u in self.edges and v in self.edges[u] and len(self.edges[u][v]) > 0
 
     def get_edges(self, u, v):
